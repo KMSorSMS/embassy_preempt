@@ -1,0 +1,12 @@
+[target.thumbv7em-none-eabi]
+# replace STM32F429ZITx with your chip as listed in `probe-rs chip list`
+runner = "probe-rs run --chip STM32F401RETx"
+# rustflags = [
+#     "-Clink-arg=-Tmemory.x"
+# ]
+
+[build]
+target = "thumbv7em-none-eabi"
+
+[env]
+DEFMT_LOG = "trace"
