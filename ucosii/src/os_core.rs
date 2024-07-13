@@ -31,7 +31,7 @@
 *********************************************************************************************************
 */
 
-use crate::os_cpu;
+use crate::port::*;
 
 /*
 *********************************************************************************************************
@@ -42,43 +42,25 @@ use crate::os_cpu;
 *********************************************************************************************************
 */
 
-const OSUnMapTbl:[INT8U;256] = [
-    0u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x00 to 0x0F                   */
-    4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x10 to 0x1F                   */
-    5u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x20 to 0x2F                   */
-    4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x30 to 0x3F                   */
-    6u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x40 to 0x4F                   */
-    4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x50 to 0x5F                   */
-    5u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x60 to 0x6F                   */
-    4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x70 to 0x7F                   */
-    7u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x80 to 0x8F                   */
-    4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x90 to 0x9F                   */
-    5u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xA0 to 0xAF                   */
-    4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xB0 to 0xBF                   */
-    6u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xC0 to 0xCF                   */
-    4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xD0 to 0xDF                   */
-    5u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0xE0 to 0xEF                   */
-    4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u  /* 0xF0 to 0xFF                   */
+#[allow(unused)]
+const OS_UNMAP_TBL:[INT8U;256] = [
+    0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x00 to 0x0F                   */
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x10 to 0x1F                   */
+    5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x20 to 0x2F                   */
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x30 to 0x3F                   */
+    6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x40 to 0x4F                   */
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x50 to 0x5F                   */
+    5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x60 to 0x6F                   */
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x70 to 0x7F                   */
+    7, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x80 to 0x8F                   */
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x90 to 0x9F                   */
+    5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0xA0 to 0xAF                   */
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0xB0 to 0xBF                   */
+    6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0xC0 to 0xCF                   */
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0xD0 to 0xDF                   */
+    5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0xE0 to 0xEF                   */
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0  /* 0xF0 to 0xFF                   */
 ];
-
-/*
-*********************************************************************************************************
-*                                         FUNCTION PROTOTYPES
-*********************************************************************************************************
-*/
-
-// by noah:maybe no need？
-fn OS_InitEventList();
-
-fn OS_InitMisc();
-
-fn OS_InitRdyList();
-
-fn OS_InitTaskIdle();
-
-fn OS_InitTCBList();
-
-fn OS_SchedNew();
 
 /*
 *********************************************************************************************************
@@ -106,8 +88,9 @@ fn OS_SchedNew();
 *********************************************************************************************************
 */
 
+/// This function is used to obtain the name assigned to a semaphore, mutex, mailbox or queue.
 #[cfg(all(feature = "OS_EVENT_EN", feature = "OS_EVENT_NAME_EN"))]
-pub fn OSEventNameGet(){}
+pub fn os_event_nameget(){}
 
 /*
 *********************************************************************************************************
@@ -135,8 +118,9 @@ pub fn OSEventNameGet(){}
 *********************************************************************************************************
 */
 
+/// This function assigns a name to a semaphore, mutex, mailbox or queue.
 #[cfg(all(feature = "OS_EVENT_EN", feature = "OS_EVENT_NAME_EN"))]
-pub fn OSEventNameSet(){}
+pub fn os_event_nameset(){}
 
 /*
 *********************************************************************************************************
@@ -150,8 +134,9 @@ pub fn OSEventNameSet(){}
 * Returns    : none
 *********************************************************************************************************
 */
-
-pub fn OSInit() {}
+/// This function is used to initialize the internals of uC/OS-II and MUST be called
+/// prior to creating any uC/OS-II object and, prior to calling OSStart().
+pub fn os_init() {}
 // info!("if os is running in os_init? {}", unsafe {
 //     uc_thread::os_core::OS_IS_RUNNING
 // });
@@ -189,7 +174,10 @@ pub fn OSInit() {}
 *********************************************************************************************************
 */
 
-pub fn OSIntEnter(){}
+/// This function is used to notify uC/OS-II that you are about to service 
+/// an interrupt service routine (ISR).  This allows uC/OS-II to keep track 
+/// of interrupt nesting and thus only perform rescheduling at the last nested ISR.
+pub fn os_int_enter(){}
 
 /*
 *********************************************************************************************************
@@ -210,7 +198,10 @@ pub fn OSIntEnter(){}
 *********************************************************************************************************
 */
 
-pub fn OSIntExit(){}
+/// This function is used to notify uC/OS-II that you have completed servicing 
+/// an ISR.  When the last nested ISR has completed, uC/OS-II will call the 
+/// scheduler to determine whether a new, high-priority task, is ready to run.
+pub fn os_int_exit(){}
 
 /*
 *********************************************************************************************************
@@ -228,8 +219,11 @@ pub fn OSIntExit(){}
 *********************************************************************************************************
 */
 
-[#cfg(feature="OS_SCHED_LOCK_EN")]
-pub fn OSSchedLock(){}
+/// This function is used to prevent rescheduling to take place.
+/// This allows your application to prevent context switches until 
+/// you are ready to permit context switching.
+#[cfg(feature="OS_SCHED_LOCK_EN")]
+pub fn os_sched_lock(){}
 
 /*
 *********************************************************************************************************
@@ -246,8 +240,9 @@ pub fn OSSchedLock(){}
 *********************************************************************************************************
 */
 
-[#cfg(feature="OS_SCHED_LOCK_EN")]
-pub fn OSSchedUnlock(){}
+/// This function is used to re-allow rescheduling.
+#[cfg(feature="OS_SCHED_LOCK_EN")]
+pub fn os_sched_unlock(){}
 
 /*
 *********************************************************************************************************
@@ -269,7 +264,11 @@ pub fn OSSchedUnlock(){}
 *********************************************************************************************************
 */
 
-pub fn OSStart(){}
+/// This function is used to start the multitasking process which lets 
+/// uC/OS-II manages the task that you have created.  Before you can call 
+/// OSStart(), you MUST have called OSInit() and you MUST have created at 
+/// least one task.
+pub fn os_start(){}
 
 /*
 *********************************************************************************************************
@@ -285,7 +284,10 @@ pub fn OSStart(){}
 *********************************************************************************************************
 */
 
-pub fn OSTimeTick(){}
+/// This function is used to signal to uC/OS-II the occurrence of a 'system tick' 
+/// (also known as a 'clock tick').  This function should be called by the ticker 
+/// ISR but, can also be called by a high priority task.
+pub fn os_timetick(){}
 
 /*
 *********************************************************************************************************
@@ -301,7 +303,12 @@ pub fn OSTimeTick(){}
 *********************************************************************************************************
 */
 
-pub fn OSVersion()->INT16U{}
+/// This function is used to return the version number of uC/OS-II.
+/// The returned value corresponds to uC/OS-II's version number multiplied by 10000.
+/// In other words, version 2.01.00 would be returned as 20100.
+pub fn os_version()->INT16U{
+    return 0;
+}
 
 /*
 *********************************************************************************************************
@@ -315,8 +322,9 @@ pub fn OSVersion()->INT16U{}
 *********************************************************************************************************
 */
 
-[#cfg(feature="OS_TASK_DEL_EN")]
-pub fn OS_Dummy() {}
+/// This function doesn't do anything.  It is called by OSTaskDel().
+#[cfg(feature="OS_TASK_DEL_EN")]
+pub fn os_dummy() {}
 
 /*
 *********************************************************************************************************
@@ -346,8 +354,12 @@ pub fn OS_Dummy() {}
 *********************************************************************************************************
 */
 
-[#cfg(feature="OS_EVENT_EN")]
-pub fn OS_EventTaskRdy(OS_EVENT *pevent, void *pmsg, INT8U msk, INT8U pend_sta)->INT8U{}
+/// This function is called by other uC/OS-II services and is used to ready 
+/// a task that was waiting for an event to occur.
+#[cfg(feature="OS_EVENT_EN")]
+pub fn os_event_task_rdy()->INT8U{
+    return 0;
+}
 
 /*
 *********************************************************************************************************
@@ -364,8 +376,10 @@ pub fn OS_EventTaskRdy(OS_EVENT *pevent, void *pmsg, INT8U msk, INT8U pend_sta)-
 *********************************************************************************************************
 */
 
-[cfg(feature="OS_EVENT_EN")]
-pub fn OS_EventTaskWait(){}
+/// This function is called by other uC/OS-II services to suspend a task 
+/// because an event has not occurred.
+#[cfg(feature="OS_EVENT_EN")]
+pub fn os_event_task_wait(){}
 
 /*
 *********************************************************************************************************
@@ -383,8 +397,9 @@ pub fn OS_EventTaskWait(){}
 *********************************************************************************************************
 */
 
-[#cfg(feature="OS_EVENT_EN")]
-pub fn OS_EventTaskRemove(){}
+/// Remove a task from an event's wait list.
+#[cfg(feature="OS_EVENT_EN")]
+pub fn os_event_task_remove(){}
 
 /*
 *********************************************************************************************************
@@ -400,8 +415,9 @@ pub fn OS_EventTaskRemove(){}
 *********************************************************************************************************
 */
 
-[#cfg(feature="OS_EVENT_EN")]
-pub fn OS_EventWaitListInit(){}
+/// This function is called by other uC/OS-II services to initialize the event wait list.
+#[cfg(feature="OS_EVENT_EN")]
+pub fn os_event_wait_list_init(){}
 
 /*
 *********************************************************************************************************
@@ -415,3 +431,163 @@ pub fn OS_EventWaitListInit(){}
 * Returns    : none
 *********************************************************************************************************
 */
+
+#[allow(unused)]
+fn os_init_event_list(){}
+
+/*
+*********************************************************************************************************
+*                                             INITIALIZATION
+*                                    INITIALIZE MISCELLANEOUS VARIABLES
+*
+* Description: This function is called by OSInit() to initialize miscellaneous variables.
+*
+* Arguments  : none
+*
+* Returns    : none
+*********************************************************************************************************
+*/
+
+#[allow(unused)]
+fn os_init_misc(){}
+
+/*
+*********************************************************************************************************
+*                                             INITIALIZATION
+*                                       INITIALIZE THE READY LIST
+*
+* Description: This function is called by OSInit() to initialize the Ready List.
+*
+* Arguments  : none
+*
+* Returns    : none
+*********************************************************************************************************
+*/
+
+#[allow(unused)]
+fn os_init_rdy_list(){}
+
+/*
+*********************************************************************************************************
+*                                             INITIALIZATION
+*                                         CREATING THE IDLE TASK
+*
+* Description: This function creates the Idle Task.
+*
+* Arguments  : none
+*
+* Returns    : none
+*********************************************************************************************************
+*/
+
+#[allow(unused)]
+fn os_init_task_idle(){}
+
+/*
+*********************************************************************************************************
+*                                             INITIALIZATION
+*                            INITIALIZE THE FREE LIST OF TASK CONTROL BLOCKS
+*
+* Description: This function is called by OSInit() to initialize the free list of OS_TCBs.
+*
+* Arguments  : none
+*
+* Returns    : none
+*********************************************************************************************************
+*/
+
+#[allow(unused)]
+fn os_init_tcblist(){}
+
+/*
+*********************************************************************************************************
+*                                      CLEAR A SECTION OF MEMORY
+*
+* Description: This function is called by other uC/OS-II services to clear a contiguous block of RAM.
+*
+* Arguments  : pdest    is the start of the RAM to clear (i.e. write 0x00 to)
+*
+*              size     is the number of bytes to clear.
+*
+* Returns    : none
+*
+* Notes      : 1) This function is INTERNAL to uC/OS-II and your application should not call it.
+*              2) Note that we can only clear up to 64K bytes of RAM.  This is not an issue because none
+*                 of the uses of this function gets close to this limit.
+*              3) The clear is done one byte at a time since this will work on any processor irrespective
+*                 of the alignment of the destination.
+*********************************************************************************************************
+*/
+
+/// This function is called by other uC/OS-II services to clear a contiguous block of RAM.
+pub fn os_memclr(){}
+
+/*
+*********************************************************************************************************
+*                                       COPY A BLOCK OF MEMORY
+*
+* Description: This function is called by other uC/OS-II services to copy a block of memory from one
+*              location to another.
+*
+* Arguments  : pdest    is a pointer to the 'destination' memory block
+*
+*              psrc     is a pointer to the 'source'      memory block
+*
+*              size     is the number of bytes to copy.
+*
+* Returns    : none
+*
+* Notes      : 1) This function is INTERNAL to uC/OS-II and your application should not call it.  There is
+*                 no provision to handle overlapping memory copy.  However, that's not a problem since this
+*                 is not a situation that will happen.
+*              2) Note that we can only copy up to 64K bytes of RAM
+*              3) The copy is done one byte at a time since this will work on any processor irrespective
+*                 of the alignment of the source and destination.
+*********************************************************************************************************
+*/
+
+/// This function is called by other uC/OS-II services to copy a block of 
+/// memory from one location to another.
+pub fn os_memcopy(){}
+
+/*
+*********************************************************************************************************
+*                                              SCHEDULER
+*
+* Description: This function is called by other uC/OS-II services to determine whether a new, high
+*              priority task has been made ready to run.  This function is invoked by TASK level code
+*              and is not used to reschedule tasks from ISRs (see OSIntExit() for ISR rescheduling).
+*
+* Arguments  : none
+*
+* Returns    : none
+*
+* Notes      : 1) This function is INTERNAL to uC/OS-II and your application should not call it.
+*              2) Rescheduling is prevented when the scheduler is locked (see OS_SchedLock())
+*********************************************************************************************************
+*/
+
+/// This function is called by other uC/OS-II services to determine whether a new, high 
+/// priority task has been made ready to run.  This function is invoked by TASK level code
+/// and is not used to reschedule tasks from ISRs (see OSIntExit() for ISR rescheduling).
+pub fn os_sched(){}
+
+/*
+*********************************************************************************************************
+*                               FIND HIGHEST PRIORITY TASK READY TO RUN
+*
+* Description: This function is called by other uC/OS-II services to determine the highest priority task
+*              that is ready to run.  The global variable 'OSPrioHighRdy' is changed accordingly.
+*
+* Arguments  : none
+*
+* Returns    : none
+*
+* Notes      : 1) This function is INTERNAL to uC/OS-II and your application should not call it.
+*              2) Interrupts are assumed to be disabled when this function is called.
+*********************************************************************************************************
+*/
+
+#[allow(unused)]
+fn os_sched_new(){}
+
