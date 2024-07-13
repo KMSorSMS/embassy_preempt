@@ -22,6 +22,13 @@
     // "unstable-pac",
     // "exti",
     // "rt",
+    "defmt",
+    // "log",
+    "nightly",
+    "OS_EVENT_EN",
+    "OS_EVENT_NAME_EN",
+    "OS_SCHED_LOCK_EN",
+    "OS_TASK_DEL_EN",
   ],
   "rust-analyzer.linkedProjects": [
     // "embassy-stm32/Cargo.toml",

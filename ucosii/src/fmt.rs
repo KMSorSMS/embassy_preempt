@@ -1,6 +1,5 @@
 #![macro_use]
 #![allow(unused)]
-
 use core::fmt::{Debug, Display, LowerHex};
 
 #[cfg(all(feature = "defmt", feature = "log"))]
