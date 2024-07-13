@@ -53,6 +53,7 @@
     // "examples/stm32wb/Cargo.toml",
     // "examples/stm32wl/Cargo.toml",
     // "examples/wasm/Cargo.toml",
-    "examples/stm32f401re/Cargo.toml",
+    // "examples/stm32f401re/Cargo.toml",
+    "ucosii/Cargo.toml"
   ],
 }
