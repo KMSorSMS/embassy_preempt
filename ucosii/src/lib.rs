@@ -29,3 +29,11 @@ pub mod os_tmr;
 pub mod ucosii;
 /// need to import port here
 pub mod port;
+
+/*
+*********************************************************************************
+*                                  type define 
+*********************************************************************************
+*/
+/// address is a raw pointer
+pub type Addr = *mut u8;
