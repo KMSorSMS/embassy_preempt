@@ -30,6 +30,8 @@
     "OS_SCHED_LOCK_EN",
     "OS_TASK_DEL_EN",
     "OS_PRIO_LESS_THAN_64",
+    "OS_MEM_EN",
+    "OS_MAX_MEM_PART_EN"
     // "OS_PRIO_LESS_THAN_256"
   ],
   "rust-analyzer.linkedProjects": [
