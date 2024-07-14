@@ -8,11 +8,20 @@ cortex-m = { version = "0.7.6", optional = true }
 critical-section = "1.1"
 defmt = { version = "0.3", optional = true }
 log = { version = "0.4.14", optional = true }
+lazy_static = "1.4.0"
 
+# this part only define features, don't decide whether the feature is active
 [features]
 default = ["defmt"]
 nightly = []
+# this feature will be set in build.rs
 OS_EVENT_EN=[]
+# this feature will be set in build.rs
 OS_EVENT_NAME_EN=[]
 OS_SCHED_LOCK_EN=[]
 OS_TASK_DEL_EN=[]
+OS_PRIO_LESS_THAN_64=[]
+OS_PRIO_LESS_THAN_256=[]
+OS_MAX_MEM_PART_EN = []
+OS_MBOX_EN=[]
+OS_TASK_STAT_EN=[]
