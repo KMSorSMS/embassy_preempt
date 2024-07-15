@@ -21,8 +21,13 @@ pub type INT32S = i32;
 pub type FP32 = f32;
 /// Double precision floating point
 pub type FP64 = f64;
-/// the
+/// the ptr size. define this to use raw ptr
+pub type PTR = u32;
+/// the usize type used in array
+pub type USIZE = usize;
 
+#[allow(non_camel_case_types)]
+pub type OS_STK = u32;    /* Each stack entry is 32-bit wide                    */
 /// Define size of CPU status register (PSR = 32 bits)
 #[allow(non_camel_case_types)]
 pub type OS_CPU_SR = u32;

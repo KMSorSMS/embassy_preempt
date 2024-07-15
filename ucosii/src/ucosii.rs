@@ -28,10 +28,12 @@
 *********************************************************************************************************
 */
 
-use core::env;
+use core::ptr::NonNull;
 
 use crate::port::*;
+use crate::cfg::*;
 use crate::*;
+
 
 /*
 *********************************************************************************************************
@@ -55,15 +57,15 @@ const OS_N_SYS_TASKS: INT32U = 1;
 
 // by noah：maybe because the lazy_static, the const val can be calculate when it is used for the first time
 // maybe use a static val is a good choice.
-const OS_TASK_STAT_PRIO: INT32U = env!("OS_LOWEST_PRIO").parse::<INT32U>().unwrap() - 1; /* Statistic task priority                     */
-const OS_TASK_IDLE_PRIO: INT32U = env!("OS_LOWEST_PRIO").parse::<INT32U>().unwrap(); /* IDLE      task priority                     */
+const OS_TASK_STAT_PRIO: INT32U = OS_LOWEST_PRIO - 1; /* Statistic task priority                     */
+const OS_TASK_IDLE_PRIO: INT32U = OS_LOWEST_PRIO; /* IDLE      task priority                     */
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
-const OS_EVENT_TBL_SIZE: INT32U = env!("OS_LOWEST_PRIO").parse::<INT32U>().unwrap() / 8 + 1; /* Size of event table                         */
+const OS_EVENT_TBL_SIZE: USIZE = (OS_LOWEST_PRIO / 8 + 1) as USIZE;  /* Size of event table                         */
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
-const OS_EVENT_TBL_SIZE: INT32U = env!("OS_LOWEST_PRIO").parse::<INT32U>().unwrap() / 16 + 1; /* Size of event table                         */
+const OS_EVENT_TBL_SIZE: INT32U = OS_LOWEST_PRIO / 16 + 1; /* Size of event table                         */
 
-const OS_RDY_TBL_SIZE: INT32U = OS_EVENT_TBL_SIZE; /* Size of ready table                         */
+const OS_RDY_TBL_SIZE: USIZE = OS_EVENT_TBL_SIZE; /* Size of ready table                         */
 
 const OS_TASK_IDLE_ID: INT32U = 65535; /* ID numbers for Idle, Stat and Timer tasks   */
 const OS_TASK_STAT_ID: INT32U = 65534;
@@ -258,6 +260,7 @@ const OS_TMR_STATE_STOPPED: INT32U = 1;
 const OS_TMR_STATE_COMPLETED: INT32U = 2;
 const OS_TMR_STATE_RUNNING: INT32U = 3;
 
+
 /*
 *********************************************************************************************************
 *                                             ERROR CODES
@@ -266,9 +269,8 @@ const OS_TMR_STATE_RUNNING: INT32U = 3;
 
 #[derive(PartialEq)]
 #[repr(align(8))]
-#[allow(non_camel_case_types)]
 /// uC/OS-II error codes
-pub enum OsErrState {
+pub enum OS_ERR_STATE {
     /// No error
     OS_ERR_NONE,
     /// The event type is invalid
@@ -466,14 +468,14 @@ pub enum OsErrState {
 */
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
-pub type OsPrio = INT8U;
+pub type OS_PRIO = INT8U;
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
 pub type OS_PRIO = INT16U;
 
 // if use both of the features, there will be an error
 #[cfg(not(any(feature = "OS_PRIO_LESS_THAN_64", feature = "OS_PRIO_LESS_THAN_256")))]
-pub type OsPrio = INT8U;
+pub type OS_PRIO = INT8U;
 // there will be an error if both features is active
 #[cfg(all(feature = "OS_PRIO_LESS_THAN_64", feature = "OS_PRIO_LESS_THAN_256"))]
 compile_error!("You may not enable both `OS_PRIO_LESS_THAN_64` and `OS_PRIO_LESS_THAN_256` features.");
@@ -486,27 +488,26 @@ compile_error!("You may not enable both `OS_PRIO_LESS_THAN_64` and `OS_PRIO_LESS
 
 /// the ref of ECB
 #[cfg(feature = "OS_EVENT_EN")]
-pub struct OsEventRef {
-    ptr: NonNull<OsEvent>,
+pub struct OS_EVENT_REF {
+    ptr: NonNull<OS_EVENT>,
 }
 
 /// the value of osevent_ptr, which can be a message or a queue structure
 #[cfg(feature = "OS_EVENT_EN")]
-pub enum ECBPtr {
-    Event(OsEventRef),
+pub enum ECBPTR {
+    Event(OS_EVENT_REF),
 }
 
 // only need to expose to current crate
 #[cfg(feature = "OS_EVENT_EN")]
-pub(crate) struct OsEvent {
-    osevent_type: INT8U,         /* Type of event control block (see OS_EVENT_TYPE_xxxx)    */
-    osevent_ptr: Option<ECBPtr>, /* Pointer to message or queue structure                   */
-    osevent_cnt: INT16U,         /* Semaphore Count (not used if other EVENT type)          */
-    osevent_grp: OsPrio,         /* Group corresponding to tasks waiting for event to occur */
-    osevent_tbl: [OsPrio; OS_EVENT_TBL_SIZE as usize], /* List of tasks waiting for event to occur                */
+pub(crate) struct OS_EVENT {
+    OSEventType: INT8U,         /* Type of event control block (see OS_EVENT_TYPE_xxxx)    */
+    OSEventPtr: Option<ECBPTR>, /* Pointer to message or queue structure                   */
+    OSEventCnt: INT16U,         /* Semaphore Count (not used if other EVENT type)          */
+    OSEventGrp: OS_PRIO,         /* Group corresponding to tasks waiting for event to occur */
+    OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE as usize], /* List of tasks waiting for event to occur                */
     #[cfg(feature = "OS_EVENT_NAME_EN")]
-    // the name of the event
-    osevent_name: str,
+    OSEventName: str,    // the name of the event
 }
 
 /*
@@ -522,9 +523,11 @@ pub(crate) struct OsEvent {
 */
 
 #[cfg(feature = "OS_MBOX_EN")]
-pub struct OS_MBOX_DATA {
-    OSMboxMsg: Option<OsEvent>, /* Pointer to message in mailbox                          */
-    OSMboxAccept: INT8U,        /* Indicates if the message has been read                 */
+pub struct OS_MBOX_DATA
+{
+    OSMsg:PTR,                           /* Pointer to message in mailbox                           */
+    OSEventTbl:[OS_PRIO;OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
+    OSEventGrp:OS_PRIO,                    /* Group corresponding to tasks waiting for event to occur */
 }
 
 /*
@@ -533,27 +536,195 @@ pub struct OS_MBOX_DATA {
 *********************************************************************************************************
 */
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
-#[allow(non_camel_case_types)]
-#[allow(non_snake_case)]
 pub struct OS_MEM {
     OSMemAddr: Addr,      /* Pointer to beginning of memory partition              */
     OSMemFreeList: Addr,  /* Pointer to list of free memory blocks                 */
-    OSMemNFree: INT32U,   /* Number of free memory blocks in the partition         */
-    OSMemNBlks: INT32U,   /* Total number of blocks in the partition               */
     OSMemBlkSize: INT32U, /* Size (in bytes) of each block in the partition        */
+    OSMemNBlks: INT32U,   /* Total number of blocks in the partition               */
+    OSMemNFree: INT32U,   /* Number of free memory blocks in the partition         */
     #[cfg(feature = "OS_MEM_NAME_EN")]
     OSMemName: str, /* Memory partition name                                */
 }
+unsafe impl Sync for OS_MEM {}
+
+pub struct OS_MEM_DATA{
+    OSAddr:PTR,     /* Ptr to the beginning address of the memory partition    */
+    OSFreeList:PTR, /* Ptr to the beginning of the free list of memory blocks  */
+    OSBlkSize:INT32U, /* Size (in bytes) of each memory block                    */
+    OSNBlks:INT32U,   /* Total number of blocks in the partition                 */
+    OSNFree:INT32U,   /* Number of memory blocks free                            */
+    OSNUsed:INT32U    /* Number of memory blocks used                            */
+}
+
 /*
- *********************************************************************************************************
- *                                          GLOBAL VARIABLES
- *********************************************************************************************************
- */
+*********************************************************************************************************
+*                                   MUTUAL EXCLUSION SEMAPHORE DATA
+*********************************************************************************************************
+*/
+
+#[cfg(feature="OS_MUTEX_EN")]
+pub struct OS_MUTEX_DATA
+{
+    OSEventTbl:[OS_PRIO;OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
+    OSEventGrp:OS_PRIO,                    /* Group corresponding to tasks waiting for event to occur */
+    OSValue:BOOLEAN,                       /* Mutex value (OS_FALSE = used, OS_TRUE = available)      */
+    OSOwnerPrio:INT8U,                     /* Mutex owner's task priority or 0xFF if no owner         */
+    OSMutexPCP:INT8U,                       /* Priority Ceiling Priority or 0xFF if PCP disabled       */
+}
+
+/*
+*********************************************************************************************************
+*                                         MESSAGE QUEUE DATA
+*********************************************************************************************************
+*/
+
+#[cfg(feature = "OS_Q_EN")]
+pub(crate) struct OS_Q
+{                        /* QUEUE CONTROL BLOCK                                     */
+    osqptr:Option<OS_Q_REF>, /* Link to next queue control block in list of free blocks */
+    osqstart:PTR,     /* Ptr to start of queue data. is a second level ptr          */
+    osqend:PTR,       /* Ptr to end   of queue data.is a second level ptr            */
+    osqin:PTR,        /* Ptr to where next message will be inserted  in   the Q. is a second level ptr*/
+    osqout:PTR,       /* Ptr to where next message will be extracted from the Q. is a second level ptr*/
+    osqsize:INT16U,      /* Size of queue (maximum number of entries)               */
+    osqentries:INT16U,   /* Current number of entries in the queue                  */
+}
+
+/// the ref to OS_Q
+pub struct OS_Q_REF{
+    ptr:NonNull<OS_Q>,
+}
+
+#[cfg(feature = "OS_Q_EN")]
+pub struct OS_Q_DATA
+{
+    OSMsg:PTR,                           /* Pointer to next message to be extracted from queue      */
+    OSNMsgs:INT16U,                        /* Number of messages in message queue                     */
+    OSQSize:INT16U,                        /* Size of message queue                                   */
+    OSEventTbl:[OS_PRIO;OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur         */
+    OSEventGrp:OS_PRIO,                    /* Group corresponding to tasks waiting for event to occur */
+}
+
+/*
+*********************************************************************************************************
+*                                           SEMAPHORE DATA
+*********************************************************************************************************
+*/
+
+#[cfg(feature="OS_SEM_EN")]
+pub struct OS_SEM_DATA
+{
+    OSCnt:INT16U,                          /* Semaphore count                                         */
+    OSEventTbl:[OS_PRIO;OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
+    OSEventGrp:OS_PRIO,                    /* Group corresponding to tasks waiting for event to occur */
+}
+
+/*
+*********************************************************************************************************
+*                                           TASK STACK DATA
+*********************************************************************************************************
+*/
+
+#[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+pub struct OS_STK_DATA
+{
+    OSFree:INT32U, /* Number of free entries on the stack                     */
+    OSUsed:INT32U, /* Number of entries used on the stack                     */
+}
+
+/*
+*********************************************************************************************************
+*                                         TASK CONTROL BLOCK
+*********************************************************************************************************
+*/
+
+pub(crate) struct OS_TCB
+{
+    OSTCBStkPtr:OS_STK, /* Pointer to current top of stack                         */
+    #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+    OSTCBExtPtr:PTR,      /* Pointer to user definable data for TCB extension        */
+    #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+    OSTCBStkBottom:OS_STK, /* Pointer to bottom of stack                              */
+    #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+    OSTCBStkSize:INT32U,    /* Size of task stack (in number of stack elements)        */
+    #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+    OSTCBOpt:INT16U,        /* Task options as passed by OSTaskCreateExt()             */
+    #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+    OSTCBId:INT16U,         /* Task ID (0..65535)                                      */
+
+    OSTCBNext:Option<OS_TCB_REF>, /* Pointer to next     TCB in the TCB list                 */
+    OSTCBPrev:Option<OS_TCB_REF>, /* Pointer to previous TCB in the TCB list                 */
+
+    // #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+    // OS_TLS OSTCBTLSTbl[OS_TLS_TBL_SIZE];
+
+
+    #[cfg(feature="OS_EVENT_EN")]
+    OSTCBEventPtr:Option<OS_EVENT_REF>, /* Pointer to           event control block                */
+
+    // OS_EVENT **OSTCBEventMultiPtr; /* Pointer to multiple  event control blocks               */
+    // OS_EVENT *OSTCBEventMultiRdy;  /* Pointer to the first event control block readied        */
+
+    #[cfg(any(all(feature = "OS_Q_EN", feature = "OS_MAX_QS"), feature = "OS_MBOX_EN"))]
+    OSTCBMsg:PTR, /* Message received from OSMboxPost() or OSQPost()         */
+
+    // OS_FLAG_NODE *OSTCBFlagNode; /* Pointer to event flag node                              */
+
+    // OS_FLAGS OSTCBFlagsRdy; /* Event flags that made task ready to run                 */
+
+    OSTCBDly:INT32U,     /* Nbr ticks to delay task or, timeout waiting for event   */
+    OSTCBStat:INT8U,     /* Task      status                                        */
+    OSTCBStatPend:INT8U, /* Task PEND status                                        */
+    OSTCBPrio:INT8U,     /* Task priority (0 == highest)                            */
+
+    OSTCBX:INT8U,      /* Bit position in group  corresponding to task priority   */
+    OSTCBY:INT8U,      /* Index into ready table corresponding to task priority   */
+    OSTCBBitX:OS_PRIO, /* Bit mask to access bit position in ready table          */
+    OSTCBBitY:OS_PRIO, /* Bit mask to access bit position in ready group          */
+
+    #[cfg(feature="OS_TASK_DEL_EN")]
+    OSTCBDelReq:INT8U,  /* Indicates whether a task needs to delete itself         */
+
+    #[cfg(feature="OS_TASK_PROFILE_EN")]
+    OSTCBCtxSwCtr:INT32U,    /* Number of time the task was switched in                 */
+    OSTCBCyclesTot:INT32U,   /* Total number of clock cycles the task has been running  */
+    OSTCBCyclesStart:INT32U, /* Snapshot of cycle counter at start of task resumption   */
+    OSTCBStkBase:OS_STK,    /* Pointer to the beginning of the task stack              */
+    OSTCBStkUsed:INT32U,     /* Number of bytes used from the stack                     */
+
+    #[cfg(feature="OS_TASK_REG_TBL_SIZE")]
+    OSTCBRegTbl:[INT32U;OS_TASK_REG_TBL_SIZE],
+    
+    #[cfg(feature="OS_TASK_NAME_EN")]
+    OSTCBTaskName: str,
+}
+
+pub struct OS_TCB_REF{
+    ptr:NonNull<OS_TCB>,
+}
+
+/*
+*********************************************************************************************************
+*                                          TIMER DATA TYPES
+*********************************************************************************************************
+*/
+
+/*
+*********************************************************************************************************
+*                                       THREAD LOCAL STORAGE (TLS)
+*********************************************************************************************************
+*/
+
+/*
+*********************************************************************************************************
+*                                          GLOBAL VARIABLES
+*********************************************************************************************************
+*/
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 #[allow(non_upper_case_globals)]
-static OSMemFreeList: *mut OS_MEM = core::ptr::null_mut();
+static mut OSMemFreeList: *mut OS_MEM = core::ptr::null_mut();
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
-const OS_MAX_MEM_PART: INT32U = env!("OS_MAX_MEM_PART").parse::<INT32U>().unwrap();
+// const OS_MAX_MEM_PART: INT32U = env!("OS_MAX_MEM_PART").parse::<INT32U>().unwrap();
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 #[allow(non_upper_case_globals)]
 static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize] = [OS_MEM {
