@@ -26,7 +26,8 @@
 */
 
 use crate::ucosii::*;
-use crate::Addr;
+use crate::*;
+use core::mem::size_of;
 
 /*
 *********************************************************************************************************
@@ -61,4 +62,48 @@ use crate::Addr;
 */
 #[allow(unused)]
 #[no_mangle]
-pub fn OSMemCreate(addr: Addr, nblks: u32, blksize: u32, perr: *mut OsErrState) -> *mut OS_MEM {}
+pub fn OSMemCreate(addr: VoidPtr, nblks: u32, blksize: u32, perr: *mut OS_ERR_STATE) -> *mut OS_MEM {
+    let pmem: *mut OS_MEM;
+    let mut pblk: VoidPtr;
+    let plink: *mut VoidPtr;
+    let mut loops: u32;
+    let mut i: u32;
+    #[cfg(feature = "OS_SAFETY_CRITICAL")]
+    {
+        if (perr.is_null()) {
+            // you should provide this function below
+            OS_SAFETY_CRITICAL_EXCEPTION();
+            return (0 as *mut OS_MEM);
+        }
+    }
+    // escape OS_SAFETY_CRITICAL_IEC61508
+    #[cfg(feature = "OS_ARG_CHK_EN")]
+    {
+        if addr.is_null() {
+            /* Must pass a valid address for the memory part.*/
+            *perr = OS_ERR_MEM_INVALID_ADDR;
+            return (0 as *mut OS_MEM);
+        }
+        if (addr as u32) & (size_of(VoidPtr) - 1) != 0 {
+            /* Must be pointer size aligned.*/
+            *perr = OS_ERR_MEM_INVALID_ADDR;
+            return (0 as *mut OS_MEM);
+        }
+        if (nblks < 2) {
+            /* Must have at least 2 blocks.*/
+            *perr = OS_ERR_MEM_INVALID_BLKS;
+            return (0 as *mut OS_MEM);
+        }
+        if blksize < size_of(VoidPtr) {
+            /* Must be able to hold at least a pointer.*/
+            *perr = OS_ERR_MEM_INVALID_SIZE;
+            return (0 as *mut OS_MEM);
+        }
+    }
+    // enter critical to protect the memory partition
+    if critical_section::with(|cs|{
+        
+    }){
+
+    }
+}

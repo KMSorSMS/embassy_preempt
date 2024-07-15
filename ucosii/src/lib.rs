@@ -1,4 +1,7 @@
 #![no_std]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(non_upper_case_globals)]
 #![warn(missing_docs)]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
 // #[macro_use]
@@ -28,6 +31,8 @@ pub mod os_time;
 pub mod os_tmr;
 /// need to import port here
 pub mod port;
+/// need to import port here
+pub mod cfg;
 /// the mod which define the data structure of uC/OS-II kernel
 pub mod ucosii;
 
@@ -40,3 +45,4 @@ mod util;
 */
 /// address is a raw pointer
 pub type Addr = *mut u8;
+pub type VoidPtr = u32;

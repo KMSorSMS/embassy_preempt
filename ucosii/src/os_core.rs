@@ -43,7 +43,7 @@ use crate::port::*;
 */
 
 #[allow(unused)]
-const OS_UNMAP_TBL: [INT8U; 256] = [
+const OSUnMapTbl: [INT8U; 256] = [
     0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x00 to 0x0F                   */
     4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x10 to 0x1F                   */
     5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x20 to 0x2F                   */
@@ -90,7 +90,7 @@ const OS_UNMAP_TBL: [INT8U; 256] = [
 
 /// This function is used to obtain the name assigned to a semaphore, mutex, mailbox or queue.
 #[cfg(all(feature = "OS_EVENT_EN", feature = "OS_EVENT_NAME_EN"))]
-pub fn os_event_nameget() {}
+pub fn OSEventNameGet() {}
 
 /*
 *********************************************************************************************************
@@ -120,7 +120,7 @@ pub fn os_event_nameget() {}
 
 /// This function assigns a name to a semaphore, mutex, mailbox or queue.
 #[cfg(all(feature = "OS_EVENT_EN", feature = "OS_EVENT_NAME_EN"))]
-pub fn os_event_nameset() {}
+pub fn OSEventNameSet() {}
 
 /*
 *********************************************************************************************************
@@ -136,7 +136,7 @@ pub fn os_event_nameset() {}
 */
 /// This function is used to initialize the internals of uC/OS-II and MUST be called
 /// prior to creating any uC/OS-II object and, prior to calling OSStart().
-pub fn os_init() {}
+pub fn OSInit() {}
 // info!("if os is running in os_init? {}", unsafe {
 //     uc_thread::os_core::OS_IS_RUNNING
 // });
@@ -177,7 +177,7 @@ pub fn os_init() {}
 /// This function is used to notify uC/OS-II that you are about to service
 /// an interrupt service routine (ISR).  This allows uC/OS-II to keep track
 /// of interrupt nesting and thus only perform rescheduling at the last nested ISR.
-pub fn os_int_enter() {}
+pub fn OSIntEnter() {}
 
 /*
 *********************************************************************************************************
@@ -201,7 +201,7 @@ pub fn os_int_enter() {}
 /// This function is used to notify uC/OS-II that you have completed servicing
 /// an ISR.  When the last nested ISR has completed, uC/OS-II will call the
 /// scheduler to determine whether a new, high-priority task, is ready to run.
-pub fn os_int_exit() {}
+pub fn OSIntExit() {}
 
 /*
 *********************************************************************************************************
@@ -223,7 +223,7 @@ pub fn os_int_exit() {}
 /// This allows your application to prevent context switches until
 /// you are ready to permit context switching.
 #[cfg(feature = "OS_SCHED_LOCK_EN")]
-pub fn os_sched_lock() {}
+pub fn OSSchedLock() {}
 
 /*
 *********************************************************************************************************
@@ -242,7 +242,7 @@ pub fn os_sched_lock() {}
 
 /// This function is used to re-allow rescheduling.
 #[cfg(feature = "OS_SCHED_LOCK_EN")]
-pub fn os_sched_unlock() {}
+pub fn OSSchedUnlock() {}
 
 /*
 *********************************************************************************************************
@@ -268,7 +268,7 @@ pub fn os_sched_unlock() {}
 /// uC/OS-II manages the task that you have created.  Before you can call
 /// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
-pub fn os_start() {}
+pub fn OSStart() {}
 
 /*
 *********************************************************************************************************
@@ -287,7 +287,7 @@ pub fn os_start() {}
 /// This function is used to signal to uC/OS-II the occurrence of a 'system tick'
 /// (also known as a 'clock tick').  This function should be called by the ticker
 /// ISR but, can also be called by a high priority task.
-pub fn os_timetick() {}
+pub fn OSTimeTick() {}
 
 /*
 *********************************************************************************************************
@@ -306,7 +306,7 @@ pub fn os_timetick() {}
 /// This function is used to return the version number of uC/OS-II.
 /// The returned value corresponds to uC/OS-II's version number multiplied by 10000.
 /// In other words, version 2.01.00 would be returned as 20100.
-pub fn os_version() -> INT16U {
+pub fn OSVersion() -> INT16U {
     return 0;
 }
 
@@ -324,7 +324,7 @@ pub fn os_version() -> INT16U {
 
 /// This function doesn't do anything.  It is called by OSTaskDel().
 #[cfg(feature = "OS_TASK_DEL_EN")]
-pub fn os_dummy() {}
+pub fn OS_Dummy() {}
 
 /*
 *********************************************************************************************************
@@ -357,7 +357,7 @@ pub fn os_dummy() {}
 /// This function is called by other uC/OS-II services and is used to ready
 /// a task that was waiting for an event to occur.
 #[cfg(feature = "OS_EVENT_EN")]
-pub fn os_event_task_rdy() -> INT8U {
+pub fn OS_EventTaskRdy() -> INT8U {
     return 0;
 }
 
@@ -379,7 +379,7 @@ pub fn os_event_task_rdy() -> INT8U {
 /// This function is called by other uC/OS-II services to suspend a task
 /// because an event has not occurred.
 #[cfg(feature = "OS_EVENT_EN")]
-pub fn os_event_task_wait() {}
+pub fn OS_EventTaskWait() {}
 
 /*
 *********************************************************************************************************
@@ -399,7 +399,7 @@ pub fn os_event_task_wait() {}
 
 /// Remove a task from an event's wait list.
 #[cfg(feature = "OS_EVENT_EN")]
-pub fn os_event_task_remove() {}
+pub fn OS_EventTaskRemove() {}
 
 /*
 *********************************************************************************************************
@@ -417,7 +417,7 @@ pub fn os_event_task_remove() {}
 
 /// This function is called by other uC/OS-II services to initialize the event wait list.
 #[cfg(feature = "OS_EVENT_EN")]
-pub fn os_event_wait_list_init() {}
+pub fn OS_EventWaitListInit() {}
 
 /*
 *********************************************************************************************************
@@ -433,7 +433,7 @@ pub fn os_event_wait_list_init() {}
 */
 
 #[allow(unused)]
-fn os_init_event_list() {}
+fn OS_InitEventList() {}
 
 /*
 *********************************************************************************************************
@@ -449,7 +449,7 @@ fn os_init_event_list() {}
 */
 
 #[allow(unused)]
-fn os_init_misc() {}
+fn OS_InitMisc() {}
 
 /*
 *********************************************************************************************************
@@ -465,7 +465,7 @@ fn os_init_misc() {}
 */
 
 #[allow(unused)]
-fn os_init_rdy_list() {}
+fn OS_InitRdyList() {}
 
 /*
 *********************************************************************************************************
@@ -481,7 +481,7 @@ fn os_init_rdy_list() {}
 */
 
 #[allow(unused)]
-fn os_init_task_idle() {}
+fn OS_InitTaskIdle() {}
 
 /*
 *********************************************************************************************************
@@ -497,7 +497,7 @@ fn os_init_task_idle() {}
 */
 
 #[allow(unused)]
-fn os_init_tcblist() {}
+fn OS_InitTCBList() {}
 
 /*
 *********************************************************************************************************
@@ -520,7 +520,7 @@ fn os_init_tcblist() {}
 */
 
 /// This function is called by other uC/OS-II services to clear a contiguous block of RAM.
-pub fn os_memclr() {}
+pub fn OS_MemClr() {}
 
 /*
 *********************************************************************************************************
@@ -548,7 +548,7 @@ pub fn os_memclr() {}
 
 /// This function is called by other uC/OS-II services to copy a block of
 /// memory from one location to another.
-pub fn os_memcopy() {}
+pub fn OS_MemCopy() {}
 
 /*
 *********************************************************************************************************
@@ -570,7 +570,7 @@ pub fn os_memcopy() {}
 /// This function is called by other uC/OS-II services to determine whether a new, high
 /// priority task has been made ready to run.  This function is invoked by TASK level code
 /// and is not used to reschedule tasks from ISRs (see OSIntExit() for ISR rescheduling).
-pub fn os_sched() {}
+pub fn OS_Sched() {}
 
 /*
 *********************************************************************************************************
@@ -589,4 +589,108 @@ pub fn os_sched() {}
 */
 
 #[allow(unused)]
-fn os_sched_new() {}
+fn OS_SchedNew() {}
+
+/*
+*********************************************************************************************************
+*                               DETERMINE THE LENGTH OF AN ASCII STRING
+*
+* Description: This function is called by other uC/OS-II services to determine the size of an ASCII string
+*              (excluding the NUL character).
+*
+* Arguments  : psrc     is a pointer to the string for which we need to know the size.
+*
+* Returns    : The size of the string (excluding the NUL terminating character)
+*
+* Notes      : 1) This function is INTERNAL to uC/OS-II and your application should not call it.
+*              2) The string to check must be less than 255 characters long.
+*********************************************************************************************************
+*/
+
+pub fn OS_StrLen(_psrc: &str)->INT8U{
+    return 0;
+}
+
+/*
+*********************************************************************************************************
+*                                              IDLE TASK
+*
+* Description: This task is internal to uC/OS-II and executes whenever no other higher priority tasks
+*              executes because they are ALL waiting for event(s) to occur.
+*
+* Arguments  : none
+*
+* Returns    : none
+*
+* Note(s)    : 1) OSTaskIdleHook() is called after the critical section to ensure that interrupts will be
+*                 enabled for at least a few instructions.  On some processors (ex. Philips XA), enabling
+*                 and then disabling interrupts didn't allow the processor enough time to have interrupts
+*                 enabled before they were disabled again.  uC/OS-II would thus never recognize
+*                 interrupts.
+*              2) This hook has been added to allow you to do such things as STOP the CPU to conserve
+*                 power.
+*********************************************************************************************************
+*/
+
+fn OS_TaskIdle(){}
+
+/*
+*********************************************************************************************************
+*                                        CHECK ALL TASK STACKS
+*
+* Description: This function is called by OS_TaskStat() to check the stacks of each active task.
+*
+* Arguments  : none
+*
+* Returns    : none
+*********************************************************************************************************
+*/
+
+#[cfg(all(feature="OS_TASK_STAT_STK_CHK_EN",feature="OS_TASK_CREATE_EXT_EN"))]
+pub fn OS_TaskStatStkChk(){}
+
+/*
+*********************************************************************************************************
+*                                           INITIALIZE TCB
+*
+* Description: This function is internal to uC/OS-II and is used to initialize a Task Control Block when
+*              a task is created (see OSTaskCreate() and OSTaskCreateExt()).
+*
+* Arguments  : prio          is the priority of the task being created
+*
+*              ptos          is a pointer to the task's top-of-stack assuming that the CPU registers
+*                            have been placed on the stack.  Note that the top-of-stack corresponds to a
+*                            'high' memory location is OS_STK_GROWTH is set to 1 and a 'low' memory
+*                            location if OS_STK_GROWTH is set to 0.  Note that stack growth is CPU
+*                            specific.
+*
+*              pbos          is a pointer to the bottom of stack.  A NULL pointer is passed if called by
+*                            'OSTaskCreate()'.
+*
+*              id            is the task's ID (0..65535)
+*
+*              stk_size      is the size of the stack (in 'stack units').  If the stack units are INT8Us
+*                            then, 'stk_size' contains the number of bytes for the stack.  If the stack
+*                            units are INT32Us then, the stack contains '4 * stk_size' bytes.  The stack
+*                            units are established by the #define constant OS_STK which is CPU
+*                            specific.  'stk_size' is 0 if called by 'OSTaskCreate()'.
+*
+*              pext          is a pointer to a user supplied memory area that is used to extend the task
+*                            control block.  This allows you to store the contents of floating-point
+*                            registers, MMU registers or anything else you could find useful during a
+*                            context switch.  You can even assign a name to each task and store this name
+*                            in this TCB extension.  A NULL pointer is passed if called by OSTaskCreate().
+*
+*              opt           options as passed to 'OSTaskCreateExt()' or,
+*                            0 if called from 'OSTaskCreate()'.
+*
+* Returns    : OS_ERR_NONE              if the call was successful
+*              OS_ERR_TASK_NO_MORE_TCB  if there are no more free TCBs to be allocated and thus, the task
+*                                       cannot be created.
+*
+* Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
+*********************************************************************************************************
+*/
+
+pub fn OS_TCBInit(){}
+
