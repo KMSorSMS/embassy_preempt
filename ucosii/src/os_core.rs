@@ -692,5 +692,6 @@ pub fn OS_TaskStatStkChk(){}
 *********************************************************************************************************
 */
 
+/// need to rewrite it to use future
 pub fn OS_TCBInit(){}
 

@@ -638,6 +638,7 @@ pub struct OS_STK_DATA
 *********************************************************************************************************
 */
 
+/// need rewrite to use future
 pub(crate) struct OS_TCB
 {
     OSTCBStkPtr:OS_STK, /* Pointer to current top of stack                         */
@@ -673,6 +674,7 @@ pub(crate) struct OS_TCB
     // OS_FLAGS OSTCBFlagsRdy; /* Event flags that made task ready to run                 */
 
     OSTCBDly:INT32U,     /* Nbr ticks to delay task or, timeout waiting for event   */
+    // pub(crate) state: State,
     OSTCBStat:INT8U,     /* Task      status                                        */
     OSTCBStatPend:INT8U, /* Task PEND status                                        */
     OSTCBPrio:INT8U,     /* Task priority (0 == highest)                            */
@@ -697,6 +699,18 @@ pub(crate) struct OS_TCB
     
     #[cfg(feature="OS_TASK_NAME_EN")]
     OSTCBTaskName: str,
+}
+
+pub(crate) struct TaskHeader {
+    pub(crate) state: State,
+    pub(crate) run_queue_item: RunQueueItem,
+    pub(crate) executor: SyncUnsafeCell<Option<&'static SyncExecutor>>,
+    poll_fn: SyncUnsafeCell<Option<unsafe fn(TaskRef)>>,
+
+    #[cfg(feature = "integrated-timers")]
+    pub(crate) expires_at: SyncUnsafeCell<u64>,
+    #[cfg(feature = "integrated-timers")]
+    pub(crate) timer_queue_item: timer_queue::TimerQueueItem,
 }
 
 pub struct OS_TCB_REF{
