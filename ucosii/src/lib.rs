@@ -1,7 +1,8 @@
 #![no_std]
 #![warn(missing_docs)]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
-
+// #[macro_use]
+// extern crate lazy_static;
 /// This mod MUST go first, so that the others see its macros.
 pub(crate) mod fmt;
 
@@ -25,14 +26,16 @@ pub mod os_task;
 pub mod os_time;
 /// the mod of timer of uC/OS-II kernel
 pub mod os_tmr;
-/// the mod which define the data structure of uC/OS-II kernel
-pub mod ucosii;
 /// need to import port here
 pub mod port;
+/// the mod which define the data structure of uC/OS-II kernel
+pub mod ucosii;
+
+mod util;
 
 /*
 *********************************************************************************
-*                                  type define 
+*                                  type define
 *********************************************************************************
 */
 /// address is a raw pointer

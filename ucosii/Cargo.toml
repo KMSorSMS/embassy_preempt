@@ -12,7 +12,7 @@ lazy_static = "1.4.0"
 
 # this part only define features, don't decide whether the feature is active
 [features]
-default = ["defmt"]
+default = ["defmt","OS_MEM_EN" , "OS_PRIO_LESS_THAN_64"]
 nightly = []
 # this feature will be set in build.rs
 OS_EVENT_EN = []
