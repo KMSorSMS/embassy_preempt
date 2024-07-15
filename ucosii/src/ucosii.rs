@@ -29,11 +29,9 @@
 */
 
 use core::env;
-use core::ptr::NonNull;
 
 use crate::port::*;
-#[macro_use]
-extern crate lazy_static;
+use crate::*;
 
 /*
 *********************************************************************************************************
@@ -553,9 +551,17 @@ pub struct OS_MEM {
  */
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 #[allow(non_upper_case_globals)]
-static OSMemFreeList: *mut OS_MEM;
+static OSMemFreeList: *mut OS_MEM = core::ptr::null_mut();
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 const OS_MAX_MEM_PART: INT32U = env!("OS_MAX_MEM_PART").parse::<INT32U>().unwrap();
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 #[allow(non_upper_case_globals)]
-static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize];
+static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize] = [OS_MEM {
+    OSMemAddr: core::ptr::null_mut(),
+    OSMemFreeList: core::ptr::null_mut(),
+    OSMemNFree: 0,
+    OSMemNBlks: 0,
+    OSMemBlkSize: 0,
+    #[cfg(feature = "OS_MEM_NAME_EN")]
+    OSMemName: "",
+}; OS_MAX_MEM_PART as usize];

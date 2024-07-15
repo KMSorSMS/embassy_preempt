@@ -1,4 +1,5 @@
 [env]
+# the config of max_mem_part
 OS_MAX_MEM_PART = "5"
 # about message
 OS_Q_EN = "0"

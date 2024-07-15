@@ -43,7 +43,7 @@ use crate::port::*;
 */
 
 #[allow(unused)]
-const OS_UNMAP_TBL:[INT8U;256] = [
+const OS_UNMAP_TBL: [INT8U; 256] = [
     0, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x00 to 0x0F                   */
     4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x10 to 0x1F                   */
     5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0x20 to 0x2F                   */
@@ -59,7 +59,7 @@ const OS_UNMAP_TBL:[INT8U;256] = [
     6, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0xC0 to 0xCF                   */
     4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0xD0 to 0xDF                   */
     5, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0xE0 to 0xEF                   */
-    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0  /* 0xF0 to 0xFF                   */
+    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0, /* 0xF0 to 0xFF                   */
 ];
 
 /*
@@ -90,7 +90,7 @@ const OS_UNMAP_TBL:[INT8U;256] = [
 
 /// This function is used to obtain the name assigned to a semaphore, mutex, mailbox or queue.
 #[cfg(all(feature = "OS_EVENT_EN", feature = "OS_EVENT_NAME_EN"))]
-pub fn os_event_nameget(){}
+pub fn os_event_nameget() {}
 
 /*
 *********************************************************************************************************
@@ -120,7 +120,7 @@ pub fn os_event_nameget(){}
 
 /// This function assigns a name to a semaphore, mutex, mailbox or queue.
 #[cfg(all(feature = "OS_EVENT_EN", feature = "OS_EVENT_NAME_EN"))]
-pub fn os_event_nameset(){}
+pub fn os_event_nameset() {}
 
 /*
 *********************************************************************************************************
@@ -174,10 +174,10 @@ pub fn os_init() {}
 *********************************************************************************************************
 */
 
-/// This function is used to notify uC/OS-II that you are about to service 
-/// an interrupt service routine (ISR).  This allows uC/OS-II to keep track 
+/// This function is used to notify uC/OS-II that you are about to service
+/// an interrupt service routine (ISR).  This allows uC/OS-II to keep track
 /// of interrupt nesting and thus only perform rescheduling at the last nested ISR.
-pub fn os_int_enter(){}
+pub fn os_int_enter() {}
 
 /*
 *********************************************************************************************************
@@ -198,10 +198,10 @@ pub fn os_int_enter(){}
 *********************************************************************************************************
 */
 
-/// This function is used to notify uC/OS-II that you have completed servicing 
-/// an ISR.  When the last nested ISR has completed, uC/OS-II will call the 
+/// This function is used to notify uC/OS-II that you have completed servicing
+/// an ISR.  When the last nested ISR has completed, uC/OS-II will call the
 /// scheduler to determine whether a new, high-priority task, is ready to run.
-pub fn os_int_exit(){}
+pub fn os_int_exit() {}
 
 /*
 *********************************************************************************************************
@@ -220,10 +220,10 @@ pub fn os_int_exit(){}
 */
 
 /// This function is used to prevent rescheduling to take place.
-/// This allows your application to prevent context switches until 
+/// This allows your application to prevent context switches until
 /// you are ready to permit context switching.
-#[cfg(feature="OS_SCHED_LOCK_EN")]
-pub fn os_sched_lock(){}
+#[cfg(feature = "OS_SCHED_LOCK_EN")]
+pub fn os_sched_lock() {}
 
 /*
 *********************************************************************************************************
@@ -241,8 +241,8 @@ pub fn os_sched_lock(){}
 */
 
 /// This function is used to re-allow rescheduling.
-#[cfg(feature="OS_SCHED_LOCK_EN")]
-pub fn os_sched_unlock(){}
+#[cfg(feature = "OS_SCHED_LOCK_EN")]
+pub fn os_sched_unlock() {}
 
 /*
 *********************************************************************************************************
@@ -264,11 +264,11 @@ pub fn os_sched_unlock(){}
 *********************************************************************************************************
 */
 
-/// This function is used to start the multitasking process which lets 
-/// uC/OS-II manages the task that you have created.  Before you can call 
-/// OSStart(), you MUST have called OSInit() and you MUST have created at 
+/// This function is used to start the multitasking process which lets
+/// uC/OS-II manages the task that you have created.  Before you can call
+/// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
-pub fn os_start(){}
+pub fn os_start() {}
 
 /*
 *********************************************************************************************************
@@ -284,10 +284,10 @@ pub fn os_start(){}
 *********************************************************************************************************
 */
 
-/// This function is used to signal to uC/OS-II the occurrence of a 'system tick' 
-/// (also known as a 'clock tick').  This function should be called by the ticker 
+/// This function is used to signal to uC/OS-II the occurrence of a 'system tick'
+/// (also known as a 'clock tick').  This function should be called by the ticker
 /// ISR but, can also be called by a high priority task.
-pub fn os_timetick(){}
+pub fn os_timetick() {}
 
 /*
 *********************************************************************************************************
@@ -306,7 +306,7 @@ pub fn os_timetick(){}
 /// This function is used to return the version number of uC/OS-II.
 /// The returned value corresponds to uC/OS-II's version number multiplied by 10000.
 /// In other words, version 2.01.00 would be returned as 20100.
-pub fn os_version()->INT16U{
+pub fn os_version() -> INT16U {
     return 0;
 }
 
@@ -323,7 +323,7 @@ pub fn os_version()->INT16U{
 */
 
 /// This function doesn't do anything.  It is called by OSTaskDel().
-#[cfg(feature="OS_TASK_DEL_EN")]
+#[cfg(feature = "OS_TASK_DEL_EN")]
 pub fn os_dummy() {}
 
 /*
@@ -354,10 +354,10 @@ pub fn os_dummy() {}
 *********************************************************************************************************
 */
 
-/// This function is called by other uC/OS-II services and is used to ready 
+/// This function is called by other uC/OS-II services and is used to ready
 /// a task that was waiting for an event to occur.
-#[cfg(feature="OS_EVENT_EN")]
-pub fn os_event_task_rdy()->INT8U{
+#[cfg(feature = "OS_EVENT_EN")]
+pub fn os_event_task_rdy() -> INT8U {
     return 0;
 }
 
@@ -376,10 +376,10 @@ pub fn os_event_task_rdy()->INT8U{
 *********************************************************************************************************
 */
 
-/// This function is called by other uC/OS-II services to suspend a task 
+/// This function is called by other uC/OS-II services to suspend a task
 /// because an event has not occurred.
-#[cfg(feature="OS_EVENT_EN")]
-pub fn os_event_task_wait(){}
+#[cfg(feature = "OS_EVENT_EN")]
+pub fn os_event_task_wait() {}
 
 /*
 *********************************************************************************************************
@@ -398,8 +398,8 @@ pub fn os_event_task_wait(){}
 */
 
 /// Remove a task from an event's wait list.
-#[cfg(feature="OS_EVENT_EN")]
-pub fn os_event_task_remove(){}
+#[cfg(feature = "OS_EVENT_EN")]
+pub fn os_event_task_remove() {}
 
 /*
 *********************************************************************************************************
@@ -416,8 +416,8 @@ pub fn os_event_task_remove(){}
 */
 
 /// This function is called by other uC/OS-II services to initialize the event wait list.
-#[cfg(feature="OS_EVENT_EN")]
-pub fn os_event_wait_list_init(){}
+#[cfg(feature = "OS_EVENT_EN")]
+pub fn os_event_wait_list_init() {}
 
 /*
 *********************************************************************************************************
@@ -433,7 +433,7 @@ pub fn os_event_wait_list_init(){}
 */
 
 #[allow(unused)]
-fn os_init_event_list(){}
+fn os_init_event_list() {}
 
 /*
 *********************************************************************************************************
@@ -449,7 +449,7 @@ fn os_init_event_list(){}
 */
 
 #[allow(unused)]
-fn os_init_misc(){}
+fn os_init_misc() {}
 
 /*
 *********************************************************************************************************
@@ -465,7 +465,7 @@ fn os_init_misc(){}
 */
 
 #[allow(unused)]
-fn os_init_rdy_list(){}
+fn os_init_rdy_list() {}
 
 /*
 *********************************************************************************************************
@@ -481,7 +481,7 @@ fn os_init_rdy_list(){}
 */
 
 #[allow(unused)]
-fn os_init_task_idle(){}
+fn os_init_task_idle() {}
 
 /*
 *********************************************************************************************************
@@ -497,7 +497,7 @@ fn os_init_task_idle(){}
 */
 
 #[allow(unused)]
-fn os_init_tcblist(){}
+fn os_init_tcblist() {}
 
 /*
 *********************************************************************************************************
@@ -520,7 +520,7 @@ fn os_init_tcblist(){}
 */
 
 /// This function is called by other uC/OS-II services to clear a contiguous block of RAM.
-pub fn os_memclr(){}
+pub fn os_memclr() {}
 
 /*
 *********************************************************************************************************
@@ -546,9 +546,9 @@ pub fn os_memclr(){}
 *********************************************************************************************************
 */
 
-/// This function is called by other uC/OS-II services to copy a block of 
+/// This function is called by other uC/OS-II services to copy a block of
 /// memory from one location to another.
-pub fn os_memcopy(){}
+pub fn os_memcopy() {}
 
 /*
 *********************************************************************************************************
@@ -567,10 +567,10 @@ pub fn os_memcopy(){}
 *********************************************************************************************************
 */
 
-/// This function is called by other uC/OS-II services to determine whether a new, high 
+/// This function is called by other uC/OS-II services to determine whether a new, high
 /// priority task has been made ready to run.  This function is invoked by TASK level code
 /// and is not used to reschedule tasks from ISRs (see OSIntExit() for ISR rescheduling).
-pub fn os_sched(){}
+pub fn os_sched() {}
 
 /*
 *********************************************************************************************************
@@ -589,5 +589,4 @@ pub fn os_sched(){}
 */
 
 #[allow(unused)]
-fn os_sched_new(){}
-
+fn os_sched_new() {}

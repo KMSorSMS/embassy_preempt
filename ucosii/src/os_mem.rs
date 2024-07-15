@@ -25,8 +25,8 @@
 *********************************************************************************************************
 */
 
-use crate::{ucosii::OS_MEM, Addr};
-
+use crate::ucosii::*;
+use crate::Addr;
 
 /*
 *********************************************************************************************************
@@ -61,6 +61,4 @@ use crate::{ucosii::OS_MEM, Addr};
 */
 #[allow(unused)]
 #[no_mangle]
-pub fn OSMemCreate(addr: Addr, nblks: u32, blksize: u32, perr: *mut OsErrState) -> *mut OS_MEM {
-    
-}
+pub fn OSMemCreate(addr: Addr, nblks: u32, blksize: u32, perr: *mut OsErrState) -> *mut OS_MEM {}
