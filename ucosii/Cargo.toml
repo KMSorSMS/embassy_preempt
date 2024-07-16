@@ -12,7 +12,7 @@ log = { version = "0.4.14", optional = true }
 
 # this part only define features, don't decide whether the feature is active
 [features]
-default = ["defmt", "OS_MEM_EN", "OS_PRIO_LESS_THAN_64"]
+default = ["defmt", "OS_MEM_EN", "OS_PRIO_LESS_THAN_64","OS_ARG_CHK_EN"]
 nightly = []
 # this feature will be set in build.rs
 OS_EVENT_EN = []

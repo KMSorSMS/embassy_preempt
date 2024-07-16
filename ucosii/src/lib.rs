@@ -44,5 +44,5 @@ mod util;
 *********************************************************************************
 */
 /// address is a raw pointer
-pub type Addr = *mut u8;
-pub type VoidPtr = u32;
+pub type Addr = *mut core::ffi::c_void;
+pub type VoidPtr = *mut core::ffi::c_void;

@@ -24,11 +24,17 @@
 * Version  : V0.0.1
 *********************************************************************************************************
 */
-
-use crate::ucosii::*;
-use crate::*;
+#[cfg(feature = "OS_ARG_CHK_EN")]
 use core::mem::size_of;
 
+use crate::ucosii::OS_ERR_STATE::*;
+use crate::ucosii::*;
+use crate::*;
+
+
+#[allow(unused)]
+#[no_mangle]
+/// CREATE A MEMORY PARTITION
 /*
 *********************************************************************************************************
 *                                      CREATE A MEMORY PARTITION
@@ -60,12 +66,10 @@ use core::mem::size_of;
 *                              free partition is available.
 *********************************************************************************************************
 */
-#[allow(unused)]
-#[no_mangle]
 pub fn OSMemCreate(addr: VoidPtr, nblks: u32, blksize: u32, perr: *mut OS_ERR_STATE) -> *mut OS_MEM {
-    let pmem: *mut OS_MEM;
+    let mut pmem: *mut OS_MEM = 0 as *mut OS_MEM;
     let mut pblk: VoidPtr;
-    let plink: *mut VoidPtr;
+    let mut plink: *mut VoidPtr;
     let mut loops: u32;
     let mut i: u32;
     #[cfg(feature = "OS_SAFETY_CRITICAL")]
@@ -81,29 +85,44 @@ pub fn OSMemCreate(addr: VoidPtr, nblks: u32, blksize: u32, perr: *mut OS_ERR_ST
     {
         if addr.is_null() {
             /* Must pass a valid address for the memory part.*/
-            *perr = OS_ERR_MEM_INVALID_ADDR;
+            unsafe {
+                *perr = OS_ERR_MEM_INVALID_ADDR;
+            }
             return (0 as *mut OS_MEM);
         }
-        if (addr as u32) & (size_of(VoidPtr) - 1) != 0 {
+        if (addr as usize) & (size_of::<VoidPtr>() - 1) != 0 {
             /* Must be pointer size aligned.*/
-            *perr = OS_ERR_MEM_INVALID_ADDR;
+            unsafe { *perr = OS_ERR_MEM_INVALID_ADDR };
             return (0 as *mut OS_MEM);
         }
         if (nblks < 2) {
             /* Must have at least 2 blocks.*/
-            *perr = OS_ERR_MEM_INVALID_BLKS;
+            unsafe { *perr = OS_ERR_MEM_INVALID_BLKS };
             return (0 as *mut OS_MEM);
         }
-        if blksize < size_of(VoidPtr) {
+        if (blksize as usize) < size_of::<VoidPtr>() {
             /* Must be able to hold at least a pointer.*/
-            *perr = OS_ERR_MEM_INVALID_SIZE;
+            unsafe { *perr = OS_ERR_MEM_INVALID_SIZE };
             return (0 as *mut OS_MEM);
         }
     }
     // enter critical to protect the memory partition
-    if critical_section::with(|cs|{
-        
-    }){
-
+    pmem = critical_section::with(|cs| {
+        /* Get next free memory partition                */
+        pmem = unsafe { OSMemFreeList as *mut OS_MEM };
+        if (!unsafe { OSMemFreeList.is_null() }) {
+            /* Remove this memory partition from free list */
+            unsafe {
+                OSMemFreeList = (*(OSMemFreeList as (*mut OS_MEM))).OSMemFreeList;
+            };
+        }
+        pmem
+    });
+    if (pmem.is_null()) {
+        /* No more memory partitions available */
+        unsafe { *perr = OS_ERR_MEM_INVALID_PART };
+        return (0 as *mut OS_MEM);
     }
+    plink = addr as *mut VoidPtr;
+    pmem
 }
