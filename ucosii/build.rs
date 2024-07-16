@@ -46,4 +46,6 @@ fn main() {
     if os_event_name_en == 1 {
         println!("cargo:rustc-cfg=feature=\"OS_EVENT_NAME_EN\"");
     }
+    // about loom cfg
+    // println!("cargo::rustc-check-cfg=cfg(loom)");
 }
