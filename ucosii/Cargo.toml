@@ -8,11 +8,13 @@ cortex-m = { version = "0.7.6", optional = true }
 critical-section = "1.1"
 defmt = { version = "0.3", optional = true }
 log = { version = "0.4.14", optional = true }
+# futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
+
 # lazy_static = "1.4.0"
 
 # this part only define features, don't decide whether the feature is active
 [features]
-default = ["defmt", "OS_MEM_EN", "OS_PRIO_LESS_THAN_64","OS_ARG_CHK_EN"]
+default = ["defmt", "OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN"]
 nightly = []
 # this feature will be set in build.rs
 OS_EVENT_EN = []
@@ -35,6 +37,11 @@ OS_TASK_PROFILE_EN = []
 OS_TASK_NAME_EN = []
 OS_SAFETY_CRITICAL = []
 OS_ARG_CHK_EN = []
-OS_MAX_QS=[]
-OS_TASK_REG_TBL_SIZE=[]
-OS_TASK_STAT_STK_CHK_EN=[]
+OS_MAX_QS = []
+OS_TASK_REG_TBL_SIZE = []
+OS_TASK_STAT_STK_CHK_EN = []
+host = []
+atomics = []                 # use hardware atomics from core::sync::atomic
+xip = []                     # enable optimizations for execute in place
+[target.'cfg(loom)'.dependencies]
+loom = { version = "0.7", features = ["checkpoint"] }

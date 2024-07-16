@@ -2,11 +2,17 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
+#![feature(allocator_api)]
+#![feature(alloc_layout_extra)]
+#![feature(slice_ptr_get)]
+#![feature(sync_unsafe_cell)]
+#![feature(alloc_error_handler)]
 #![warn(missing_docs)]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
 // #[macro_use]
 // extern crate lazy_static;
 /// This mod MUST go first, so that the others see its macros.
+extern crate alloc;
 pub(crate) mod fmt;
 
 /// the mod of uC/OS-II kernel
@@ -36,8 +42,22 @@ pub mod cfg;
 /// the mod which define the data structure of uC/OS-II kernel
 pub mod ucosii;
 
-mod util;
+#[macro_use]
+pub mod atomic_macros;
+pub mod helper;
 
+mod heap;
+
+mod util;
+mod platform;
+mod lang_items;
+
+/// Re-exports for use inside macros.
+#[doc(hidden)]
+pub mod _rt {
+    pub use ::core;
+    pub use crate::helper;
+}
 /*
 *********************************************************************************
 *                                  type define
@@ -45,4 +65,5 @@ mod util;
 */
 /// address is a raw pointer
 pub type Addr = *mut core::ffi::c_void;
+/// Unsigned  8 bit quantity
 pub type VoidPtr = *mut core::ffi::c_void;
