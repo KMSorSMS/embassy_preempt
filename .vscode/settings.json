@@ -31,8 +31,17 @@
     "OS_TASK_DEL_EN",
     "OS_PRIO_LESS_THAN_64",
     "OS_MEM_EN",
-    "OS_MAX_MEM_PART_EN"
+    "OS_MAX_MEM_PART_EN",
     // "OS_PRIO_LESS_THAN_256"
+    "OS_MUTEX_EN",
+    "OS_Q_EN",
+    "OS_SEM_EN",
+    "OS_TASK_CREATE_EXT_EN",
+    "OS_TASK_PROFILE_EN",
+    "OS_TASK_NAME_EN",
+    "OS_MAX_QS",
+    "OS_TASK_REG_TBL_SIZE",
+    "OS_TASK_STAT_STK_CHK_EN",
   ],
   "rust-analyzer.linkedProjects": [
     // "embassy-stm32/Cargo.toml",
