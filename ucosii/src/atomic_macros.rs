@@ -1,3 +1,5 @@
+//！ the the macro of atomic operation
+
 macro_rules! load_atomic {
     ($atomic:expr, $ordering:ident) => {{
         #[cfg(not(any(feature = "atomics", loom)))]
@@ -100,6 +102,7 @@ macro_rules! load_try_modify_atomic {
     }};
 }
 
+#[allow(unused)]
 macro_rules! swap_atomic {
     ($atomic:expr, $value:expr, $ordering:ident) => {{
         #[cfg(not(any(feature = "atomics", loom)))]
@@ -113,6 +116,7 @@ macro_rules! swap_atomic {
     }};
 }
 
+#[allow(unused)]
 macro_rules! fetch_or_atomic {
     ($atomic:expr, $value:expr, $ordering:ident) => {{
         #[cfg(not(any(feature = "atomics", loom)))]
@@ -126,6 +130,7 @@ macro_rules! fetch_or_atomic {
     }};
 }
 
+#[allow(unused)]
 macro_rules! fetch_and_atomic {
     ($atomic:expr, $value:expr, $ordering:ident) => {{
         #[cfg(not(any(feature = "atomics", loom)))]

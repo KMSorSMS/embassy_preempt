@@ -3,6 +3,8 @@
 *                                  type define
 *********************************************************************************
 */
+#![allow(non_camel_case_types)]
+
 /// Unsigned  8 bit quantity
 pub type BOOLEAN = bool;
 /// Unsigned  8 bit quantity  
@@ -26,9 +28,8 @@ pub type PTR = u32;
 /// the usize type used in array
 pub type USIZE = usize;
 
-#[allow(non_camel_case_types)]
+
 /// Each stack entry is 32-bit wide
 pub type OS_STK = u32;
 /// Define size of CPU status register (PSR = 32 bits)
-#[allow(non_camel_case_types)]
 pub type OS_CPU_SR = u32;
