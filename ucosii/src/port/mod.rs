@@ -27,7 +27,8 @@ pub type PTR = u32;
 pub type USIZE = usize;
 
 #[allow(non_camel_case_types)]
-pub type OS_STK = u32;    /* Each stack entry is 32-bit wide                    */
+/// Each stack entry is 32-bit wide
+pub type OS_STK = u32;
 /// Define size of CPU status register (PSR = 32 bits)
 #[allow(non_camel_case_types)]
 pub type OS_CPU_SR = u32;
