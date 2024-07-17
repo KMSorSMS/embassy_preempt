@@ -43,6 +43,7 @@ pub mod cfg;
 pub mod ucosii;
 
 #[macro_use]
+/// the atomic_macros module is used to define atomic operations
 pub mod atomic_macros;
 pub mod helper;
 
@@ -57,6 +58,10 @@ mod lang_items;
 pub mod _rt {
     pub use ::core;
     pub use crate::helper;
+}
+/// define the global allocator
+heap!{
+    
 }
 /*
 *********************************************************************************

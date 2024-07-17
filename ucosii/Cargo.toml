@@ -1,13 +1,46 @@
+[workspace.package]
+version = "0.1.0"
+authors = ["liam","noah"]
+edition = "2021"
+repository = "https://github.com/KMSorSMS/embassy_preempt"
+license = "MIT OR Apache-2.0"
+
 [package]
 name = "ucosii"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+repository.workspace = true
+license.workspace = true
+readme = "README.md"
+
+[workspace]
+members = [ "config","macros","macros-core"]
+
+[workspace.dependencies.ucosii-macros]
+version = "=0.1.0"
+path = "macros"
+
+[workspace.dependencies.ucosii-macros-core]
+version = "=0.1.0"
+path = "macros-core"
+
+[workspace.dependencies.ucosii-config]
+version = "=0.1.0"
+path = "config"
+
+[workspace.dependencies]
+proc-macro2 = "1.0.43"
+quote = "1.0.21"
+syn = "1.0.99"
 
 [dependencies]
 cortex-m = { version = "0.7.6", optional = true }
 critical-section = "1.1"
 defmt = { version = "0.3", optional = true }
 log = { version = "0.4.14", optional = true }
+ucosii-macros.workspace = true
+
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
 
 # lazy_static = "1.4.0"
@@ -46,4 +79,4 @@ xip = []                     # enable optimizations for execute in place
 [target.'cfg(loom)'.dependencies]
 loom = { version = "0.7", features = ["checkpoint"] }
 [lints.rust]
- unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
