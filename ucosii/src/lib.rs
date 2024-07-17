@@ -2,7 +2,8 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
-#![warn(missing_docs)]
+#![allow(unused)]
+// #![warn(missing_docs)]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
 // #[macro_use]
 // extern crate lazy_static;
@@ -44,5 +45,5 @@ mod util;
 *********************************************************************************
 */
 /// address is a raw pointer
-pub type Addr = *mut u8;
-pub type VoidPtr = u32;
+pub type Addr = *mut core::ffi::c_void;
+pub type VoidPtr = *mut core::ffi::c_void;

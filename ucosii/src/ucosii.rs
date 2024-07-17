@@ -536,17 +536,18 @@ pub struct OS_MBOX_DATA
 *********************************************************************************************************
 */
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
+#[derive(Copy,Clone)]
 pub struct OS_MEM {
     OSMemAddr: Addr,      /* Pointer to beginning of memory partition              */
-    OSMemFreeList: Addr,  /* Pointer to list of free memory blocks                 */
+    pub OSMemFreeList: Addr,  /* Pointer to list of free memory blocks                 */
     OSMemBlkSize: INT32U, /* Size (in bytes) of each block in the partition        */
     OSMemNBlks: INT32U,   /* Total number of blocks in the partition               */
     OSMemNFree: INT32U,   /* Number of free memory blocks in the partition         */
     #[cfg(feature = "OS_MEM_NAME_EN")]
     OSMemName: str, /* Memory partition name                                */
 }
-unsafe impl Sync for OS_MEM {}
 
+unsafe impl Sync for OS_MEM {}
 pub struct OS_MEM_DATA{
     OSAddr:PTR,     /* Ptr to the beginning address of the memory partition    */
     OSFreeList:PTR, /* Ptr to the beginning of the free list of memory blocks  */
@@ -591,6 +592,7 @@ pub(crate) struct OS_Q
 }
 
 /// the ref to OS_Q
+#[cfg(feature = "OS_Q_EN")]
 pub struct OS_Q_REF{
     ptr:NonNull<OS_Q>,
 }
@@ -717,6 +719,19 @@ pub struct OS_TCB_REF{
     ptr:NonNull<OS_TCB>,
 }
 
+// pub(crate) struct TaskHeader {
+//     pub(crate) state: State,
+//     pub(crate) run_queue_item: RunQueueItem,
+//     pub(crate) executor: SyncUnsafeCell<Option<&'static SyncExecutor>>,
+//     poll_fn: SyncUnsafeCell<Option<unsafe fn(TaskRef)>>,
+
+//     #[cfg(feature = "integrated-timers")]
+//     pub(crate) expires_at: SyncUnsafeCell<u64>,
+//     #[cfg(feature = "integrated-timers")]
+//     pub(crate) timer_queue_item: timer_queue::TimerQueueItem,
+// }
+
+
 /*
 *********************************************************************************************************
 *                                          TIMER DATA TYPES
@@ -736,11 +751,13 @@ pub struct OS_TCB_REF{
 */
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 #[allow(non_upper_case_globals)]
-static mut OSMemFreeList: *mut OS_MEM = core::ptr::null_mut();
+/// the free memory partition table list
+pub static mut OSMemFreeList: Addr = core::ptr::null_mut(); 
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 // const OS_MAX_MEM_PART: INT32U = env!("OS_MAX_MEM_PART").parse::<INT32U>().unwrap();
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 #[allow(non_upper_case_globals)]
+/// the memory partition table
 static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize] = [OS_MEM {
     OSMemAddr: core::ptr::null_mut(),
     OSMemFreeList: core::ptr::null_mut(),
@@ -750,3 +767,4 @@ static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize] = [OS_MEM {
     #[cfg(feature = "OS_MEM_NAME_EN")]
     OSMemName: "",
 }; OS_MAX_MEM_PART as usize];
+
