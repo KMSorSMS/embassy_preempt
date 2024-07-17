@@ -2,17 +2,12 @@
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
-<<<<<<< HEAD
-#![allow(unused)]
-// #![warn(missing_docs)]
-=======
 #![feature(allocator_api)]
 #![feature(alloc_layout_extra)]
 #![feature(slice_ptr_get)]
 #![feature(sync_unsafe_cell)]
 #![feature(alloc_error_handler)]
 #![warn(missing_docs)]
->>>>>>> 4c8ba2c58ef52ecfd5d688313a262d3d6b90f95f
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
 // #[macro_use]
 // extern crate lazy_static;
@@ -47,6 +42,7 @@ pub mod cfg;
 /// the mod which define the data structure of uC/OS-II kernel
 pub mod ucosii;
 
+/// the the macro of atomic operation
 #[macro_use]
 pub mod atomic_macros;
 pub mod helper;

@@ -607,6 +607,7 @@ fn OS_SchedNew() {}
 *********************************************************************************************************
 */
 
+/// This function is called by other uC/OS-II services to determine the size of an ASCII string (excluding the NUL character)
 pub fn OS_StrLen(_psrc: &str)->INT8U{
     return 0;
 }
@@ -632,6 +633,7 @@ pub fn OS_StrLen(_psrc: &str)->INT8U{
 *********************************************************************************************************
 */
 
+#[allow(unused)]
 fn OS_TaskIdle(){}
 
 /*
@@ -646,6 +648,7 @@ fn OS_TaskIdle(){}
 *********************************************************************************************************
 */
 
+/// his function is called by OS_TaskStat() to check the stacks of each active task.
 #[cfg(all(feature="OS_TASK_STAT_STK_CHK_EN",feature="OS_TASK_CREATE_EXT_EN"))]
 pub fn OS_TaskStatStkChk(){}
 

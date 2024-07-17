@@ -8,6 +8,7 @@ pub use self::interrputs::Interrupts;
 use core::cell::UnsafeCell;
 use crate::helper::Runtime;
 
+#[allow(unused)]
 extern "C" {
     fn drone_reset() -> !;
     fn drone_save_and_disable_interrupts() -> u32;
@@ -104,6 +105,7 @@ pub fn reset() -> ! {
 ///
 /// This function is very unsafe, because it directly overwrites the memory.
 #[inline]
+#[allow(unused)]
 pub unsafe fn zeroed_mem_init(base: &UnsafeCell<usize>, end: &UnsafeCell<usize>) {
     // Need to use assembly code, because pure Rust code can be optimized to use the
     // compiler builtin `memcpy`, which may be not available yet.
@@ -141,6 +143,7 @@ pub unsafe fn zeroed_mem_init(base: &UnsafeCell<usize>, end: &UnsafeCell<usize>)
 ///
 /// This function is very unsafe, because it directly overwrites the memory.
 #[inline]
+#[allow(unused)]
 pub unsafe fn data_mem_init(
     load: &UnsafeCell<usize>,
     base: &UnsafeCell<usize>,

@@ -3,6 +3,8 @@ use core::mem::MaybeUninit;
 use core::ptr;
 
 pub(crate) struct UninitCell<T>(MaybeUninit<UnsafeCell<T>>);
+
+#[allow(unused)]
 impl<T> UninitCell<T> {
     pub const fn uninit() -> Self {
         Self(MaybeUninit::uninit())

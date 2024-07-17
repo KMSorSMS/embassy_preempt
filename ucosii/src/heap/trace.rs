@@ -3,6 +3,7 @@ use core::alloc::Layout;
 use core::mem;
 
 #[inline(always)]
+#[allow(unused)]
 pub fn allocate(trace_stream: u8, layout: Layout) {
     #[inline(never)]
     fn trace(trace_stream: u8, layout: Layout) {
@@ -16,6 +17,7 @@ pub fn allocate(trace_stream: u8, layout: Layout) {
 }
 
 #[inline(always)]
+#[allow(unused)]
 pub fn deallocate(trace_stream: u8, layout: Layout) {
     #[inline(never)]
     fn trace(trace_stream: u8, layout: Layout) {
@@ -29,6 +31,7 @@ pub fn deallocate(trace_stream: u8, layout: Layout) {
 }
 
 #[inline(always)]
+#[allow(unused)]
 pub fn grow(trace_stream: u8, old_layout: Layout, new_layout: Layout) {
     #[inline(never)]
     fn trace(trace_stream: u8, old_layout: Layout, new_layout: Layout) {
@@ -42,6 +45,7 @@ pub fn grow(trace_stream: u8, old_layout: Layout, new_layout: Layout) {
 }
 
 #[inline(always)]
+#[allow(unused)]
 pub fn shrink(trace_stream: u8, old_layout: Layout, new_layout: Layout) {
     #[inline(never)]
     fn trace(trace_stream: u8, old_layout: Layout, new_layout: Layout) {

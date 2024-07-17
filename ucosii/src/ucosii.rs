@@ -41,12 +41,15 @@ use crate::*;
 *********************************************************************************************************
 */
 
+#[allow(unused)]
 const OS_PRIO_SELF: INT32U = 0xFF; /* Indicate SELF priority                      */
+#[allow(unused)]
 const OS_PRIO_MUTEX_CEIL_DIS: INT32U = 0xFF; /* Disable mutex priority ceiling promotion    */
 
 #[cfg(feature = "OS_TASK_STAT_EN")]
 const OS_N_SYS_TASKS: INT32U = 2; /* Number of system tasks                      */
 #[cfg(not(feature = "OS_TASK_STAT_EN"))]
+#[allow(unused)]
 const OS_N_SYS_TASKS: INT32U = 1;
 
 // lazy_static! {
@@ -57,7 +60,9 @@ const OS_N_SYS_TASKS: INT32U = 1;
 
 // by noah：maybe because the lazy_static, the const val can be calculate when it is used for the first time
 // maybe use a static val is a good choice.
+#[allow(unused)]
 const OS_TASK_STAT_PRIO: INT32U = OS_LOWEST_PRIO - 1; /* Statistic task priority                     */
+#[allow(unused)]
 const OS_TASK_IDLE_PRIO: INT32U = OS_LOWEST_PRIO; /* IDLE      task priority                     */
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
@@ -65,10 +70,14 @@ const OS_EVENT_TBL_SIZE: USIZE = (OS_LOWEST_PRIO / 8 + 1) as USIZE;  /* Size of 
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
 const OS_EVENT_TBL_SIZE: INT32U = OS_LOWEST_PRIO / 16 + 1; /* Size of event table                         */
 
+#[allow(unused)]
 const OS_RDY_TBL_SIZE: USIZE = OS_EVENT_TBL_SIZE; /* Size of ready table                         */
 
+#[allow(unused)]
 const OS_TASK_IDLE_ID: INT32U = 65535; /* ID numbers for Idle, Stat and Timer tasks   */
+#[allow(unused)]
 const OS_TASK_STAT_ID: INT32U = 65534;
+#[allow(unused)]
 const OS_TASK_TMR_ID: INT32U = 65533;
 
 /*
@@ -229,10 +238,15 @@ const OS_POST_OPT_NO_SCHED: INT32U = 0x04; /* Do not call the scheduler if this 
 *********************************************************************************************************
 */
 
+#[allow(unused)]
 const OS_TASK_OPT_NONE: INT32U = 0x0000; /* NO option selected                                      */
+#[allow(unused)]
 const OS_TASK_OPT_STK_CHK: INT32U = 0x0001; /* Enable stack checking for the task                      */
+#[allow(unused)]
 const OS_TASK_OPT_STK_CLR: INT32U = 0x0002; /* Clear the stack when the task is create                 */
+#[allow(unused)]
 const OS_TASK_OPT_SAVE_FP: INT32U = 0x0004; /* Save the contents of any floating-point registers       */
+#[allow(unused)]
 const OS_TASK_OPT_NO_TLS: INT32U = 0x0008; /* Specify that task doesn't needs TLS                     */
 
 /*
@@ -241,12 +255,17 @@ const OS_TASK_OPT_NO_TLS: INT32U = 0x0008; /* Specify that task doesn't needs TL
 *********************************************************************************************************
 */
 
+#[allow(unused)]
 const OS_TMR_OPT_NONE: INT32U = 0; /* No option selected                                      */
 
+#[allow(unused)]
 const OS_TMR_OPT_ONE_SHOT: INT32U = 1; /* Timer will not automatically restart when it expires    */
+#[allow(unused)]
 const OS_TMR_OPT_PERIODIC: INT32U = 2; /* Timer will     automatically restart when it expires    */
 
+#[allow(unused)]
 const OS_TMR_OPT_CALLBACK: INT32U = 3; /* OSTmrStop() option to call 'callback' w/ timer arg.     */
+#[allow(unused)]
 const OS_TMR_OPT_CALLBACK_ARG: INT32U = 4; /* OSTmrStop() option to call 'callback' w/ new   arg.     */
 
 /*
@@ -255,9 +274,13 @@ const OS_TMR_OPT_CALLBACK_ARG: INT32U = 4; /* OSTmrStop() option to call 'callba
 *********************************************************************************************************
 */
 
+#[allow(unused)]
 const OS_TMR_STATE_UNUSED: INT32U = 0;
+#[allow(unused)]
 const OS_TMR_STATE_STOPPED: INT32U = 1;
+#[allow(unused)]
 const OS_TMR_STATE_COMPLETED: INT32U = 2;
+#[allow(unused)]
 const OS_TMR_STATE_RUNNING: INT32U = 3;
 
 
@@ -467,7 +490,9 @@ pub enum OS_ERR_STATE {
 *********************************************************************************************************
 */
 
+/// the prio type defination in the rust-uC
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
+#[allow(non_camel_case_types)]
 pub type OS_PRIO = INT8U;
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
@@ -488,6 +513,7 @@ compile_error!("You may not enable both `OS_PRIO_LESS_THAN_64` and `OS_PRIO_LESS
 
 /// the ref of ECB
 #[cfg(feature = "OS_EVENT_EN")]
+#[allow(unused)]
 pub struct OS_EVENT_REF {
     ptr: NonNull<OS_EVENT>,
 }
@@ -495,11 +521,13 @@ pub struct OS_EVENT_REF {
 /// the value of osevent_ptr, which can be a message or a queue structure
 #[cfg(feature = "OS_EVENT_EN")]
 pub enum ECBPTR {
+    /// the event ptr
     Event(OS_EVENT_REF),
 }
 
 // only need to expose to current crate
 #[cfg(feature = "OS_EVENT_EN")]
+#[allow(unused)]
 pub(crate) struct OS_EVENT {
     OSEventType: INT8U,         /* Type of event control block (see OS_EVENT_TYPE_xxxx)    */
     OSEventPtr: Option<ECBPTR>, /* Pointer to message or queue structure                   */
@@ -537,9 +565,12 @@ pub struct OS_MBOX_DATA
 */
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 #[derive(Copy,Clone)]
+#[allow(unused)]
+/// the OS_MEM
 pub struct OS_MEM {
     OSMemAddr: Addr,      /* Pointer to beginning of memory partition              */
-    pub OSMemFreeList: Addr,  /* Pointer to list of free memory blocks                 */
+    /// Pointer to list of free memory blocks
+    pub OSMemFreeList: Addr,
     OSMemBlkSize: INT32U, /* Size (in bytes) of each block in the partition        */
     OSMemNBlks: INT32U,   /* Total number of blocks in the partition               */
     OSMemNFree: INT32U,   /* Number of free memory blocks in the partition         */
@@ -548,6 +579,9 @@ pub struct OS_MEM {
 }
 
 unsafe impl Sync for OS_MEM {}
+
+/// the data of the os mem part
+#[allow(unused)]
 pub struct OS_MEM_DATA{
     OSAddr:PTR,     /* Ptr to the beginning address of the memory partition    */
     OSFreeList:PTR, /* Ptr to the beginning of the free list of memory blocks  */
@@ -563,7 +597,9 @@ pub struct OS_MEM_DATA{
 *********************************************************************************************************
 */
 
+/// the data of the mutex
 #[cfg(feature="OS_MUTEX_EN")]
+#[allow(unused)]
 pub struct OS_MUTEX_DATA
 {
     OSEventTbl:[OS_PRIO;OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
@@ -580,6 +616,7 @@ pub struct OS_MUTEX_DATA
 */
 
 #[cfg(feature = "OS_Q_EN")]
+#[allow(unused)]
 pub(crate) struct OS_Q
 {                        /* QUEUE CONTROL BLOCK                                     */
     osqptr:Option<OS_Q_REF>, /* Link to next queue control block in list of free blocks */
@@ -593,11 +630,14 @@ pub(crate) struct OS_Q
 
 /// the ref to OS_Q
 #[cfg(feature = "OS_Q_EN")]
+#[allow(unused)]
 pub struct OS_Q_REF{
     ptr:NonNull<OS_Q>,
 }
 
+/// the data of the OS message queue
 #[cfg(feature = "OS_Q_EN")]
+#[allow(unused)]
 pub struct OS_Q_DATA
 {
     OSMsg:PTR,                           /* Pointer to next message to be extracted from queue      */
@@ -613,7 +653,9 @@ pub struct OS_Q_DATA
 *********************************************************************************************************
 */
 
+/// the data of the OS semphore
 #[cfg(feature="OS_SEM_EN")]
+#[allow(unused)]
 pub struct OS_SEM_DATA
 {
     OSCnt:INT16U,                          /* Semaphore count                                         */
@@ -627,7 +669,9 @@ pub struct OS_SEM_DATA
 *********************************************************************************************************
 */
 
+/// the data of the OS stk
 #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+#[allow(unused)]
 pub struct OS_STK_DATA
 {
     OSFree:INT32U, /* Number of free entries on the stack                     */
@@ -641,6 +685,7 @@ pub struct OS_STK_DATA
 */
 
 /// need rewrite to use future
+#[allow(unused)]
 pub(crate) struct OS_TCB
 {
     OSTCBStkPtr:OS_STK, /* Pointer to current top of stack                         */
@@ -715,6 +760,8 @@ pub(crate) struct OS_TCB
 //     pub(crate) timer_queue_item: timer_queue::TimerQueueItem,
 // }
 
+/// the ref of the TCB
+#[allow(unused)]
 pub struct OS_TCB_REF{
     ptr:NonNull<OS_TCB>,
 }
@@ -757,6 +804,7 @@ pub static mut OSMemFreeList: Addr = core::ptr::null_mut();
 // const OS_MAX_MEM_PART: INT32U = env!("OS_MAX_MEM_PART").parse::<INT32U>().unwrap();
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 #[allow(non_upper_case_globals)]
+#[allow(unused)]
 /// the memory partition table
 static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize] = [OS_MEM {
     OSMemAddr: core::ptr::null_mut(),
