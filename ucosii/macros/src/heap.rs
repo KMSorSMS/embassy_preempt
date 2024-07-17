@@ -1,5 +1,5 @@
-use drone_config::{Layout, LAYOUT_CONFIG};
-use drone_macros_core::parse_error;
+use ucosii_config::{Layout, LAYOUT_CONFIG};
+use ucosii_macros_core::parse_error;
 use heck::ToShoutySnakeCase;
 use proc_macro::TokenStream;
 use proc_macro2::{Span, TokenStream as TokenStream2, TokenTree as TokenTree2};

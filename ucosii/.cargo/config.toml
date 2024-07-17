@@ -1,3 +1,4 @@
+[target.'cfg(target_os = "none")']
 [env]
 # the config of max_mem_part
 OS_MAX_MEM_PART = "5"

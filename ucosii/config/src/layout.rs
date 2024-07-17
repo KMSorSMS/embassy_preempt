@@ -3,7 +3,7 @@
 use crate::{
     addr, size, HEAP_POOL_SIZE, HEAP_PREFIX_SIZE, STREAM_GLOBAL_RUNTIME_SIZE, STREAM_RUNTIME_SIZE,
 };
-use MIN_BUFFER_SIZE;
+use ucosii_stream::MIN_BUFFER_SIZE;
 use eyre::{bail, eyre, Result, WrapErr};
 use indexmap::IndexMap;
 use serde::{Deserialize, Serialize};

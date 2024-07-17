@@ -15,7 +15,7 @@ license.workspace = true
 readme = "README.md"
 
 [workspace]
-members = [ "config","macros","macros-core"]
+members = [ "config","macros","macros-core", "stream"]
 
 [workspace.dependencies.ucosii-macros]
 version = "=0.1.0"
@@ -29,10 +29,16 @@ path = "macros-core"
 version = "=0.1.0"
 path = "config"
 
+[workspace.dependencies.ucosii-stream]
+version = "0.1.0"
+path = "stream"
+
 [workspace.dependencies]
 proc-macro2 = "1.0.43"
 quote = "1.0.21"
 syn = "1.0.99"
+eyre = "0.6.8"
+serde = { version = "1.0.144", features = ["derive"] }
 
 [dependencies]
 cortex-m = { version = "0.7.6", optional = true }
@@ -40,6 +46,8 @@ critical-section = "1.1"
 defmt = { version = "0.3", optional = true }
 log = { version = "0.4.14", optional = true }
 ucosii-macros.workspace = true
+ucosii-config.workspace = true
+ucosii-stream.workspace = true
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
 
@@ -73,6 +81,7 @@ OS_ARG_CHK_EN = []
 OS_MAX_QS = []
 OS_TASK_REG_TBL_SIZE = []
 OS_TASK_STAT_STK_CHK_EN = []
+std = []
 host = []
 atomics = []                 # use hardware atomics from core::sync::atomic
 xip = []                     # enable optimizations for execute in place
