@@ -2,7 +2,7 @@
 
 use crate::platform::Interrupts;
 use core::ptr;
-use super::{GlobalRuntime, Runtime, HEADER_LENGTH};
+use ucosii_stream::{GlobalRuntime, Runtime, HEADER_LENGTH};
 
 const DEFAULT_TRANSACTION_LENGTH: u8 = 64;
 
