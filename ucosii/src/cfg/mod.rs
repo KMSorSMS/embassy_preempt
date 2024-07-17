@@ -1,6 +1,3 @@
-/// this mod is used to config the OS
-pub mod config;
-
 use crate::port::*;
 
 /// the const val define the lowest prio

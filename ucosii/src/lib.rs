@@ -9,9 +9,12 @@
 #![feature(alloc_error_handler)]
 #![warn(missing_docs)]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
-// #[macro_use]
-// extern crate lazy_static;
 /// This mod MUST go first, so that the others see its macros.
+/*
+********************************************************************************************************************************************
+*                                                               pub mod
+********************************************************************************************************************************************
+*/
 extern crate alloc;
 pub(crate) mod fmt;
 
@@ -41,6 +44,10 @@ pub mod port;
 pub mod cfg;
 /// the mod which define the data structure of uC/OS-II kernel
 pub mod ucosii;
+/// the async scheduler(executor) of rust uC
+pub mod executor;
+/// the stk allocator
+pub mod stk_allocator;
 
 /// the the macro of atomic operation
 #[macro_use]
@@ -59,10 +66,19 @@ pub mod _rt {
     pub use ::core;
     pub use crate::helper;
 }
+
 /*
-*********************************************************************************
-*                                  type define
-*********************************************************************************
+********************************************************************************************************************************************
+*                                                               import mod
+********************************************************************************************************************************************
+*/
+
+
+
+/*
+********************************************************************************************************************************************
+*                                                               type define
+********************************************************************************************************************************************
 */
 /// address is a raw pointer
 pub type Addr = *mut core::ffi::c_void;
