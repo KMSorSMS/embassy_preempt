@@ -38,7 +38,7 @@ linked_list_allocator = "0.9.0"
 
 # this part only define features, don't decide whether the feature is active
 [features]
-default = ["defmt", "OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN"]
+default = ["defmt", "OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN"]
 nightly = []
 # this feature will be set in build.rs
 OS_EVENT_EN = []
@@ -77,4 +77,5 @@ atomics = []                 # use hardware atomics from core::sync::atomic
 xip = []                     # enable optimizations for execute in place
 [target.'cfg(loom)'.dependencies]
 loom = { version = "0.7", features = ["checkpoint"] }
+[lints.rust]
 unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
