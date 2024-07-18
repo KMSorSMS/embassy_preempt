@@ -9,7 +9,7 @@ critical-section = "1.1"
 defmt = { version = "0.3", optional = true }
 log = { version = "0.4.14", optional = true }
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
-
+# use lazy static to define global variables
 # lazy_static = "1.4.0"
 
 # this part only define features, don't decide whether the feature is active
@@ -40,6 +40,13 @@ OS_ARG_CHK_EN = []
 OS_MAX_QS = []
 OS_TASK_REG_TBL_SIZE = []
 OS_TASK_STAT_STK_CHK_EN = []
+OS_MAX_MEM_PART=[]
+OS_FLAG_EN=[]
+OS_MAX_FLAGS=[]
+OS_TMR_EN=[]
+OS_CPU_HOOKS_EN=[]
+OS_DEBUG_EN=[]
+OS_TIME_GET_SET_EN=[]
 host = []
 atomics = []                 # use hardware atomics from core::sync::atomic
 xip = []                     # enable optimizations for execute in place

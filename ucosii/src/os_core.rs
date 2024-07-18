@@ -31,7 +31,13 @@
 *********************************************************************************************************
 */
 
+use os_cpu::*;
+
+use crate::os_q::OS_QInit;
 use crate::port::*;
+
+use crate::os_mem::OS_MemInit;
+use crate::ucosii::OSTime;
 
 /*
 *********************************************************************************************************
@@ -136,18 +142,44 @@ pub fn OSEventNameSet() {}
 */
 /// This function is used to initialize the internals of uC/OS-II and MUST be called
 /// prior to creating any uC/OS-II object and, prior to calling OSStart().
-pub fn OSInit() {}
-// info!("if os is running in os_init? {}", unsafe {
-//     uc_thread::os_core::OS_IS_RUNNING
-// });
-// OSInitHookBegin();
-// OS_InitMisc();
-// OS_InitRdyList();
-// OS_InitTCBList();
-// OS_InitEventList();
-// OS_MemInit();
-// OS_QInit();
-// OS_InitTaskIdle();
+pub fn OSInit() {
+
+    OSInitHookBegin();/* Call port specific initialization code   */
+
+    OS_InitMisc();/* Initialize miscellaneous variables       */
+
+    OS_InitRdyList();/* Initialize the Ready List                */
+
+    OS_InitTCBList(); /* Initialize the free list of OS_TCBs      */
+
+    OS_InitEventList(); /* Initialize the free list of OS_EVENTs    */
+
+    #[cfg(all(feature="OS_MEM_EN",feature="OS_MAX_MEM_PART_EN"))]
+    OS_MemInit(); /* Initialize the memory manager            */
+
+    #[cfg(all(feature="OS_Q_EN",feature="OS_MAX_QS"))]
+    OS_QInit();
+
+    // maybe there is still no need to implement idle task
+    OS_InitTaskIdle();
+
+    #[cfg(all(feature="OS_FLAG_EN",feature="OS_MAX_FLAGS"))]
+    OS_FlagInit(); /* Initialize the event flag structures     */
+
+    #[cfg(feature="OS_TASK_STAT_EN")]
+    OS_InitTaskStat(); /* Create the Statistic Task                */
+
+    #[cfg(feature="OS_TMR_EN")]
+    OSTmr_Init(); /* Initialize the Timer Manager             */
+
+    #[cfg(feature="OS_CPU_HOOKS_EN")]
+    OSInitHookEnd(); /* Call port specific init. code            */
+
+    #[cfg(feature="OS_DEBUG_EN")]
+    OSDebugInit();
+
+}
+
 
 /*
 *********************************************************************************************************
@@ -449,7 +481,11 @@ fn OS_InitEventList() {}
 */
 
 #[allow(unused)]
-fn OS_InitMisc() {}
+fn OS_InitMisc() {
+    /* Clear the 32-bit system clock            */
+    // #[cfg(feature="OS_TIME_GET_SET_EN")]
+    // OSTime.store(val, order)
+}
 
 /*
 *********************************************************************************************************
@@ -696,5 +732,7 @@ pub fn OS_TaskStatStkChk(){}
 */
 
 /// need to rewrite it to use future
-pub fn OS_TCBInit(){}
+pub fn OS_TCBInit(){
+
+}
 
