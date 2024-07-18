@@ -126,3 +126,8 @@ pub fn OSMemCreate(addr: VoidPtr, nblks: u32, blksize: u32, perr: *mut OS_ERR_ST
     plink = addr as *mut VoidPtr;
     pmem
 }
+
+/// init the mem
+pub fn OS_MemInit(){
+
+}

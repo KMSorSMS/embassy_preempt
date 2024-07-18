@@ -34,3 +34,6 @@ pub type USIZE = usize;
 pub type OS_STK = u32;
 /// Define size of CPU status register (PSR = 32 bits)
 pub type OS_CPU_SR = u32;
+
+
+pub mod os_cpu;

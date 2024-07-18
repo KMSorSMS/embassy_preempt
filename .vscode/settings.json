@@ -45,6 +45,8 @@
     "OS_TASK_STAT_STK_CHK_EN",
     "OS_MEM_EN",
     "OS_MAX_MEM_PART_EN",
+    // "OS_MAX_MEM_PART",
+    "OS_TIME_GET_SET_EN",
   ],
   "rust-analyzer.linkedProjects": [
     // "embassy-stm32/Cargo.toml",

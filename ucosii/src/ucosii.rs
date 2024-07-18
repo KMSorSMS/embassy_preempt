@@ -29,6 +29,10 @@
 */
 
 use core::ptr::NonNull;
+use core::sync::atomic::AtomicU32;
+// use RefCell;
+
+// use lazy_static::lazy_static;
 
 use crate::port::*;
 use crate::cfg::*;
@@ -700,6 +704,7 @@ pub struct OS_STK_DATA
 /*
 *********************************************************************************************************
 *                                          GLOBAL VARIABLES
+*                this part contains the static vars instead of const which need to be changed
 *********************************************************************************************************
 */
 #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
@@ -721,4 +726,10 @@ static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize] = [OS_MEM {
     #[cfg(feature = "OS_MEM_NAME_EN")]
     OSMemName: "",
 }; OS_MAX_MEM_PART as usize];
+
+#[cfg(feature = "OS_TIME_GET_SET_EN")]
+/// the time tick, record the absolute time
+pub static OSTime: AtomicU32=AtomicU32::new(0);
+
+// if we use the lazy static, we need to read
 
