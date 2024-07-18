@@ -7,6 +7,7 @@
 #![feature(slice_ptr_get)]
 #![feature(sync_unsafe_cell)]
 #![feature(alloc_error_handler)]
+#![feature(const_mut_refs)]
 #![warn(missing_docs)]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
 // #[macro_use]
@@ -53,12 +54,6 @@ mod util;
 mod platform;
 mod lang_items;
 
-/// Re-exports for use inside macros.
-#[doc(hidden)]
-pub mod _rt {
-    pub use ::core;
-    pub use crate::helper;
-}
 
 /*
 *********************************************************************************

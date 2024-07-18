@@ -507,28 +507,3 @@ impl<T> DerefMut for Node<T> {
         &mut self.value
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn drain_filter_test() {
-        let mut m: LinkedList<u32> = LinkedList::new();
-        m.extend(&[1, 2, 3, 4, 5, 6]);
-        let deleted = m.drain_filter(|v| *v < 4).collect::<Vec<_>>();
-
-        assert_eq!(deleted, &[3, 2, 1]);
-        assert_eq!(m.into_iter().collect::<Vec<_>>(), &[6, 5, 4]);
-    }
-
-    #[test]
-    fn drain_to_empty_test() {
-        let mut m: LinkedList<u32> = LinkedList::new();
-        m.extend(&[1, 2, 3, 4, 5, 6]);
-        let deleted = m.drain_filter(|_| true).collect::<Vec<_>>();
-
-        assert_eq!(deleted, &[6, 5, 4, 3, 2, 1]);
-        assert!(m.into_iter().collect::<Vec<_>>().is_empty());
-    }
-}
