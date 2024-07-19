@@ -5,14 +5,14 @@
   "[markdown]": {
     "editor.formatOnSave": false
   },
-  "rust-analyzer.check.allTargets": false,
+  "rust-analyzer.check.allTargets": true,
   "rust-analyzer.check.noDefaultFeatures": true,
   "rust-analyzer.cargo.noDefaultFeatures": true,
   "rust-analyzer.showUnlinkedFileNotification": false,
   // Uncomment the target of your chip.
   //"rust-analyzer.cargo.target": "thumbv6m-none-eabi",
   //"rust-analyzer.cargo.target": "thumbv7m-none-eabi",
-  "rust-analyzer.cargo.target": "thumbv7em-none-eabi",
+  // "rust-analyzer.cargo.target": "thumbv7em-none-eabi",
   //"rust-analyzer.cargo.target": "thumbv7em-none-eabihf",
   //"rust-analyzer.cargo.target": "thumbv8m.main-none-eabihf",
   "rust-analyzer.cargo.features": [
@@ -22,8 +22,8 @@
     // "unstable-pac",
     // "exti",
     // "rt",
-    "defmt",
     // "log",
+    "defmt",
     "nightly",
     "OS_EVENT_EN",
     "OS_EVENT_NAME_EN",
@@ -79,6 +79,7 @@
     // "examples/stm32wl/Cargo.toml",
     // "examples/wasm/Cargo.toml",
     // "examples/stm32f401re/Cargo.toml",
-    "ucosii/Cargo.toml"
+    "ucosii/Cargo.toml",
+    // "embassy-executor/Cargo.toml",
   ],
 }

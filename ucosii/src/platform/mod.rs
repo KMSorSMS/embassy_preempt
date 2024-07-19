@@ -6,7 +6,7 @@ mod interrputs;
 
 pub use self::interrputs::Interrupts;
 use core::cell::UnsafeCell;
-use crate::helper::Runtime;
+use ucosii_stream::Runtime;
 
 #[allow(unused)]
 extern "C" {
