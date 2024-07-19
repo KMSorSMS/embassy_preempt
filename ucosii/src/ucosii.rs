@@ -29,7 +29,7 @@
 */
 
 use core::ptr::NonNull;
-use core::sync::atomic::AtomicU32;
+use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU8};
 // use RefCell;
 
 // use lazy_static::lazy_static;
@@ -727,9 +727,28 @@ static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize] = [OS_MEM {
     OSMemName: "",
 }; OS_MAX_MEM_PART as usize];
 
+/// Current value of system time (in ticks)
 #[cfg(feature = "OS_TIME_GET_SET_EN")]
-/// the time tick, record the absolute time
 pub static OSTime: AtomicU32=AtomicU32::new(0);
 
-// if we use the lazy static, we need to read
+/// Interrupt nesting level
+pub static OSIntNesting:AtomicU8=AtomicU8::new(0);
 
+/// Multitasking lock nesting level
+pub static OSLockNesting:AtomicU8=AtomicU8::new(0);
+
+/// Number of tasks created
+pub static OSTaskCtr:AtomicU8=AtomicU8::new(0);
+
+/// Flag indicating that kernel is running
+pub static OSRunning:AtomicBool=AtomicBool::new(false);
+
+/// Counter of number of context switches
+pub static OSCtxSwCtr:AtomicU32=AtomicU32::new(0);
+
+/// Idle counter
+pub static OSIdleCtr:AtomicU32=AtomicU32::new(0);
+
+/// Next available Task register ID
+#[cfg(feature="OS_TASK_REG_TBL_SIZE")]
+pub static OSTaskRegNextAvailID:AtomicU8=AtomicU8::new(0);

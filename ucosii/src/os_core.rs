@@ -484,7 +484,7 @@ fn OS_InitEventList() {}
 fn OS_InitMisc() {
     /* Clear the 32-bit system clock            */
     // #[cfg(feature="OS_TIME_GET_SET_EN")]
-    // OSTime.store(val, order)
+    // OSTime.store(val, order);
 }
 
 /*
