@@ -31,13 +31,15 @@
 *********************************************************************************************************
 */
 
+
+use core::sync::atomic::Ordering;
+
 use os_cpu::*;
 
 use crate::os_q::OS_QInit;
 use crate::port::*;
 
-use crate::os_mem::OS_MemInit;
-use crate::ucosii::OSTime;
+use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSRunning, OSTaskCtr, OSTaskRegNextAvailID, OSTime};
 
 /*
 *********************************************************************************************************
@@ -154,8 +156,8 @@ pub fn OSInit() {
 
     OS_InitEventList(); /* Initialize the free list of OS_EVENTs    */
 
-    #[cfg(all(feature="OS_MEM_EN",feature="OS_MAX_MEM_PART_EN"))]
-    OS_MemInit(); /* Initialize the memory manager            */
+    // #[cfg(all(feature="OS_MEM_EN",feature="OS_MAX_MEM_PART_EN"))]
+    // OS_MemInit(); /* Initialize the memory manager            */
 
     #[cfg(all(feature="OS_Q_EN",feature="OS_MAX_QS"))]
     OS_QInit();
@@ -480,11 +482,34 @@ fn OS_InitEventList() {}
 *********************************************************************************************************
 */
 
+// by noah: maybe we can use Ordering::Relaxed?
 #[allow(unused)]
 fn OS_InitMisc() {
-    /* Clear the 32-bit system clock            */
-    // #[cfg(feature="OS_TIME_GET_SET_EN")]
-    // OSTime.store(val, order);
+    #[cfg(feature="OS_TIME_GET_SET_EN")]
+    OSTime.store(0, Ordering::Release);/* Clear the 32-bit system clock            */
+
+    OSIntNesting.store(0, Ordering::Release);/* Clear the interrupt nesting counter     */
+    OSLockNesting.store(0, Ordering::Release);/* Clear the scheduling lock counter        */
+
+    OSTaskCtr.store(0, Ordering::Release);/* Clear the number of tasks                */
+
+    OSRunning.store(false,Ordering::Release);/* Indicate that multitasking not started   */
+
+    OSCtxSwCtr.store(0,Ordering::Release);/* Clear the context switch counter         */
+    OSIdleCtr.store(0, Ordering::Release);/* Clear the 32-bit idle counter            */
+
+    #[cfg(feature="OS_TASK_STAT_EN")]
+    OSIdleCtrRun.store(0,Ordering::Release);
+    #[cfg(feature="OS_TASK_STAT_EN")]
+    OSIdleCtrMax.store(0,Ordering::Release);
+    #[cfg(feature="OS_TASK_STAT_EN")]
+    OSStatRdy.store(false, Ordering::Release);
+
+    #[cfg(feature="OS_SAFETY_CRITICAL_IEC61508")]
+    OSSafetyCriticalStartFlag.store(false, Ordering::Release);
+
+    #[cfg(feature="OS_TASK_REG_TBL_SIZE")]
+    OSTaskRegNextAvailID.store(0,Ordering::Release);
 }
 
 /*
