@@ -27,7 +27,7 @@ use crate::util::UninitCell;
 /// the TCB of the task. It contains the task's info
 #[allow(unused)]
 // we put it in executor crate to use "pub(crate)" to make it can be used in the other mod in order to reduce coupling
-pub(crate) struct OS_TCB{
+pub struct OS_TCB{
     // it maybe None
     OSTCBStkPtr:Option<OS_STK_REF>, /* Pointer to current top of stack                         */
     // Task specific extension. If the OS_TASK_CREATE_EXT_EN feature is not active, it will be None
@@ -102,8 +102,12 @@ pub struct OS_TASK_STORAGE<F: Future + 'static>{
 #[derive(Clone, Copy)]
 #[allow(unused)]
 pub struct OS_TCB_REF{
-    ptr:NonNull<OS_TCB>,
+    /// the pointer to the TCB
+    pub ptr:NonNull<OS_TCB>,
 }
+
+unsafe impl Sync for OS_TCB_REF{}
+unsafe impl Send for OS_TCB_REF{}
 
 /*
 ****************************************************************************************************************************************
@@ -164,7 +168,10 @@ impl <F: Future + 'static>OS_TASK_STORAGE<F>{
     }
 }
 
-
-impl OS_TCB_REF{
-    
+/// by noah: maybe we can impl deref and default for it
+impl Default for OS_TCB_REF{
+    fn default()->Self{
+        // by noah:dangling is used to create a dangling pointer, which is just like the null pointer in C
+        OS_TCB_REF{ptr:NonNull::dangling()}
+    }
 }

@@ -74,7 +74,7 @@ mod lang_items;
 *                                                               type define
 ********************************************************************************************************************************************
 */
-/// address is a raw pointer
-pub type Addr = *mut core::ffi::c_void;
-/// Unsigned  8 bit quantity
-pub type VoidPtr = *mut core::ffi::c_void;
+// /// address is a raw pointer
+// pub type Addr = *mut core::ffi::c_void;
+// /// Unsigned  8 bit quantity
+// pub type VoidPtr = *mut core::ffi::c_void;

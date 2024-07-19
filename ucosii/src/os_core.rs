@@ -33,13 +33,18 @@
 
 
 use core::sync::atomic::Ordering;
-
+use core::cell::RefCell;
+use critical_section::Mutex;
 use os_cpu::*;
 
 use crate::os_q::OS_QInit;
 use crate::port::*;
 
-use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSRunning, OSTaskCtr, OSTaskRegNextAvailID, OSTime};
+use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSRdyGrp, OSRdyTbl, OSRunning, OSTaskCtr, OSTime,OSPrioCur,OSPrioHighRdy};
+#[cfg(feature="OS_TASK_REG_TBL_SIZE")]
+use crate::ucosii::OSTaskRegNextAvailID;
+
+use crate::ucosii::OS_RDY_TBL_SIZE;
 
 /*
 *********************************************************************************************************
@@ -148,7 +153,8 @@ pub fn OSInit() {
 
     OSInitHookBegin();/* Call port specific initialization code   */
 
-    OS_InitMisc();/* Initialize miscellaneous variables       */
+    // by noah: this func is no need to be called because we give the static var init val
+    // OS_InitMisc();/* Initialize miscellaneous variables       */
 
     OS_InitRdyList();/* Initialize the Ready List                */
 
@@ -525,8 +531,26 @@ fn OS_InitMisc() {
 *********************************************************************************************************
 */
 
+// init the ready bit map
 #[allow(unused)]
-fn OS_InitRdyList() {}
+fn OS_InitRdyList() {
+    /* Clear the ready list                     */
+    OSRdyGrp.store(0, Ordering::Release);
+
+    OSPrioCur.store(0, Ordering::Release);
+
+    OSPrioHighRdy.store(0, Ordering::Release);
+
+    // by noah: to init static var with type Mutex, we need a cs
+    critical_section::with(|cs|{
+        // init the ready table
+        OSRdyTbl.borrow_ref_mut(cs).iter_mut().for_each(|x| {
+            *x = 0;// set the array element to 0
+        });
+
+        // OSTCBCur.borrow_ref_mut(cs).
+    })
+}
 
 /*
 *********************************************************************************************************
