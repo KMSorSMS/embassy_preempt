@@ -752,3 +752,5 @@ pub static OSIdleCtr:AtomicU32=AtomicU32::new(0);
 /// Next available Task register ID
 #[cfg(feature="OS_TASK_REG_TBL_SIZE")]
 pub static OSTaskRegNextAvailID:AtomicU8=AtomicU8::new(0);
+
+
