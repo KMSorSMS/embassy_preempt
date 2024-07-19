@@ -54,12 +54,10 @@ pub mod stk_allocator;
 #[macro_use]
 /// the atomic_macros module is used to define atomic operations
 pub mod atomic_macros;
-pub mod helper;
 
 mod heap;
 
 mod util;
-mod platform;
 mod lang_items;
 
 
