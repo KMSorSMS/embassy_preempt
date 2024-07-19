@@ -28,16 +28,16 @@
 *********************************************************************************************************
 */
 
+use core::cell::RefCell;
 use core::ptr::NonNull;
 use core::sync::atomic::{AtomicBool, AtomicU32, AtomicU8};
-// use RefCell;
 
-// use lazy_static::lazy_static;
+use critical_section::Mutex;
+use lazy_static::lazy_static;
 
-use crate::port::*;
 use crate::cfg::*;
-use crate::*;
-
+use crate::executor::OS_TCB_REF;
+use crate::port::*;
 
 /*
 *********************************************************************************************************
@@ -70,12 +70,13 @@ const OS_TASK_STAT_PRIO: INT32U = OS_LOWEST_PRIO - 1; /* Statistic task priority
 const OS_TASK_IDLE_PRIO: INT32U = OS_LOWEST_PRIO; /* IDLE      task priority                     */
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
-const OS_EVENT_TBL_SIZE: USIZE = (OS_LOWEST_PRIO / 8 + 1) as USIZE;  /* Size of event table                         */
+const OS_EVENT_TBL_SIZE: USIZE = (OS_LOWEST_PRIO / 8 + 1) as USIZE; /* Size of event table                         */
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
 const OS_EVENT_TBL_SIZE: INT32U = OS_LOWEST_PRIO / 16 + 1; /* Size of event table                         */
 
+/// Size of ready table
 #[allow(unused)]
-const OS_RDY_TBL_SIZE: USIZE = OS_EVENT_TBL_SIZE; /* Size of ready table                         */
+pub const OS_RDY_TBL_SIZE: USIZE = OS_EVENT_TBL_SIZE;
 
 #[allow(unused)]
 const OS_TASK_IDLE_ID: INT32U = 65535; /* ID numbers for Idle, Stat and Timer tasks   */
@@ -286,7 +287,6 @@ const OS_TMR_STATE_STOPPED: INT32U = 1;
 const OS_TMR_STATE_COMPLETED: INT32U = 2;
 #[allow(unused)]
 const OS_TMR_STATE_RUNNING: INT32U = 3;
-
 
 /*
 *********************************************************************************************************
@@ -536,10 +536,10 @@ pub(crate) struct OS_EVENT {
     OSEventType: INT8U,         /* Type of event control block (see OS_EVENT_TYPE_xxxx)    */
     OSEventPtr: Option<ECBPTR>, /* Pointer to message or queue structure                   */
     OSEventCnt: INT16U,         /* Semaphore Count (not used if other EVENT type)          */
-    OSEventGrp: OS_PRIO,         /* Group corresponding to tasks waiting for event to occur */
+    OSEventGrp: OS_PRIO,        /* Group corresponding to tasks waiting for event to occur */
     OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE as usize], /* List of tasks waiting for event to occur                */
     #[cfg(feature = "OS_EVENT_NAME_EN")]
-    OSEventName: str,    // the name of the event
+    OSEventName: str, // the name of the event
 }
 
 /*
@@ -555,11 +555,10 @@ pub(crate) struct OS_EVENT {
 */
 
 #[cfg(feature = "OS_MBOX_EN")]
-pub struct OS_MBOX_DATA
-{
-    OSMsg:PTR,                           /* Pointer to message in mailbox                           */
-    OSEventTbl:[OS_PRIO;OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
-    OSEventGrp:OS_PRIO,                    /* Group corresponding to tasks waiting for event to occur */
+pub struct OS_MBOX_DATA {
+    OSMsg: PTR,                               /* Pointer to message in mailbox                           */
+    OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
+    OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
 }
 
 /*
@@ -567,32 +566,32 @@ pub struct OS_MBOX_DATA
 *                                  MEMORY PARTITION DATA STRUCTURES
 *********************************************************************************************************
 */
-#[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
-#[derive(Copy,Clone)]
-#[allow(unused)]
-/// the OS_MEM
-pub struct OS_MEM {
-    OSMemAddr: Addr,      /* Pointer to beginning of memory partition              */
-    /// Pointer to list of free memory blocks
-    pub OSMemFreeList: Addr,
-    OSMemBlkSize: INT32U, /* Size (in bytes) of each block in the partition        */
-    OSMemNBlks: INT32U,   /* Total number of blocks in the partition               */
-    OSMemNFree: INT32U,   /* Number of free memory blocks in the partition         */
-    #[cfg(feature = "OS_MEM_NAME_EN")]
-    OSMemName: str, /* Memory partition name                                */
-}
+// #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
+// #[derive(Copy,Clone)]
+// #[allow(unused)]
+// /// the OS_MEM
+// pub struct OS_MEM {
+//     OSMemAddr: Addr,      /* Pointer to beginning of memory partition              */
+//     /// Pointer to list of free memory blocks
+//     pub OSMemFreeList: Addr,
+//     OSMemBlkSize: INT32U, /* Size (in bytes) of each block in the partition        */
+//     OSMemNBlks: INT32U,   /* Total number of blocks in the partition               */
+//     OSMemNFree: INT32U,   /* Number of free memory blocks in the partition         */
+//     #[cfg(feature = "OS_MEM_NAME_EN")]
+//     OSMemName: str, /* Memory partition name                                */
+// }
 
-unsafe impl Sync for OS_MEM {}
+// unsafe impl Sync for OS_MEM {}
 
 /// the data of the os mem part
 #[allow(unused)]
-pub struct OS_MEM_DATA{
-    OSAddr:PTR,     /* Ptr to the beginning address of the memory partition    */
-    OSFreeList:PTR, /* Ptr to the beginning of the free list of memory blocks  */
-    OSBlkSize:INT32U, /* Size (in bytes) of each memory block                    */
-    OSNBlks:INT32U,   /* Total number of blocks in the partition                 */
-    OSNFree:INT32U,   /* Number of memory blocks free                            */
-    OSNUsed:INT32U    /* Number of memory blocks used                            */
+pub struct OS_MEM_DATA {
+    OSAddr: PTR,       /* Ptr to the beginning address of the memory partition    */
+    OSFreeList: PTR,   /* Ptr to the beginning of the free list of memory blocks  */
+    OSBlkSize: INT32U, /* Size (in bytes) of each memory block                    */
+    OSNBlks: INT32U,   /* Total number of blocks in the partition                 */
+    OSNFree: INT32U,   /* Number of memory blocks free                            */
+    OSNUsed: INT32U,   /* Number of memory blocks used                            */
 }
 
 /*
@@ -602,15 +601,14 @@ pub struct OS_MEM_DATA{
 */
 
 /// the data of the mutex
-#[cfg(feature="OS_MUTEX_EN")]
+#[cfg(feature = "OS_MUTEX_EN")]
 #[allow(unused)]
-pub struct OS_MUTEX_DATA
-{
-    OSEventTbl:[OS_PRIO;OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
-    OSEventGrp:OS_PRIO,                    /* Group corresponding to tasks waiting for event to occur */
-    OSValue:BOOLEAN,                       /* Mutex value (OS_FALSE = used, OS_TRUE = available)      */
-    OSOwnerPrio:INT8U,                     /* Mutex owner's task priority or 0xFF if no owner         */
-    OSMutexPCP:INT8U,                       /* Priority Ceiling Priority or 0xFF if PCP disabled       */
+pub struct OS_MUTEX_DATA {
+    OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
+    OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
+    OSValue: BOOLEAN,                         /* Mutex value (OS_FALSE = used, OS_TRUE = available)      */
+    OSOwnerPrio: INT8U,                       /* Mutex owner's task priority or 0xFF if no owner         */
+    OSMutexPCP: INT8U,                        /* Priority Ceiling Priority or 0xFF if PCP disabled       */
 }
 
 /*
@@ -621,34 +619,33 @@ pub struct OS_MUTEX_DATA
 
 #[cfg(feature = "OS_Q_EN")]
 #[allow(unused)]
-pub(crate) struct OS_Q
-{                        /* QUEUE CONTROL BLOCK                                     */
-    osqptr:Option<OS_Q_REF>, /* Link to next queue control block in list of free blocks */
-    osqstart:PTR,     /* Ptr to start of queue data. is a second level ptr          */
-    osqend:PTR,       /* Ptr to end   of queue data.is a second level ptr            */
-    osqin:PTR,        /* Ptr to where next message will be inserted  in   the Q. is a second level ptr*/
-    osqout:PTR,       /* Ptr to where next message will be extracted from the Q. is a second level ptr*/
-    osqsize:INT16U,      /* Size of queue (maximum number of entries)               */
-    osqentries:INT16U,   /* Current number of entries in the queue                  */
+pub(crate) struct OS_Q {
+    /* QUEUE CONTROL BLOCK                                     */
+    osqptr: Option<OS_Q_REF>, /* Link to next queue control block in list of free blocks */
+    osqstart: PTR,            /* Ptr to start of queue data. is a second level ptr          */
+    osqend: PTR,              /* Ptr to end   of queue data.is a second level ptr            */
+    osqin: PTR,               /* Ptr to where next message will be inserted  in   the Q. is a second level ptr*/
+    osqout: PTR,              /* Ptr to where next message will be extracted from the Q. is a second level ptr*/
+    osqsize: INT16U,          /* Size of queue (maximum number of entries)               */
+    osqentries: INT16U,       /* Current number of entries in the queue                  */
 }
 
 /// the ref to OS_Q
 #[cfg(feature = "OS_Q_EN")]
 #[allow(unused)]
-pub struct OS_Q_REF{
-    ptr:NonNull<OS_Q>,
+pub struct OS_Q_REF {
+    ptr: NonNull<OS_Q>,
 }
 
 /// the data of the OS message queue
 #[cfg(feature = "OS_Q_EN")]
 #[allow(unused)]
-pub struct OS_Q_DATA
-{
-    OSMsg:PTR,                           /* Pointer to next message to be extracted from queue      */
-    OSNMsgs:INT16U,                        /* Number of messages in message queue                     */
-    OSQSize:INT16U,                        /* Size of message queue                                   */
-    OSEventTbl:[OS_PRIO;OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur         */
-    OSEventGrp:OS_PRIO,                    /* Group corresponding to tasks waiting for event to occur */
+pub struct OS_Q_DATA {
+    OSMsg: PTR,                               /* Pointer to next message to be extracted from queue      */
+    OSNMsgs: INT16U,                          /* Number of messages in message queue                     */
+    OSQSize: INT16U,                          /* Size of message queue                                   */
+    OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur         */
+    OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
 }
 
 /*
@@ -658,13 +655,12 @@ pub struct OS_Q_DATA
 */
 
 /// the data of the OS semphore
-#[cfg(feature="OS_SEM_EN")]
+#[cfg(feature = "OS_SEM_EN")]
 #[allow(unused)]
-pub struct OS_SEM_DATA
-{
-    OSCnt:INT16U,                          /* Semaphore count                                         */
-    OSEventTbl:[OS_PRIO;OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
-    OSEventGrp:OS_PRIO,                    /* Group corresponding to tasks waiting for event to occur */
+pub struct OS_SEM_DATA {
+    OSCnt: INT16U,                            /* Semaphore count                                         */
+    OSEventTbl: [OS_PRIO; OS_EVENT_TBL_SIZE], /* List of tasks waiting for event to occur                */
+    OSEventGrp: OS_PRIO,                      /* Group corresponding to tasks waiting for event to occur */
 }
 
 /*
@@ -674,12 +670,11 @@ pub struct OS_SEM_DATA
 */
 
 /// the data of the OS stk
-#[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+#[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
 #[allow(unused)]
-pub struct OS_STK_DATA
-{
-    OSFree:INT32U, /* Number of free entries on the stack                     */
-    OSUsed:INT32U, /* Number of entries used on the stack                     */
+pub struct OS_STK_DATA {
+    OSFree: INT32U, /* Number of free entries on the stack                     */
+    OSUsed: INT32U, /* Number of entries used on the stack                     */
 }
 
 /*
@@ -707,50 +702,79 @@ pub struct OS_STK_DATA
 *                this part contains the static vars instead of const which need to be changed
 *********************************************************************************************************
 */
-#[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
-#[allow(non_upper_case_globals)]
-/// the free memory partition table list
-pub static mut OSMemFreeList: Addr = core::ptr::null_mut(); 
-#[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
+// #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
+// #[allow(non_upper_case_globals)]
+// /// the free memory partition table list
+// pub static mut OSMemFreeList: Addr = core::ptr::null_mut();
+// #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
 // const OS_MAX_MEM_PART: INT32U = env!("OS_MAX_MEM_PART").parse::<INT32U>().unwrap();
-#[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
-#[allow(non_upper_case_globals)]
-#[allow(unused)]
-/// the memory partition table
-static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize] = [OS_MEM {
-    OSMemAddr: core::ptr::null_mut(),
-    OSMemFreeList: core::ptr::null_mut(),
-    OSMemNFree: 0,
-    OSMemNBlks: 0,
-    OSMemBlkSize: 0,
-    #[cfg(feature = "OS_MEM_NAME_EN")]
-    OSMemName: "",
-}; OS_MAX_MEM_PART as usize];
+// #[cfg(all(feature = "OS_MEM_EN", feature = "OS_MAX_MEM_PART_EN"))]
+// #[allow(non_upper_case_globals)]
+// #[allow(unused)]
+// /// the memory partition table
+// static OSMemTbl: [OS_MEM; OS_MAX_MEM_PART as usize] = [OS_MEM {
+//     OSMemAddr: core::ptr::null_mut(),
+//     OSMemFreeList: core::ptr::null_mut(),
+//     OSMemNFree: 0,
+//     OSMemNBlks: 0,
+//     OSMemBlkSize: 0,
+//     #[cfg(feature = "OS_MEM_NAME_EN")]
+//     OSMemName: "",
+// }; OS_MAX_MEM_PART as usize];
 
 /// Current value of system time (in ticks)
 #[cfg(feature = "OS_TIME_GET_SET_EN")]
-pub static OSTime: AtomicU32=AtomicU32::new(0);
+pub static OSTime: AtomicU32 = AtomicU32::new(0);
 
 /// Interrupt nesting level
-pub static OSIntNesting:AtomicU8=AtomicU8::new(0);
+pub static OSIntNesting: AtomicU8 = AtomicU8::new(0);
 
 /// Multitasking lock nesting level
-pub static OSLockNesting:AtomicU8=AtomicU8::new(0);
+pub static OSLockNesting: AtomicU8 = AtomicU8::new(0);
 
 /// Number of tasks created
-pub static OSTaskCtr:AtomicU8=AtomicU8::new(0);
+pub static OSTaskCtr: AtomicU8 = AtomicU8::new(0);
 
 /// Flag indicating that kernel is running
-pub static OSRunning:AtomicBool=AtomicBool::new(false);
+pub static OSRunning: AtomicBool = AtomicBool::new(false);
 
 /// Counter of number of context switches
-pub static OSCtxSwCtr:AtomicU32=AtomicU32::new(0);
+pub static OSCtxSwCtr: AtomicU32 = AtomicU32::new(0);
 
 /// Idle counter
-pub static OSIdleCtr:AtomicU32=AtomicU32::new(0);
+pub static OSIdleCtr: AtomicU32 = AtomicU32::new(0);
 
 /// Next available Task register ID
-#[cfg(feature="OS_TASK_REG_TBL_SIZE")]
-pub static OSTaskRegNextAvailID:AtomicU8=AtomicU8::new(0);
+#[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
+pub static OSTaskRegNextAvailID: AtomicU8 = AtomicU8::new(0);
 
+/// Ready list group
+#[cfg(feature = "OS_PRIO_LESS_THAN_64")]
+pub static OSRdyGrp: AtomicU8 = AtomicU8::new(0);
+#[cfg(feature = "OS_PRIO_LESS_THAN_256")]
+pub static OSRdyGrp: AtomicU16 = AtomicU16::new(0);
 
+/// Table of tasks which are ready to run
+/// the table will be used in the scheduler(executor)
+/// besides, we use the RefCell to do borrowing check at run time
+pub static OSRdyTbl: Mutex<RefCell<[OS_PRIO; OS_RDY_TBL_SIZE]>> = Mutex::new(RefCell::new([0; OS_RDY_TBL_SIZE]));
+
+/// Priority of current task
+pub static OSPrioCur: AtomicU8 = AtomicU8::new(0);
+
+/// Priority of highest priority task
+pub static OSPrioHighRdy: AtomicU8 = AtomicU8::new(0);
+
+lazy_static! {
+/// we need the lazy static so that we can call default to get the default value
+    /// Pointer to currently running TCB
+    pub static ref OSTCBCur:Mutex<RefCell<OS_TCB_REF>>=Mutex::new(RefCell::new(OS_TCB_REF::default()));
+    /// Pointer to highest priority TCB R-to-R
+    pub static ref OSTCBHighRdy:Mutex<RefCell<OS_TCB_REF>>=Mutex::new(RefCell::new(OS_TCB_REF::default()));
+}
+
+// by noah: this code is related to the assembly code, I can't guarantee the accuracy of the code
+// Pointer to currently running TCB
+// pub static OSTCBCur:Mutex<RefCell<OS_TCB_REF>>=Mutex::new(RefCell::new(OS_TCB_REF{ptr:NonNull::dangling()}));
+// Pointer to highest priority TCB R-to-R
+// pub static OSTCBHighRdy:Mutex<RefCell<OS_TCB_REF>>=Mutex::new(RefCell::new(OS_TCB_REF{ptr:NonNull::dangling()}));
