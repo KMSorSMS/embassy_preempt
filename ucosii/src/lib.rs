@@ -33,8 +33,6 @@ pub mod os_mutex;
 pub mod os_q;
 /// the mod of semaphore of uC/OS-II kernel
 pub mod os_sem;
-/// the mod of the task part of uC/OS-II kernel
-pub mod os_task;
 /// the mod of time of uC/OS-II kernel
 pub mod os_time;
 /// the mod of timer of uC/OS-II kernel

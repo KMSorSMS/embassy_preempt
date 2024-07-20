@@ -535,6 +535,7 @@ fn OS_InitMisc() {
 #[allow(unused)]
 fn OS_InitRdyList() {
     /* Clear the ready list                     */
+    // check by liam: may be Ordering::relaxed as the os have not started 
     OSRdyGrp.store(0, Ordering::Release);
 
     OSPrioCur.store(0, Ordering::Release);
@@ -547,7 +548,6 @@ fn OS_InitRdyList() {
         OSRdyTbl.borrow_ref_mut(cs).iter_mut().for_each(|x| {
             *x = 0;// set the array element to 0
         });
-
         // OSTCBCur.borrow_ref_mut(cs).
     })
 }
