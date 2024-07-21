@@ -14,6 +14,15 @@ repository.workspace = true
 license.workspace = true
 readme = "README.md"
 
+
+[lib]
+harness = false
+
+# needed for each integration test
+[[test]]
+name = "integration"
+harness = false
+
 [workspace]
 members = [""]
 
@@ -21,16 +30,49 @@ members = [""]
 [workspace.dependencies]
 
 [dependencies]
-cortex-m = { version = "0.7.6", optional = true }
+cortex-m = { version = "0.7", features = ["critical-section-single-core"] }
+cortex-m-rt = "0.7"
 critical-section = "1.1"
-defmt = { version = "0.3", optional = true }
+defmt = {version = "0.3", optional = true}
+defmt-rtt = "0.4"
 log = { version = "0.4.14", optional = true }
 spin = "0.5.2"
 linked_list_allocator = "0.9.0"
 embassy-executor = { version = "0.5.0", path = "../embassy-executor", features = ["task-arena-size-32768", "arch-cortex-m", "executor-thread", "executor-interrupt", "defmt", "integrated-timers"] }
-embassy-stm32 = { version = "0.1.0", path = "../embassy-stm32", features = ["defmt", "stm32f401re", "unstable-pac", "memory-x", "time-driver-any", "exti", "chrono"] }
 lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
+panic-probe = { version = "0.3", features = ["print-defmt"] }
+cortex-m-semihosting = "0.5.0"
 
+[dev-dependencies]
+defmt-test = "0.3"
+
+# cargo build/run
+[profile.dev]
+codegen-units = 1
+debug = 2
+debug-assertions = true # <-
+incremental = false
+opt-level = 'z'         # <-
+overflow-checks = true  # <-
+
+# cargo test
+[profile.test]
+codegen-units = 1
+debug = 2
+debug-assertions = true # <-
+incremental = false
+opt-level = 3           # <-
+overflow-checks = true  # <-
+
+# cargo test --release
+[profile.bench]
+codegen-units = 1
+debug = 2
+debug-assertions = false # <-
+incremental = false
+lto = 'fat'
+opt-level = 3            # <-
+overflow-checks = false  # <-
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
 # use lazy static to define global variables
@@ -38,7 +80,8 @@ lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
 
 # this part only define features, don't decide whether the feature is active
 [features]
-default = ["defmt", "OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+default = ["defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+defmt = ["dep:defmt"]
 nightly = []
 # this feature will be set in build.rs
 OS_EVENT_EN = []
