@@ -36,7 +36,7 @@ use critical_section::Mutex;
 use lazy_static::lazy_static;
 
 use crate::cfg::*;
-use crate::executor::OS_TCB_REF;
+use crate::executor::{TaskPoolRef, OS_TCB_REF};
 use crate::port::*;
 
 /*
@@ -54,7 +54,7 @@ const OS_PRIO_MUTEX_CEIL_DIS: INT32U = 0xFF; /* Disable mutex priority ceiling p
 const OS_N_SYS_TASKS: INT32U = 2; /* Number of system tasks                      */
 #[cfg(not(feature = "OS_TASK_STAT_EN"))]
 #[allow(unused)]
-const OS_N_SYS_TASKS: INT32U = 1;
+const OS_N_SYS_TASKS: USIZE = 1;
 
 // lazy_static! {
 //     static ref OS_LOWEST_PRIO: INT32U = env!("OS_LOWEST_PRIO").parse().expect("Failed to parse OS_LOWEST_PRIO");
@@ -758,6 +758,9 @@ pub static OSRdyGrp: AtomicU16 = AtomicU16::new(0);
 /// the table will be used in the scheduler(executor)
 /// besides, we use the RefCell to do borrowing check at run time
 pub static OSRdyTbl: Mutex<RefCell<[OS_PRIO; OS_RDY_TBL_SIZE]>> = Mutex::new(RefCell::new([0; OS_RDY_TBL_SIZE]));
+
+/// Table of TCBs. Every TCB(here, we store TaskStorage) will be stored here.
+pub static OSTCBTbl:TaskPoolRef=TaskPoolRef::new();
 
 /// Priority of current task
 pub static OSPrioCur: AtomicU8 = AtomicU8::new(0);
