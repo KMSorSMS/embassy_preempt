@@ -7,11 +7,15 @@
 */
 
 pub mod os_task;
+/// the executor's raw module
+pub mod raw;
+mod spawner;
 
 use core::future::Future;
 use core::ptr::NonNull;
 
 use alloc::string::String;
+use spawner::SpawnToken;
 
 use crate::port::*;
 use crate::ucosii::*;
@@ -111,6 +115,71 @@ pub struct OS_TCB_REF{
 unsafe impl Sync for OS_TCB_REF{}
 unsafe impl Send for OS_TCB_REF{}
 
+/// An uninitialized [`OS_TASK_STORAGE`].
+pub struct AvailableTask<F: Future + 'static> {
+    task: &'static OS_TASK_STORAGE<F>,
+}
+impl<F: Future + 'static> AvailableTask<F> {
+    /// Try to claim a [`TaskStorage`].
+    ///
+    /// This function returns `None` if a task has already been spawned and has not finished running.
+    pub fn claim(task: &'static OS_TASK_STORAGE<F>) -> Option<Self> {
+        task.raw.state.spawn().then(|| Self { task })
+    }
+
+    fn initialize_impl<S>(self, future: impl FnOnce() -> F) -> SpawnToken<S> {
+        unsafe {
+            self.task.raw.poll_fn.set(Some(OS_TASK_STORAGE::<F>::poll));
+            self.task.future.write_in_place(future);
+
+            let task = OS_TCB_REF::new(self.task);
+
+            SpawnToken::new(task)
+        }
+    }
+
+    /// Initialize the [`TaskStorage`] to run the given future.
+    pub fn initialize(self, future: impl FnOnce() -> F) -> SpawnToken<F> {
+        self.initialize_impl::<F>(future)
+    }
+
+    /// Initialize the [`TaskStorage`] to run the given future.
+    ///
+    /// # Safety
+    ///
+    /// `future` must be a closure of the form `move || my_async_fn(args)`, where `my_async_fn`
+    /// is an `async fn`, NOT a hand-written `Future`.
+    #[doc(hidden)]
+    pub unsafe fn __initialize_async_fn<FutFn>(self, future: impl FnOnce() -> F) -> SpawnToken<FutFn> {
+        // When send-spawning a task, we construct the future in this thread, and effectively
+        // "send" it to the executor thread by enqueuing it in its queue. Therefore, in theory,
+        // send-spawning should require the future `F` to be `Send`.
+        //
+        // The problem is this is more restrictive than needed. Once the future is executing,
+        // it is never sent to another thread. It is only sent when spawning. It should be
+        // enough for the task's arguments to be Send. (and in practice it's super easy to
+        // accidentally make your futures !Send, for example by holding an `Rc` or a `&RefCell` across an `.await`.)
+        //
+        // We can do it by sending the task args and constructing the future in the executor thread
+        // on first poll. However, this cannot be done in-place, so it'll waste stack space for a copy
+        // of the args.
+        //
+        // Luckily, an `async fn` future contains just the args when freshly constructed. So, if the
+        // args are Send, it's OK to send a !Send future, as long as we do it before first polling it.
+        //
+        // (Note: this is how the generators are implemented today, it's not officially guaranteed yet,
+        // but it's possible it'll be guaranteed in the future. See zulip thread:
+        // https://rust-lang.zulipchat.com/#narrow/stream/187312-wg-async/topic/.22only.20before.20poll.22.20Send.20futures )
+        //
+        // The `FutFn` captures all the args, so if it's Send, the task can be send-spawned.
+        // This is why we return `SpawnToken<FutFn>` below.
+        //
+        // This ONLY holds for `async fn` futures. The other `spawn` methods can be called directly
+        // by the user, with arbitrary hand-implemented futures. This is why these return `SpawnToken<F>`.
+        self.initialize_impl::<FutFn>(future)
+    }
+}
+
 /*
 ****************************************************************************************************************************************
 *                                                             implement of structure  
@@ -118,6 +187,7 @@ unsafe impl Send for OS_TCB_REF{}
 */
 
 impl <F: Future + 'static>OS_TASK_STORAGE<F>{
+    const NEW: Self = Self::new();
     /// create a new OS_TASK_STORAGE
     // Take a lazy approach, which means the TCB will be init when call the init func of TCB
     // this func will be used to init the global array
@@ -168,6 +238,7 @@ impl <F: Future + 'static>OS_TASK_STORAGE<F>{
     pub fn poll(){
 
     }
+    
 }
 
 /// by noah: maybe we can impl deref and default for it

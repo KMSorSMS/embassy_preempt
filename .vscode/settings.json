@@ -6,6 +6,9 @@
     "editor.formatOnSave": false
   },
   "rust-analyzer.check.allTargets": false,
+  // "rust-analyzer.check.extraArgs": [
+  //     "--bins"
+  // ],
   "rust-analyzer.check.noDefaultFeatures": true,
   "rust-analyzer.cargo.noDefaultFeatures": true,
   "rust-analyzer.showUnlinkedFileNotification": false,
