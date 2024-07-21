@@ -1,4 +1,6 @@
 #![no_std]
+#![no_main]
+
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -16,9 +18,10 @@
 *                                                               pub mod
 ********************************************************************************************************************************************
 */
-extern crate alloc;
-pub(crate) mod fmt;
 
+use defmt_rtt as _; // global logger
+
+extern crate alloc;
 /// the mod of uC/OS-II kernel
 pub mod os_core;
 /// the mod of flag of uC/OS-II kernel
@@ -56,7 +59,8 @@ pub mod atomic_macros;
 mod heap;
 
 mod util;
-mod lang_items;
+/// the mod of lang_items
+pub mod lang_items;
 
 
 /*
@@ -76,3 +80,12 @@ mod lang_items;
 // pub type Addr = *mut core::ffi::c_void;
 // /// Unsigned  8 bit quantity
 // pub type VoidPtr = *mut core::ffi::c_void;
+#[cfg(test)]
+#[defmt_test::tests]
+mod unit_tests {
+    use defmt::assert;
+    #[test]
+    fn it_works() {
+        assert!(true)
+    }
+}
