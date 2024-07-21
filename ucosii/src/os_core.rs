@@ -33,18 +33,17 @@
 
 
 use core::sync::atomic::Ordering;
-use core::cell::RefCell;
-use critical_section::Mutex;
+// use critical_section::Mutex;
+// use core::cell::RefCell;
 use os_cpu::*;
 
+use crate::executor::OS_TCB_REF;
 use crate::os_q::OS_QInit;
 use crate::port::*;
 
-use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSRdyGrp, OSRdyTbl, OSRunning, OSTaskCtr, OSTime,OSPrioCur,OSPrioHighRdy};
+use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSPrioCur, OSPrioHighRdy, OSRdyGrp, OSRdyTbl, OSRunning, OSTCBCur, OSTCBHighRdy, OSTaskCtr, OSTime};
 #[cfg(feature="OS_TASK_REG_TBL_SIZE")]
 use crate::ucosii::OSTaskRegNextAvailID;
-
-use crate::ucosii::OS_RDY_TBL_SIZE;
 
 /*
 *********************************************************************************************************
@@ -156,7 +155,8 @@ pub fn OSInit() {
     // by noah: this func is no need to be called because we give the static var init val
     // OS_InitMisc();/* Initialize miscellaneous variables       */
 
-    OS_InitRdyList();/* Initialize the Ready List                */
+    // by noah：this function is not called because we use lazy_static
+    // OS_InitRdyList();/* Initialize the Ready List                */
 
     OS_InitTCBList(); /* Initialize the free list of OS_TCBs      */
 
@@ -548,7 +548,8 @@ fn OS_InitRdyList() {
         OSRdyTbl.borrow_ref_mut(cs).iter_mut().for_each(|x| {
             *x = 0;// set the array element to 0
         });
-        // OSTCBCur.borrow_ref_mut(cs).
+        *(OSTCBCur.borrow_ref_mut(cs)) = OS_TCB_REF::default();
+        *(OSTCBHighRdy.borrow_ref_mut(cs))= OS_TCB_REF::default();
     })
 }
 
@@ -582,7 +583,10 @@ fn OS_InitTaskIdle() {}
 */
 
 #[allow(unused)]
-fn OS_InitTCBList() {}
+fn OS_InitTCBList() {
+    
+    OS_MemClr();
+}
 
 /*
 *********************************************************************************************************
