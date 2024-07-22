@@ -16,12 +16,14 @@ use core::cell::RefCell;
 use core::cell::UnsafeCell;
 use core::future::Future;
 use core::mem::MaybeUninit;
+use core::pin::Pin;
 use core::ptr::null_mut;
 use core::ptr::NonNull;
 
 use alloc::string::String;
 use critical_section::CriticalSection;
 use critical_section::Mutex;
+use raw::state::State;
 use spawner::SpawnToken;
 
 use crate::port::*;
@@ -59,7 +61,9 @@ pub struct OS_TCB{
     OSTCBMsg:PTR, /* Message received from OSMboxPost() or OSQPost()         */
     
     OSTCBDly:INT32U,     /* Nbr ticks to delay task or, timeout waiting for event   */
-    OSTCBStat:INT8U,     /* Task      status                                        */
+    // change by liam: to change the representation of status of the task
+    // OSTCBStat:INT8U,     /* Task      status                                        */
+    OSTCBStat: State,
     OSTCBStatPend:INT8U, /* Task PEND status                                        */
     OSTCBPrio:INT8U,     /* Task priority (0 == highest)                            */
     
@@ -170,7 +174,7 @@ impl <F: Future + 'static>OS_TASK_STORAGE<F>{
                 #[cfg(any(all(feature = "OS_Q_EN", feature = "OS_MAX_QS"), feature = "OS_MBOX_EN"))]
                 OSTCBMsg:0 as PTR,
                 OSTCBDly:0,
-                OSTCBStat:0,
+                OSTCBStat:State::new(),
                 OSTCBStatPend:0,
                 OSTCBPrio:0,
                 OSTCBX:0,
@@ -201,9 +205,24 @@ impl <F: Future + 'static>OS_TASK_STORAGE<F>{
     }
 
     /// the poll fun called by the executor
-    pub fn poll(){
+    unsafe fn poll(p: OS_TCB_REF) {
+        let this = &*(p.as_ptr() as *const OS_TASK_STORAGE<F>);
 
+        let future = Pin::new_unchecked(this.future.as_mut());
+        let waker = waker::from_task(p);
+        let mut cx = Context::from_waker(&waker);
+        match future.poll(&mut cx) {
+            Poll::Ready(_) => {
+                this.future.drop_in_place();
+                this.raw.state.despawn();
+
+                #[cfg(feature = "integrated-timers")]
+                this.raw.expires_at.set(u64::MAX);
+            }
+            Poll::Pending => {}
+        }
     }
+
     
 }
 
@@ -212,6 +231,29 @@ impl Default for OS_TCB_REF{
     fn default()->Self{
         // by noah:dangling is used to create a dangling pointer, which is just like the null pointer in C
         OS_TCB_REF{ptr:NonNull::dangling()}
+    }
+}
+impl OS_TCB_REF {
+    fn new<F: Future + 'static>(task: &'static OS_TASK_STORAGE<F>) -> Self {
+        Self {
+            ptr: NonNull::from(task).cast(),
+        }
+    }
+
+    /// Safety: The pointer must have been obtained with `Task::as_ptr`
+    pub(crate) unsafe fn from_ptr(ptr: *const OS_TCB) -> Self {
+        Self {
+            ptr: NonNull::new_unchecked(ptr as *mut OS_TCB),
+        }
+    }
+
+    pub(crate) fn header(self) -> &'static OS_TCB {
+        unsafe { self.ptr.as_ref() }
+    }
+
+    /// The returned pointer is valid for the entire TaskStorage.
+    pub(crate) fn as_ptr(self) -> *const OS_TCB {
+        self.ptr.as_ptr()
     }
 }
 
@@ -294,16 +336,16 @@ impl<F: Future + 'static, const N: usize> TaskPool<F, N> {
 }
 
 impl<F: Future + 'static> AvailableTask<F> {
-    // Try to claim a [`TaskStorage`].
+    // Try to claim a [`OS_TASK_STORAGE`].
     //
     // This function returns `None` if a task has already been spawned and has not finished running.
     pub fn claim(task: &'static OS_TASK_STORAGE<F>) -> Option<Self> {
-        task.raw.state.spawn().then(|| Self { task })
+        task.task_tcb.OSTCBStat.spawn().then(|| Self { task })
     }
 
     fn initialize_impl<S>(self, future: impl FnOnce() -> F) -> SpawnToken<S> {
         unsafe {
-            self.task.raw.poll_fn.set(Some(OS_TASK_STORAGE::<F>::poll));
+            self.task.task_tcb.OS_POLL_FN.set(Some(OS_TASK_STORAGE::<F>::poll));
             self.task.future.write_in_place(future);
 
             let task = OS_TCB_REF::new(self.task);
@@ -312,12 +354,12 @@ impl<F: Future + 'static> AvailableTask<F> {
         }
     }
 
-    /// Initialize the [`TaskStorage`] to run the given future.
+    /// Initialize the [`OS_TASK_STORAGE`] to run the given future.
     pub fn initialize(self, future: impl FnOnce() -> F) -> SpawnToken<F> {
         self.initialize_impl::<F>(future)
     }
 
-    // Initialize the [`TaskStorage`] to run the given future.
+    // Initialize the [`OS_TASK_STORAGE`] to run the given future.
     //
     // # Safety
     //
@@ -398,5 +440,5 @@ impl<const N: usize> Arena<N> {
 *********************************************************************************************************
 */
 
-/// Every TCB(here, we store TaskStorage) will be stored here.
+/// Every TCB(here, we store OS_TASK_STORAGE) will be stored here.
 static ARENA: Arena<{ OS_MAX_TASKS + OS_N_SYS_TASKS}> = Arena::new();
