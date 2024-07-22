@@ -112,6 +112,7 @@ pub(crate) struct OS_TCB_EXT{
 pub struct OS_TASK_STORAGE<F: Future + 'static>{
     task_tcb:OS_TCB,
     // this part is invisible to other crate
+    // by noah: maybe we need to use raw ptr
     future:UninitCell<F>,
 }
 
@@ -440,5 +441,5 @@ impl<const N: usize> Arena<N> {
 *********************************************************************************************************
 */
 
-/// Every TCB(here, we store OS_TASK_STORAGE) will be stored here.
-static ARENA: Arena<{ OS_MAX_TASKS + OS_N_SYS_TASKS}> = Arena::new();
+/// Every TCB(here, we store TaskStorage) will be stored here.
+static ARENA: Arena<{ (OS_MAX_TASKS + OS_N_SYS_TASKS)*}> = Arena::new();
