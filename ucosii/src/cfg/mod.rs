@@ -1,4 +1,4 @@
-use crate::port::*;
+use crate::{executor::OS_TCB, port::*};
 
 /// the const val define the lowest prio
 pub const OS_LOWEST_PRIO: INT32U = 63;
@@ -8,3 +8,9 @@ pub const OS_TASK_REG_TBL_SIZE: USIZE = 1;
 pub const OS_MAX_MEM_PART: USIZE = 5;
 /// Max. number of tasks in your application, MUST be >= 2
 pub const OS_MAX_TASKS:USIZE=20;
+// /// by noah: because we need to provide the byte number of the Arena, but the size of OS_TASK_STORAGE can not be confirmed at compiling time.
+// /// So I just define the size of OS_TASK_STORAGE. Maybe there will be a better way to solve this problem...
+// pub const OS_TASK_STORAGE_SIZE: USIZE = core::mem::size_of::<OS_TCB>()+FUTURE_SIZE;
+// pub const FUTURE_SIZE:USIZE=;
+// by noah:maybe we can postpone the initialization of OSTCBTbl to OSStart because at that time the size of future is known.
+// Aha, I think I can alloc the future in heap to make OS_TASK_STORAGE Sized.(I will try this method)
