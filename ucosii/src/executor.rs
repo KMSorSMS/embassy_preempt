@@ -11,12 +11,16 @@ pub mod os_task;
 pub mod raw;
 mod spawner;
 
+use core::alloc::Layout;
 use core::cell::RefCell;
+use core::cell::UnsafeCell;
 use core::future::Future;
+use core::mem::MaybeUninit;
 use core::ptr::null_mut;
 use core::ptr::NonNull;
 
 use alloc::string::String;
+use critical_section::CriticalSection;
 use critical_section::Mutex;
 use spawner::SpawnToken;
 
@@ -136,65 +140,10 @@ pub struct TaskPoolRef {
 pub struct AvailableTask<F: Future + 'static> {
     task: &'static OS_TASK_STORAGE<F>,
 }
-impl<F: Future + 'static> AvailableTask<F> {
-    /// Try to claim a [`TaskStorage`].
-    ///
-    /// This function returns `None` if a task has already been spawned and has not finished running.
-    pub fn claim(task: &'static OS_TASK_STORAGE<F>) -> Option<Self> {
-        task.raw.state.spawn().then(|| Self { task })
-    }
 
-    fn initialize_impl<S>(self, future: impl FnOnce() -> F) -> SpawnToken<S> {
-        unsafe {
-            self.task.raw.poll_fn.set(Some(OS_TASK_STORAGE::<F>::poll));
-            self.task.future.write_in_place(future);
-
-            let task = OS_TCB_REF::new(self.task);
-
-            SpawnToken::new(task)
-        }
-    }
-
-    /// Initialize the [`TaskStorage`] to run the given future.
-    pub fn initialize(self, future: impl FnOnce() -> F) -> SpawnToken<F> {
-        self.initialize_impl::<F>(future)
-    }
-
-    /// Initialize the [`TaskStorage`] to run the given future.
-    ///
-    /// # Safety
-    ///
-    /// `future` must be a closure of the form `move || my_async_fn(args)`, where `my_async_fn`
-    /// is an `async fn`, NOT a hand-written `Future`.
-    #[doc(hidden)]
-    pub unsafe fn __initialize_async_fn<FutFn>(self, future: impl FnOnce() -> F) -> SpawnToken<FutFn> {
-        // When send-spawning a task, we construct the future in this thread, and effectively
-        // "send" it to the executor thread by enqueuing it in its queue. Therefore, in theory,
-        // send-spawning should require the future `F` to be `Send`.
-        //
-        // The problem is this is more restrictive than needed. Once the future is executing,
-        // it is never sent to another thread. It is only sent when spawning. It should be
-        // enough for the task's arguments to be Send. (and in practice it's super easy to
-        // accidentally make your futures !Send, for example by holding an `Rc` or a `&RefCell` across an `.await`.)
-        //
-        // We can do it by sending the task args and constructing the future in the executor thread
-        // on first poll. However, this cannot be done in-place, so it'll waste stack space for a copy
-        // of the args.
-        //
-        // Luckily, an `async fn` future contains just the args when freshly constructed. So, if the
-        // args are Send, it's OK to send a !Send future, as long as we do it before first polling it.
-        //
-        // (Note: this is how the generators are implemented today, it's not officially guaranteed yet,
-        // but it's possible it'll be guaranteed in the future. See zulip thread:
-        // https://rust-lang.zulipchat.com/#narrow/stream/187312-wg-async/topic/.22only.20before.20poll.22.20Send.20futures )
-        //
-        // The `FutFn` captures all the args, so if it's Send, the task can be send-spawned.
-        // This is why we return `SpawnToken<FutFn>` below.
-        //
-        // This ONLY holds for `async fn` futures. The other `spawn` methods can be called directly
-        // by the user, with arbitrary hand-implemented futures. This is why these return `SpawnToken<F>`.
-        self.initialize_impl::<FutFn>(future)
-    }
+struct Arena<const N: usize> {
+    buf: UnsafeCell<MaybeUninit<[u8; N]>>,
+    ptr: Mutex<RefCell<*mut u8>>,
 }
 
 /*
@@ -202,83 +151,6 @@ impl<F: Future + 'static> AvailableTask<F> {
 *                                                             implement of structure  
 ****************************************************************************************************************************************
 */
-
-/// by noah：we need to impl Send and Sync for TaskPoolRef
-unsafe impl Send for TaskPoolRef{}
-unsafe impl Sync for TaskPoolRef{}
-
-/// this part is copied from Embassy
-impl TaskPoolRef {
-    pub const fn new() -> Self {
-        Self {
-            ptr: Mutex::new(RefCell::new(null_mut())),
-        }
-    }
-
-    /// Get the pool for this ref, allocating it from the arena the first time.
-    ///
-    /// safety: for a given TaskPoolRef instance, must always call with the exact
-    /// same generic params.
-    pub unsafe fn get<F: Future, const N: usize>(&'static self) -> &'static TaskPool<F, N> {
-        critical_section::with(|cs| {
-            let ptr = self.ptr.borrow_ref_mut(cs);
-            if ptr.is_null() {
-                // by noah：we won't use ARENA.alloc as embassy. We just define a TaskPool
-                let pool = ARENA.alloc::<TaskPool<F, N>>(cs);
-                pool.write(TaskPool::new());
-                ptr = pool as *mut _ as _;
-            }
-
-            unsafe { &*(*ptr as *const _) }
-        })
-    }
-}
-
-impl<F: Future + 'static, const N: usize> TaskPool<F, N> {
-    /// Create a new TaskPool, with all tasks in non-spawned state.
-    // by noah：this func will be called to init OSTCBTbl by using lazy_static
-    pub const fn new() -> Self {
-        Self {
-            // in uC, "N" will be set as OS_MAX_TASKS + OS_N_SYS_TASKS, which is the number of the TCB
-            pool: [OS_TASK_STORAGE::NEW; N],
-        }
-    }
-
-    fn spawn_impl<T>(&'static self, future: impl FnOnce() -> F) -> SpawnToken<T> {
-        match self.pool.iter().find_map(AvailableTask::claim) {
-            Some(task) => task.initialize_impl::<T>(future),
-            None => SpawnToken::new_failed(),
-        }
-    }
-
-    /// Try to spawn a task in the pool.
-    ///
-    /// See [`OS_TASK_STORAGE::spawn()`] for details.
-    ///
-    /// This will loop over the pool and spawn the task in the first storage that
-    /// is currently free. If none is free, a "poisoned" SpawnToken is returned,
-    /// which will cause [`Spawner::spawn()`](super::Spawner::spawn) to return the error.
-    pub fn spawn(&'static self, future: impl FnOnce() -> F) -> SpawnToken<impl Sized> {
-        self.spawn_impl::<F>(future)
-    }
-
-    /// Like spawn(), but allows the task to be send-spawned if the args are Send even if
-    /// the future is !Send.
-    ///
-    /// Not covered by semver guarantees. DO NOT call this directly. Intended to be used
-    /// by the Embassy macros ONLY.
-    ///
-    /// SAFETY: `future` must be a closure of the form `move || my_async_fn(args)`, where `my_async_fn`
-    /// is an `async fn`, NOT a hand-written `Future`.
-    #[doc(hidden)]
-    pub unsafe fn _spawn_async_fn<FutFn>(&'static self, future: FutFn) -> SpawnToken<impl Sized>
-    where
-        FutFn: FnOnce() -> F,
-    {
-        // See the comment in AvailableTask::__initialize_async_fn for explanation.
-        self.spawn_impl::<FutFn>(future)
-    }
-}
 
 impl <F: Future + 'static>OS_TASK_STORAGE<F>{
     const NEW: Self = Self::new();
@@ -342,3 +214,189 @@ impl Default for OS_TCB_REF{
         OS_TCB_REF{ptr:NonNull::dangling()}
     }
 }
+
+/// by noah：we need to impl Send and Sync for TaskPoolRef
+unsafe impl Send for TaskPoolRef{}
+unsafe impl Sync for TaskPoolRef{}
+
+/// this part is copied from Embassy
+impl TaskPoolRef {
+    /// new a TaskPoolRef. the ptr is null
+    pub const fn new() -> Self {
+        Self {
+            ptr: Mutex::new(RefCell::new(null_mut())),
+        }
+    }
+
+    /// Get the pool for this ref, allocating it from the arena the first time.
+    ///
+    /// safety: for a given TaskPoolRef instance, must always call with the exact
+    /// same generic params.
+    pub unsafe fn get<F: Future, const N: usize>(&'static self) -> &'static TaskPool<F, N> {
+        critical_section::with(|cs| {
+            let mut ptr = self.ptr.borrow_ref_mut(cs);
+            if ptr.is_null() {
+                // by noah：we won't use ARENA.alloc as embassy. We just define a TaskPool
+                let pool = ARENA.alloc::<TaskPool<F, N>>(cs);
+                pool.write(TaskPool::new());
+                *ptr = pool as *mut _ as _;
+            }
+
+            unsafe { &*(*ptr as *const _) }
+        })
+    }
+}
+
+impl<F: Future + 'static, const N: usize> TaskPool<F, N> {
+    /// Create a new TaskPool, with all tasks in non-spawned state.
+    // by noah：this func will be called to init OSTCBTbl by using lazy_static
+    pub const fn new() -> Self {
+        Self {
+            // in uC, "N" will be set as OS_MAX_TASKS + OS_N_SYS_TASKS, which is the number of the TCB
+            pool: [OS_TASK_STORAGE::NEW; N],
+        }
+    }
+
+    fn spawn_impl<T>(&'static self, future: impl FnOnce() -> F) -> SpawnToken<T> {
+        match self.pool.iter().find_map(AvailableTask::claim) {
+            Some(task) => task.initialize_impl::<T>(future),
+            None => SpawnToken::new_failed(),
+        }
+    }
+
+    // Try to spawn a task in the pool.
+    //
+    // See [`OS_TASK_STORAGE::spawn()`] for details.
+    //
+    // This will loop over the pool and spawn the task in the first storage that
+    // is currently free. If none is free, a "poisoned" SpawnToken is returned,
+    // which will cause [`Spawner::spawn()`](super::Spawner::spawn) to return the error.
+    pub fn spawn(&'static self, future: impl FnOnce() -> F) -> SpawnToken<impl Sized> {
+        self.spawn_impl::<F>(future)
+    }
+
+    // Like spawn(), but allows the task to be send-spawned if the args are Send even if
+    // the future is !Send.
+    //
+    // Not covered by semver guarantees. DO NOT call this directly. Intended to be used
+    // by the Embassy macros ONLY.
+    //
+    // SAFETY: `future` must be a closure of the form `move || my_async_fn(args)`, where `my_async_fn`
+    // is an `async fn`, NOT a hand-written `Future`.
+    #[doc(hidden)]
+    pub unsafe fn _spawn_async_fn<FutFn>(&'static self, future: FutFn) -> SpawnToken<impl Sized>
+    where
+        FutFn: FnOnce() -> F,
+    {
+        // See the comment in AvailableTask::__initialize_async_fn for explanation.
+        self.spawn_impl::<FutFn>(future)
+    }
+}
+
+impl<F: Future + 'static> AvailableTask<F> {
+    // Try to claim a [`TaskStorage`].
+    //
+    // This function returns `None` if a task has already been spawned and has not finished running.
+    pub fn claim(task: &'static OS_TASK_STORAGE<F>) -> Option<Self> {
+        task.raw.state.spawn().then(|| Self { task })
+    }
+
+    fn initialize_impl<S>(self, future: impl FnOnce() -> F) -> SpawnToken<S> {
+        unsafe {
+            self.task.raw.poll_fn.set(Some(OS_TASK_STORAGE::<F>::poll));
+            self.task.future.write_in_place(future);
+
+            let task = OS_TCB_REF::new(self.task);
+
+            SpawnToken::new(task)
+        }
+    }
+
+    /// Initialize the [`TaskStorage`] to run the given future.
+    pub fn initialize(self, future: impl FnOnce() -> F) -> SpawnToken<F> {
+        self.initialize_impl::<F>(future)
+    }
+
+    // Initialize the [`TaskStorage`] to run the given future.
+    //
+    // # Safety
+    //
+    // `future` must be a closure of the form `move || my_async_fn(args)`, where `my_async_fn`
+    // is an `async fn`, NOT a hand-written `Future`.
+    #[doc(hidden)]
+    pub unsafe fn __initialize_async_fn<FutFn>(self, future: impl FnOnce() -> F) -> SpawnToken<FutFn> {
+        // When send-spawning a task, we construct the future in this thread, and effectively
+        // "send" it to the executor thread by enqueuing it in its queue. Therefore, in theory,
+        // send-spawning should require the future `F` to be `Send`.
+        //
+        // The problem is this is more restrictive than needed. Once the future is executing,
+        // it is never sent to another thread. It is only sent when spawning. It should be
+        // enough for the task's arguments to be Send. (and in practice it's super easy to
+        // accidentally make your futures !Send, for example by holding an `Rc` or a `&RefCell` across an `.await`.)
+        //
+        // We can do it by sending the task args and constructing the future in the executor thread
+        // on first poll. However, this cannot be done in-place, so it'll waste stack space for a copy
+        // of the args.
+        //
+        // Luckily, an `async fn` future contains just the args when freshly constructed. So, if the
+        // args are Send, it's OK to send a !Send future, as long as we do it before first polling it.
+        //
+        // (Note: this is how the generators are implemented today, it's not officially guaranteed yet,
+        // but it's possible it'll be guaranteed in the future. See zulip thread:
+        // https://rust-lang.zulipchat.com/#narrow/stream/187312-wg-async/topic/.22only.20before.20poll.22.20Send.20futures )
+        //
+        // The `FutFn` captures all the args, so if it's Send, the task can be send-spawned.
+        // This is why we return `SpawnToken<FutFn>` below.
+        //
+        // This ONLY holds for `async fn` futures. The other `spawn` methods can be called directly
+        // by the user, with arbitrary hand-implemented futures. This is why these return `SpawnToken<F>`.
+        self.initialize_impl::<FutFn>(future)
+    }
+}
+
+unsafe impl<const N: usize> Sync for Arena<N> {}
+unsafe impl<const N: usize> Send for Arena<N> {}
+
+impl<const N: usize> Arena<N> {
+    const fn new() -> Self {
+        Self {
+            buf: UnsafeCell::new(MaybeUninit::uninit()),
+            ptr: Mutex::new(RefCell::new(null_mut())),
+        }
+    }
+
+    fn alloc<T>(&'static self, cs: CriticalSection) -> &'static mut MaybeUninit<T> {
+        let layout = Layout::new::<T>();
+
+        let start = self.buf.get().cast::<u8>();
+        let end = unsafe { start.add(N) };
+
+        let mut ptr = self.ptr.borrow_ref_mut(cs);
+        if ptr.is_null() {
+            *ptr = self.buf.get().cast::<u8>();
+        }
+
+        let bytes_left = (end as usize) - (*ptr as usize);
+        let align_offset = (*ptr as usize).next_multiple_of(layout.align()) - (*ptr as usize);
+
+        if align_offset + layout.size() > bytes_left {
+            panic!("task arena is full. You must increase the arena size, see the documentation for details: https://docs.embassy.dev/embassy-executor/");
+        }
+
+        let res = unsafe { ptr.add(align_offset) };
+        let ptr = unsafe { ptr.add(align_offset + layout.size()) };
+
+        *(self.ptr.borrow_ref_mut(cs)) = ptr;
+
+        unsafe { &mut *(res as *mut MaybeUninit<T>) }
+    }
+}
+
+/*
+*********************************************************************************************************
+*                                            Static Var 
+*********************************************************************************************************
+*/
+
+/// Every TCB(here, we store TaskStorage) will be stored here.
+static ARENA: Arena<{ OS_MAX_TASKS + OS_N_SYS_TASKS}> = Arena::new();

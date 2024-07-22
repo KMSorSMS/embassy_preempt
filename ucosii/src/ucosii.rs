@@ -51,10 +51,10 @@ const OS_PRIO_SELF: INT32U = 0xFF; /* Indicate SELF priority                    
 const OS_PRIO_MUTEX_CEIL_DIS: INT32U = 0xFF; /* Disable mutex priority ceiling promotion    */
 
 #[cfg(feature = "OS_TASK_STAT_EN")]
-const OS_N_SYS_TASKS: INT32U = 2; /* Number of system tasks                      */
+pub const OS_N_SYS_TASKS: INT32U = 2; /* Number of system tasks                      */
 #[cfg(not(feature = "OS_TASK_STAT_EN"))]
 #[allow(unused)]
-const OS_N_SYS_TASKS: USIZE = 1;
+pub const OS_N_SYS_TASKS: USIZE = 1;
 
 // lazy_static! {
 //     static ref OS_LOWEST_PRIO: INT32U = env!("OS_LOWEST_PRIO").parse().expect("Failed to parse OS_LOWEST_PRIO");
@@ -759,7 +759,7 @@ pub static OSRdyGrp: AtomicU16 = AtomicU16::new(0);
 /// besides, we use the RefCell to do borrowing check at run time
 pub static OSRdyTbl: Mutex<RefCell<[OS_PRIO; OS_RDY_TBL_SIZE]>> = Mutex::new(RefCell::new([0; OS_RDY_TBL_SIZE]));
 
-/// Table of TCBs. Every TCB(here, we store TaskStorage) will be stored here.
+/// by noah: the ref of Table of TCBs. TCBs will be stored in Arena in executor.rs
 pub static OSTCBTbl:TaskPoolRef=TaskPoolRef::new();
 
 /// Priority of current task
@@ -775,6 +775,7 @@ lazy_static! {
     /// Pointer to highest priority TCB R-to-R
     pub static ref OSTCBHighRdy:Mutex<RefCell<OS_TCB_REF>>=Mutex::new(RefCell::new(OS_TCB_REF::default()));
 }
+
 
 // by noah: this code is related to the assembly code, I can't guarantee the accuracy of the code
 // Pointer to currently running TCB
