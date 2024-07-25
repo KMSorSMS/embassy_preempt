@@ -36,7 +36,7 @@ use critical_section::Mutex;
 use lazy_static::lazy_static;
 
 use crate::cfg::*;
-use crate::executor::{TaskPoolRef, OS_TCB_REF};
+use crate::os_task::{TaskPoolRef, OS_TCB_REF};
 use crate::port::*;
 
 /*
@@ -51,9 +51,10 @@ const OS_PRIO_SELF: INT32U = 0xFF; /* Indicate SELF priority                    
 const OS_PRIO_MUTEX_CEIL_DIS: INT32U = 0xFF; /* Disable mutex priority ceiling promotion    */
 
 #[cfg(feature = "OS_TASK_STAT_EN")]
-pub const OS_N_SYS_TASKS: INT32U = 2; /* Number of system tasks                      */
+pub const OS_N_SYS_TASKS: INT32U = 2; 
 #[cfg(not(feature = "OS_TASK_STAT_EN"))]
 #[allow(unused)]
+/// Number of system tasks
 pub const OS_N_SYS_TASKS: USIZE = 1;
 
 // lazy_static! {

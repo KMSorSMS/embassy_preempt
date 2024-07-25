@@ -37,7 +37,7 @@ use core::sync::atomic::Ordering;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::executor::OS_TCB_REF;
+use crate::os_task::OS_TCB_REF;
 use crate::os_q::OS_QInit;
 use crate::port::*;
 
