@@ -113,6 +113,7 @@ pub struct OS_TCB_REF{
 /// Raw storage that can hold up to N tasks of the same type.
 ///
 /// This is essentially a `[OS_TASK_STORAGE<F>; N]`.
+#[allow(unused)]
 pub struct TaskPool<F: Future + 'static, const N: usize> {
     pool: [OS_TASK_STORAGE<F>; N],
 }
@@ -125,6 +126,7 @@ pub struct TaskPoolRef {
 }
 
 /// An uninitialized [`OS_TASK_STORAGE`].
+#[allow(unused)]
 pub struct AvailableTask<F: Future + 'static> {
     task: &'static OS_TASK_STORAGE<F>,
 }
