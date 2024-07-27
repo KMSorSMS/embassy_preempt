@@ -2,7 +2,7 @@
 
 use run_queue_atomics::RunQueue;
 
-use crate::os_task::OS_TCB_REF;
+use super::OS_TCB_REF;
 #[cfg_attr(feature = "cortex_m", path = "state_atomics_arm.rs")]
 pub mod state;
 pub mod waker;

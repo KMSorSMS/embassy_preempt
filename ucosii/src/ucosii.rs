@@ -36,7 +36,7 @@ use critical_section::Mutex;
 use lazy_static::lazy_static;
 
 use crate::cfg::*;
-use crate::os_task::OS_TCB_REF;
+use crate::executor::OS_TCB_REF;
 use crate::port::*;
 
 /*
@@ -762,7 +762,7 @@ pub static OSRdyGrp: AtomicU16 = AtomicU16::new(0);
 pub static OSRdyTbl: Mutex<RefCell<[OS_PRIO; OS_RDY_TBL_SIZE]>> = Mutex::new(RefCell::new([0; OS_RDY_TBL_SIZE]));
 
 /// by noah: the ref of Table of TCBs. TCBs will be stored in Arena in executor.rs
-pub static OSTCBTbl:TaskPoolRef=TaskPoolRef::new();
+// pub static OSTCBTbl:TaskPoolRef=TaskPoolRef::new();
 
 /// Priority of current task
 pub static OSPrioCur: AtomicU8 = AtomicU8::new(0);
