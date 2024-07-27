@@ -92,7 +92,7 @@ pub fn run(args: &[NestedMeta], f: syn::ItemFn) -> Result<TokenStream, TokenStre
 
     // #[cfg(feature = "nightly")]
     let mut task_outer: ItemFn = parse_quote! {
-        #visibility fn #task_ident(#fargs) -> ::embassy_executor::SpawnToken<impl Sized> {
+        #visibility fn #task_ident(#fargs) -> ::ucosii::SpawnToken<impl Sized> {
             trait _EmbassyInternalTaskTrait {
                 type Fut: ::core::future::Future + 'static;
                 fn construct(#fargs) -> Self::Fut;
@@ -106,7 +106,7 @@ pub fn run(args: &[NestedMeta], f: syn::ItemFn) -> Result<TokenStream, TokenStre
             }
 
             const POOL_SIZE: usize = #pool_size;
-            static POOL: ::ucosii::executor::raw::TaskPool<<() as _EmbassyInternalTaskTrait>::Fut, POOL_SIZE> = ::embassy_executor::raw::TaskPool::new();
+            static POOL: ::ucosii::executor::raw::TaskPool<<() as _EmbassyInternalTaskTrait>::Fut, POOL_SIZE> = ::ucosii::executor::raw::TaskPool::new();
             unsafe { POOL._spawn_async_fn(move || <() as _EmbassyInternalTaskTrait>::construct(#(#full_args,)*)) }
         }
     };
