@@ -1,6 +1,6 @@
 use core::marker::PhantomData;
 
-use crate::os_task::OS_TCB_REF;
+use super::OS_TCB_REF;
 
 pub struct SpawnToken<S> {
     raw_task: Option<OS_TCB_REF>,
