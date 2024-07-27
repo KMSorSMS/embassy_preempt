@@ -2,7 +2,7 @@
 
 use run_queue_atomics::RunQueue;
 
-use super::OS_TCB_REF;
+use crate::os_task::OS_TCB_REF;
 #[cfg_attr(feature = "cortex_m", path = "state_atomics_arm.rs")]
 pub mod state;
 pub mod waker;
@@ -47,9 +47,6 @@ pub(crate) struct SyncExecutor {
 
 impl SyncExecutor {
     pub(crate) fn new(pender: Pender) -> Self {
-        #[cfg(feature = "integrated-timers")]
-        let alarm = unsafe { unwrap!(embassy_time_driver::allocate_alarm()) };
-
         Self {
             run_queue: RunQueue::new(),
             pender,
