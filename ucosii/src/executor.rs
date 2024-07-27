@@ -48,8 +48,8 @@ pub struct OS_TCB{
     // Task specific extension. If the OS_TASK_CREATE_EXT_EN feature is not active, it will be None
     OSTCBExtInfo:Option<OS_TCB_EXT>, 
 
-    OSTCBNext:Option<OS_TCB_REF>, /* Pointer to next     TCB in the TCB list                 */
-    OSTCBPrev:Option<OS_TCB_REF>, /* Pointer to previous TCB in the TCB list                 */
+    OSTCBNext:SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to next     TCB in the TCB list                 */
+    OSTCBPrev:SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to previous TCB in the TCB list                 */
 
     // the poll fn that will be called by the executor. In the func, a waker will be create.
     OS_POLL_FN:SyncUnsafeCell<Option<unsafe fn(OS_TCB_REF)>>,
@@ -167,8 +167,8 @@ impl <F: Future + 'static>OS_TASK_STORAGE<F>{
             task_tcb:OS_TCB{
                 OSTCBStkPtr:None,
                 OSTCBExtInfo:None,
-                OSTCBNext:None,
-                OSTCBPrev:None,
+                OSTCBNext:SyncUnsafeCell::new(None),
+                OSTCBPrev:SyncUnsafeCell::new(None),
                 OS_POLL_FN:SyncUnsafeCell::new(None),
                 #[cfg(feature="OS_EVENT_EN")]
                 OSTCBEventPtr:None,
@@ -217,8 +217,6 @@ impl <F: Future + 'static>OS_TASK_STORAGE<F>{
                 this.future.drop_in_place();
                 this.raw.state.despawn();
 
-                #[cfg(feature = "integrated-timers")]
-                this.raw.expires_at.set(u64::MAX);
             }
             Poll::Pending => {}
         }
@@ -441,5 +439,7 @@ impl<const N: usize> Arena<N> {
 *********************************************************************************************************
 */
 
-/// Every TCB(here, we store TaskStorage) will be stored here.
-static ARENA: Arena<{ (OS_MAX_TASKS + OS_N_SYS_TASKS)*}> = Arena::new();
+// Every TCB(here, we store TaskStorage) will be stored here.
+// static ARENA: Arena<{ (OS_MAX_TASKS + OS_N_SYS_TASKS)*}> = Arena::new();
+// create a global executor
+static EXECUTOR: SyncUnsafeCell<&'static SyncExecutor> = SyncUnsafeCell::new(&NO_EXECUTOR); 

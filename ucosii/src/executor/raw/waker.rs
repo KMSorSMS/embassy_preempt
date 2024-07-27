@@ -1,7 +1,8 @@
 use core::mem;
 use core::task::{RawWaker, RawWakerVTable, Waker};
 use crate::executor::OS_TCB;
-use super::{wake_task, , TaskRef};
+use crate::executor::OS_TCB_REF;
+use super::wake_task;
 
 static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, wake, wake, drop);
 
@@ -10,14 +11,14 @@ unsafe fn clone(p: *const ()) -> RawWaker {
 }
 
 unsafe fn wake(p: *const ()) {
-    wake_task(TaskRef::from_ptr(p as *const OS_TCB))
+    wake_task(OS_TCB_REF::from_ptr(p as *const OS_TCB))
 }
 
 unsafe fn drop(_: *const ()) {
     // nop
 }
 
-pub(crate) unsafe fn from_task(p: TaskRef) -> Waker {
+pub(crate) unsafe fn from_task(p: OS_TCB_REF) -> Waker {
     Waker::from_raw(RawWaker::new(p.as_ptr() as _, &VTABLE))
 }
 
@@ -32,7 +33,7 @@ pub(crate) unsafe fn from_task(p: TaskRef) -> Waker {
 /// # Panics
 ///
 /// Panics if the waker is not created by the Embassy executor.
-pub fn task_from_waker(waker: &Waker) -> TaskRef {
+pub fn task_from_waker(waker: &Waker) -> OS_TCB_REF {
     // safety: OK because WakerHack has the same layout as Waker.
     // This is not really guaranteed because the structs are `repr(Rust)`, it is
     // indeed the case in the current implementation.
@@ -42,8 +43,8 @@ pub fn task_from_waker(waker: &Waker) -> TaskRef {
         panic!("Found waker not created by the Embassy executor. `embassy_time::Timer` only works with the Embassy executor.")
     }
 
-    // safety: our wakers are always created with `TaskRef::as_ptr`
-    unsafe { TaskRef::from_ptr(hack.data as *const OS_TCB) }
+    // safety: our wakers are always created with `OS_TCB_REF::as_ptr`
+    unsafe { OS_TCB_REF::from_ptr(hack.data as *const OS_TCB) }
 }
 
 struct WakerHack {
