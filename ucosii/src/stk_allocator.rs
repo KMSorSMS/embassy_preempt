@@ -16,7 +16,7 @@
 use core::{alloc::Layout, cell::{RefCell, UnsafeCell}, mem::MaybeUninit, ptr::{null_mut, NonNull}};
 use critical_section::{CriticalSection, Mutex};
 
-use crate::{cfg::OS_MAX_TASKS, port::*, ucosii::OS_N_SYS_TASKS};
+use crate::{cfg::OS_ARENA_SIZE, port::*};
 
 /*
 ********************************************************************************************************************************************
@@ -39,7 +39,7 @@ pub struct OS_STK_REF{
 ********************************************************************************************************************************************
 */
 /// Every TCB(here, we store TaskStorage) will be stored here.
-pub static ARENA: Arena<{OS_MAX_TASKS + OS_N_SYS_TASKS}> = Arena::new();
+pub static ARENA: Arena<{OS_ARENA_SIZE}> = Arena::new();
 
 /// The stack allocator defination of uC/OS-II.
 pub struct Arena<const N: usize> {
@@ -64,7 +64,7 @@ impl<const N: usize> Arena<N> {
         }
     }
 
-    /// this function is used to alloc an stack area. It will be called in other crate
+    /// this function is used to alloc an area. It will be called in other crate
     pub fn alloc<T>(&'static self, cs: CriticalSection) -> &'static mut MaybeUninit<T> {
         let layout = Layout::new::<T>();
 
@@ -80,7 +80,7 @@ impl<const N: usize> Arena<N> {
         let align_offset = (*ptr as usize).next_multiple_of(layout.align()) - (*ptr as usize);
 
         if align_offset + layout.size() > bytes_left {
-            panic!("task arena is full. You must increase the arena size, see the documentation for details: https://docs.embassy.dev/embassy-executor/");
+            panic!("task arena is full. You must increase the arena size(OS_ARENA_SIZE in cfg)");
         }
 
         let res = unsafe { ptr.add(align_offset) };
@@ -91,5 +91,3 @@ impl<const N: usize> Arena<N> {
         unsafe { &mut *(res as *mut MaybeUninit<T>) }
     }
 }
-
-// function two：alloc the stack when a future is interrupted without await.

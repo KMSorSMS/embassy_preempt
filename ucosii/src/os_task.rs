@@ -6,6 +6,8 @@
 // use executor::SpawnToken;
 use core::cell::RefCell;
 use core::future::Future;
+use core::ops::Deref;
+use core::ops::DerefMut;
 use core::ptr::null_mut;
 use core::ptr::NonNull;
 
@@ -110,20 +112,20 @@ pub struct OS_TCB_REF{
     pub ptr:NonNull<OS_TCB>,
 }
 
-/// Raw storage that can hold up to N tasks of the same type.
-///
-/// This is essentially a `[OS_TASK_STORAGE<F>; N]`.
-#[allow(unused)]
-pub struct TaskPool<F: Future + 'static, const N: usize> {
-    pool: [OS_TASK_STORAGE<F>; N],
-}
+// /// Raw storage that can hold up to N tasks of the same type.
+// ///
+// /// This is essentially a `[OS_TASK_STORAGE<F>; N]`.
+// #[allow(unused)]
+// pub struct TaskPool<F: Future + 'static, const N: usize> {
+//     pool: [OS_TASK_STORAGE<F>; N],
+// }
 
-/// by noah：this structure is used to define TaskPool in the global scope with static life time
-pub struct TaskPoolRef {
-    // type-erased `&'static mut TaskPool<F, N>`
-    // Needed because statics can't have generics.
-    ptr: Mutex<RefCell<*mut ()>>,
-}
+// /// by noah：this structure is used to define TaskPool in the global scope with static life time
+// pub struct TaskPoolRef {
+//     // type-erased `&'static mut TaskPool<F, N>`
+//     // Needed because statics can't have generics.
+//     ptr: Mutex<RefCell<*mut ()>>,
+// }
 
 /// An uninitialized [`OS_TASK_STORAGE`].
 #[allow(unused)]
@@ -183,104 +185,130 @@ impl <F: Future + 'static>OS_TASK_STORAGE<F>{
     /// init the storage of the task, just like the spawn in Embassy
     //  this func will be called by OS_TASK_CTREATE
     pub fn init(&'static self, _future:impl FnOnce() -> F){
-        
+         
     }
 
     /// the poll fun called by the executor
     pub fn poll(){
 
     }
-    
+
+    /// this func will be called to create a new task(TCB)
+    // refer to the get of TaskPoolRef in embassy
+    pub fn claim() -> OS_TCB_REF {
+        // by noah: for we can create task after OSTaskCreate, so we need a cs
+        critical_section::with(|cs| {
+            let task_storage = ARENA.alloc::<OS_TASK_STORAGE<F>>(cs);
+            // create a new task which is not init
+            task_storage.write(OS_TASK_STORAGE::new());
+            // by noah：no panic will occurred here because if the Arena is not enough, the program will panic when alloc
+            OS_TCB_REF{ptr:NonNull::new(task_storage as *mut _ as _).unwrap()}
+        })
+    }
 }
 
 unsafe impl Sync for OS_TCB_REF{}
 unsafe impl Send for OS_TCB_REF{}
 
-/// by noah: maybe we can impl deref and default for it
 impl Default for OS_TCB_REF{
+    // this func will not be called
     fn default()->Self{
         // by noah:dangling is used to create a dangling pointer, which is just like the null pointer in C
         OS_TCB_REF{ptr:NonNull::dangling()}
     }
 }
 
-impl<F: Future + 'static, const N: usize> TaskPool<F, N> {
-    /// Create a new TaskPool, with all tasks in non-spawned state.
-    // by noah：this func will be called to init OSTCBTbl by using lazy_static
-    pub const fn new() -> Self {
-        Self {
-            // in uC, "N" will be set as OS_MAX_TASKS + OS_N_SYS_TASKS, which is the number of the TCB
-            pool: [OS_TASK_STORAGE::NEW; N],
-        }
-    }
-
-    // fn spawn_impl<T>(&'static self, future: impl FnOnce() -> F) -> SpawnToken<T> {
-    //     match self.pool.iter().find_map(AvailableTask::claim) {
-    //         Some(task) => task.initialize_impl::<T>(future),
-    //         None => SpawnToken::new_failed(),
-    //     }
-    // }
-
-    // // Try to spawn a task in the pool.
-    // //
-    // // See [`OS_TASK_STORAGE::spawn()`] for details.
-    // //
-    // // This will loop over the pool and spawn the task in the first storage that
-    // // is currently free. If none is free, a "poisoned" SpawnToken is returned,
-    // // which will cause [`Spawner::spawn()`](super::Spawner::spawn) to return the error.
-    // pub fn spawn(&'static self, future: impl FnOnce() -> F) -> SpawnToken<impl Sized> {
-    //     self.spawn_impl::<F>(future)
-    // }
-
-    // // Like spawn(), but allows the task to be send-spawned if the args are Send even if
-    // // the future is !Send.
-    // //
-    // // Not covered by semver guarantees. DO NOT call this directly. Intended to be used
-    // // by the Embassy macros ONLY.
-    // //
-    // // SAFETY: `future` must be a closure of the form `move || my_async_fn(args)`, where `my_async_fn`
-    // // is an `async fn`, NOT a hand-written `Future`.
-    // #[doc(hidden)]
-    // pub unsafe fn _spawn_async_fn<FutFn>(&'static self, future: FutFn) -> SpawnToken<impl Sized>
-    // where
-    //     FutFn: FnOnce() -> F,
-    // {
-    //     // See the comment in AvailableTask::__initialize_async_fn for explanation.
-    //     self.spawn_impl::<FutFn>(future)
-    // }
-}
-
-/// by noah：we need to impl Send and Sync for TaskPoolRef
-unsafe impl Send for TaskPoolRef{}
-unsafe impl Sync for TaskPoolRef{}
-
-/// this part is copied from Embassy
-impl TaskPoolRef {
-    /// new a TaskPoolRef. the ptr is null
-    pub const fn new() -> Self {
-        Self {
-            ptr: Mutex::new(RefCell::new(null_mut())),
-        }
-    }
-
-    /// Get the pool for this ref, allocating it from the arena the first time.
-    ///
-    /// safety: for a given TaskPoolRef instance, must always call with the exact
-    /// same generic params.
-    pub unsafe fn get<F: Future, const N: usize>(&'static self) -> &'static TaskPool<F, N> {
-        critical_section::with(|cs| {
-            let mut ptr = self.ptr.borrow_ref_mut(cs);
-            if ptr.is_null() {
-                // by noah：we won't use ARENA.alloc as embassy. We just define a TaskPool
-                let pool = ARENA.alloc::<TaskPool<F, N>>(cs);
-                pool.write(TaskPool::new());
-                *ptr = pool as *mut _ as _;
-            }
-
-            unsafe { &*(*ptr as *const _) }
-        })
+// impl deref for OS_TCB_REF
+impl Deref for OS_TCB_REF{
+    type Target = OS_TCB;
+    fn deref(&self)->&Self::Target{
+        unsafe{self.ptr.as_ref()}
     }
 }
+// impl deref for mut OS_TCB_REF
+impl DerefMut for OS_TCB_REF{
+    fn deref_mut(&mut self)->&mut Self::Target{
+        unsafe{self.ptr.as_mut()}
+    }
+}
+
+// impl<F: Future + 'static, const N: usize> TaskPool<F, N> {
+//     /// Create a new TaskPool, with all tasks in non-spawned state.
+//     // by noah：this func will be called to init OSTCBTbl by using lazy_static
+//     pub const fn new() -> Self {
+//         Self {
+//             // in uC, "N" will be set as OS_MAX_TASKS + OS_N_SYS_TASKS, which is the number of the TCB
+//             pool: [OS_TASK_STORAGE::NEW; N],
+//         }
+//     }
+
+//     // fn spawn_impl<T>(&'static self, future: impl FnOnce() -> F) -> SpawnToken<T> {
+//     //     match self.pool.iter().find_map(AvailableTask::claim) {
+//     //         Some(task) => task.initialize_impl::<T>(future),
+//     //         None => SpawnToken::new_failed(),
+//     //     }
+//     // }
+
+//     // // Try to spawn a task in the pool.
+//     // //
+//     // // See [`OS_TASK_STORAGE::spawn()`] for details.
+//     // //
+//     // // This will loop over the pool and spawn the task in the first storage that
+//     // // is currently free. If none is free, a "poisoned" SpawnToken is returned,
+//     // // which will cause [`Spawner::spawn()`](super::Spawner::spawn) to return the error.
+//     // pub fn spawn(&'static self, future: impl FnOnce() -> F) -> SpawnToken<impl Sized> {
+//     //     self.spawn_impl::<F>(future)
+//     // }
+
+//     // // Like spawn(), but allows the task to be send-spawned if the args are Send even if
+//     // // the future is !Send.
+//     // //
+//     // // Not covered by semver guarantees. DO NOT call this directly. Intended to be used
+//     // // by the Embassy macros ONLY.
+//     // //
+//     // // SAFETY: `future` must be a closure of the form `move || my_async_fn(args)`, where `my_async_fn`
+//     // // is an `async fn`, NOT a hand-written `Future`.
+//     // #[doc(hidden)]
+//     // pub unsafe fn _spawn_async_fn<FutFn>(&'static self, future: FutFn) -> SpawnToken<impl Sized>
+//     // where
+//     //     FutFn: FnOnce() -> F,
+//     // {
+//     //     // See the comment in AvailableTask::__initialize_async_fn for explanation.
+//     //     self.spawn_impl::<FutFn>(future)
+//     // }
+// }
+
+// /// by noah：we need to impl Send and Sync for TaskPoolRef
+// unsafe impl Send for TaskPoolRef{}
+// unsafe impl Sync for TaskPoolRef{}
+
+// /// this part is copied from Embassy
+// impl TaskPoolRef {
+//     /// new a TaskPoolRef. the ptr is null
+//     pub const fn new() -> Self {
+//         Self {
+//             ptr: Mutex::new(RefCell::new(null_mut())),
+//         }
+//     }
+
+//     /// Get the pool for this ref, allocating it from the arena the first time.
+//     ///
+//     /// safety: for a given TaskPoolRef instance, must always call with the exact
+//     /// same generic params.
+//     pub unsafe fn get<F: Future, const N: usize>(&'static self) -> &'static TaskPool<F, N> {
+//         critical_section::with(|cs| {
+//             let mut ptr = self.ptr.borrow_ref_mut(cs);
+//             if ptr.is_null() {
+//                 // by noah：we won't use ARENA.alloc as embassy. We just define a TaskPool
+//                 let pool = ARENA.alloc::<TaskPool<F, N>>(cs);
+//                 pool.write(TaskPool::new());
+//                 *ptr = pool as *mut _ as _;
+//             }
+
+//             unsafe { &*(*ptr as *const _) }
+//         })
+//     }
+// }
 
 impl<F: Future + 'static> AvailableTask<F> {
     // // Try to claim a [`TaskStorage`].

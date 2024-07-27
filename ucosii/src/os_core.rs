@@ -38,7 +38,7 @@ use core::sync::atomic::Ordering;
 use os_cpu::*;
 
 use crate::os_task::OS_TCB_REF;
-use crate::os_q::OS_QInit;
+// use crate::os_q::OS_QInit;
 use crate::port::*;
 
 use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSPrioCur, OSPrioHighRdy, OSRdyGrp, OSRdyTbl, OSRunning, OSTCBCur, OSTCBHighRdy, OSTaskCtr, OSTime};
@@ -158,18 +158,21 @@ pub fn OSInit() {
     // by noah：this function is not called because we use lazy_static
     // OS_InitRdyList();/* Initialize the Ready List                */
 
-    OS_InitTCBList(); /* Initialize the free list of OS_TCBs      */
+    // by noah：this function is not called because we can not init TCB here
+    // OS_InitTCBList(); /* Initialize the free list of OS_TCBs      */
 
-    OS_InitEventList(); /* Initialize the free list of OS_EVENTs    */
+    // to be done: For now, we just aim to implement the task module, so we will impl OS_InitEventList in the future
+    // OS_InitEventList(); /* Initialize the free list of OS_EVENTs    */
 
     // #[cfg(all(feature="OS_MEM_EN",feature="OS_MAX_MEM_PART_EN"))]
     // OS_MemInit(); /* Initialize the memory manager            */
 
-    #[cfg(all(feature="OS_Q_EN",feature="OS_MAX_QS"))]
-    OS_QInit();
+    // // to be done: For now, we just aim to implement the task module, so we will impl OS_InitEventList in the future
+    // #[cfg(all(feature="OS_Q_EN",feature="OS_MAX_QS"))]
+    // OS_QInit();
 
-    // maybe there is still no need to implement idle task
-    OS_InitTaskIdle();
+    // by noah: There is still no need to implement idle task
+    // OS_InitTaskIdle();
 
     #[cfg(all(feature="OS_FLAG_EN",feature="OS_MAX_FLAGS"))]
     OS_FlagInit(); /* Initialize the event flag structures     */

@@ -8,6 +8,9 @@ pub const OS_TASK_REG_TBL_SIZE: USIZE = 1;
 pub const OS_MAX_MEM_PART: USIZE = 5;
 /// Max. number of tasks in your application, MUST be >= 2
 pub const OS_MAX_TASKS:USIZE=20;
+/// This const val is used to config the size of ARENA. 
+/// You can set it refer to the number of tasks in your application(OS_MAX_TASKS) and the number of system tasks(OS_N_SYS_TASKS).
+pub const OS_ARENA_SIZE: USIZE = 4096;
 // /// by noah: because we need to provide the byte number of the Arena, but the size of OS_TASK_STORAGE can not be confirmed at compiling time.
 // /// So I just define the size of OS_TASK_STORAGE. Maybe there will be a better way to solve this problem...
 // pub const OS_TASK_STORAGE_SIZE: USIZE = core::mem::size_of::<OS_TCB>()+FUTURE_SIZE;
