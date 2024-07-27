@@ -13,8 +13,10 @@
 ********************************************************************************************************************************************
 */
 
-use core::ptr::NonNull;
-use crate::port::*;
+use core::{alloc::Layout, cell::{RefCell, UnsafeCell}, mem::MaybeUninit, ptr::{null_mut, NonNull}};
+use critical_section::{CriticalSection, Mutex};
+
+use crate::{cfg::OS_MAX_TASKS, port::*, ucosii::OS_N_SYS_TASKS};
 
 /*
 ********************************************************************************************************************************************
@@ -28,5 +30,66 @@ pub struct OS_STK_REF{
     pub STK_REF:NonNull<OS_STK>,
 }
 
-// to be done: the coding of the allocator can refer to the allocator of rCore
+/*
+********************************************************************************************************************************************
+*                                                              stack allocator
+*                                      The stack allocator of uC/OS-II. There are two main functions of it 
+*                                      1. alloc the stack memory for the task(TCB) list.
+*                                      2. alloc the stack when a future is interrupted without await.
+********************************************************************************************************************************************
+*/
+/// Every TCB(here, we store TaskStorage) will be stored here.
+pub static ARENA: Arena<{OS_MAX_TASKS + OS_N_SYS_TASKS}> = Arena::new();
 
+/// The stack allocator defination of uC/OS-II.
+pub struct Arena<const N: usize> {
+    buf: UnsafeCell<MaybeUninit<[u8; N]>>,
+    ptr: Mutex<RefCell<*mut u8>>,
+}
+
+/*
+********************************************************************************************************************************************
+*                                                         implements of stack allocator
+********************************************************************************************************************************************
+*/
+unsafe impl<const N: usize> Sync for Arena<N> {}
+unsafe impl<const N: usize> Send for Arena<N> {}
+
+// function one：alloc the stack memory for the task(TCB) list.
+impl<const N: usize> Arena<N> {
+    const fn new() -> Self {
+        Self {
+            buf: UnsafeCell::new(MaybeUninit::uninit()),
+            ptr: Mutex::new(RefCell::new(null_mut())),
+        }
+    }
+
+    /// this function is used to alloc an stack area. It will be called in other crate
+    pub fn alloc<T>(&'static self, cs: CriticalSection) -> &'static mut MaybeUninit<T> {
+        let layout = Layout::new::<T>();
+
+        let start = self.buf.get().cast::<u8>();
+        let end = unsafe { start.add(N) };
+
+        let mut ptr = self.ptr.borrow_ref_mut(cs);
+        if ptr.is_null() {
+            *ptr = self.buf.get().cast::<u8>();
+        }
+
+        let bytes_left = (end as usize) - (*ptr as usize);
+        let align_offset = (*ptr as usize).next_multiple_of(layout.align()) - (*ptr as usize);
+
+        if align_offset + layout.size() > bytes_left {
+            panic!("task arena is full. You must increase the arena size, see the documentation for details: https://docs.embassy.dev/embassy-executor/");
+        }
+
+        let res = unsafe { ptr.add(align_offset) };
+        let ptr = unsafe { ptr.add(align_offset + layout.size()) };
+
+        *(self.ptr.borrow_ref_mut(cs)) = ptr;
+
+        unsafe { &mut *(res as *mut MaybeUninit<T>) }
+    }
+}
+
+// function two：alloc the stack when a future is interrupted without await.

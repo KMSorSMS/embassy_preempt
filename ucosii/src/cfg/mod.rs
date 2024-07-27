@@ -1,4 +1,4 @@
-use crate::{executor::OS_TCB, port::*};
+use crate::port::*;
 
 /// the const val define the lowest prio
 pub const OS_LOWEST_PRIO: INT32U = 63;
