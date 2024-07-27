@@ -36,7 +36,7 @@ use critical_section::Mutex;
 use lazy_static::lazy_static;
 
 use crate::cfg::*;
-use crate::os_task::{TaskPoolRef, OS_TCB_REF};
+use crate::os_task::OS_TCB_REF;
 use crate::port::*;
 
 /*
@@ -50,12 +50,13 @@ const OS_PRIO_SELF: INT32U = 0xFF; /* Indicate SELF priority                    
 #[allow(unused)]
 const OS_PRIO_MUTEX_CEIL_DIS: INT32U = 0xFF; /* Disable mutex priority ceiling promotion    */
 
+// by noah：For there is no Task Idle, so the OS_N_SYS_TASKS is set as 0 or 1(when OS_TASK_STAT_EN)
 #[cfg(feature = "OS_TASK_STAT_EN")]
-pub const OS_N_SYS_TASKS: INT32U = 2; 
+pub const OS_N_SYS_TASKS: INT32U = 1; 
 #[cfg(not(feature = "OS_TASK_STAT_EN"))]
 #[allow(unused)]
 /// Number of system tasks
-pub const OS_N_SYS_TASKS: USIZE = 1;
+pub const OS_N_SYS_TASKS: USIZE = 0;
 
 // lazy_static! {
 //     static ref OS_LOWEST_PRIO: INT32U = env!("OS_LOWEST_PRIO").parse().expect("Failed to parse OS_LOWEST_PRIO");
