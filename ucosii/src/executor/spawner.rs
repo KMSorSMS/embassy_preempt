@@ -1,7 +1,5 @@
 use core::marker::PhantomData;
-
-use super::OS_TCB_REF;
-
+use super::raw::OS_TCB_REF;
 pub struct SpawnToken<S> {
     raw_task: Option<OS_TCB_REF>,
     phantom: PhantomData<*mut S>,

@@ -36,7 +36,7 @@ use critical_section::Mutex;
 use lazy_static::lazy_static;
 
 use crate::cfg::*;
-use crate::executor::OS_TCB_REF;
+use crate::executor::raw::OS_TCB_REF;
 use crate::port::*;
 
 /*

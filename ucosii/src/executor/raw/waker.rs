@@ -1,6 +1,6 @@
 use core::mem;
 use core::task::{RawWaker, RawWakerVTable, Waker};
-use super::super::{OS_TCB, OS_TCB_REF};
+use super::{OS_TCB, OS_TCB_REF};
 use super::wake_task;
 
 static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, wake, wake, drop);
