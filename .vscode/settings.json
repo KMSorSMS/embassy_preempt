@@ -50,7 +50,9 @@
     "OS_MAX_MEM_PART_EN",
     // "OS_MAX_MEM_PART",
     "OS_TIME_GET_SET_EN",
-    "cortex_m"
+    "cortex_m",
+    "OS_STACK_LESS_THAN_64",
+    // "OS_STACK_LESS_THAN_256",
   ],
   "rust-analyzer.linkedProjects": [
     // "embassy-stm32/Cargo.toml",

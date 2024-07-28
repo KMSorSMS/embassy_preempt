@@ -17,3 +17,5 @@ pub const OS_ARENA_SIZE: USIZE = 4096;
 // pub const FUTURE_SIZE:USIZE=;
 // by noah:maybe we can postpone the initialization of OSTCBTbl to OSStart because at that time the size of future is known.
 // Aha, I think I can alloc the future in heap to make OS_TASK_STORAGE Sized.(I will try this method)
+/// the size of each stack
+pub const OS_STACK_SIZE:USIZE= 256;

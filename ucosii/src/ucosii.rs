@@ -57,6 +57,20 @@ pub const OS_N_SYS_TASKS: INT32U = 1;
 #[allow(unused)]
 /// Number of system tasks
 pub const OS_N_SYS_TASKS: USIZE = 0;
+// the STACK_NUM of the OS. For now we just use the NUM of TASK as the stack num
+pub const OS_STACK_NUM:USIZE=OS_MAX_TASKS+OS_N_SYS_TASKS;
+
+#[cfg(feature = "OS_STACK_LESS_THAN_64")]
+pub const OS_STACK_TBL_SIZE: USIZE = OS_STACK_NUM / 8 + 1;
+#[cfg(feature = "OS_STACK_LESS_THAN_256")]
+const OS_STACK_TBL_SIZE: USIZE = (OS_STACK_NUM / 8 + 1);
+
+/// the type of the STACKTBL's element. To support the stack allocator's bitmap
+#[cfg(feature = "OS_STACK_LESS_THAN_64")]
+#[allow(non_camel_case_types)]
+pub type OS_STACK = INT8U;
+#[cfg(feature = "OS_STACK_LESS_THAN_256")]
+type OS_STACK = INT16U;
 
 // lazy_static! {
 //     static ref OS_LOWEST_PRIO: INT32U = env!("OS_LOWEST_PRIO").parse().expect("Failed to parse OS_LOWEST_PRIO");
@@ -75,6 +89,7 @@ const OS_TASK_IDLE_PRIO: INT32U = OS_LOWEST_PRIO; /* IDLE      task priority    
 const OS_EVENT_TBL_SIZE: USIZE = (OS_LOWEST_PRIO / 8 + 1) as USIZE; /* Size of event table                         */
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
 const OS_EVENT_TBL_SIZE: INT32U = OS_LOWEST_PRIO / 16 + 1; /* Size of event table                         */
+
 
 /// Size of ready table
 #[allow(unused)]
