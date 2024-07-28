@@ -1,3 +1,4 @@
+//! Waker implementation for uC/OS-II.
 use core::mem;
 use core::task::{RawWaker, RawWakerVTable, Waker};
 use super::{OS_TCB, OS_TCB_REF};
