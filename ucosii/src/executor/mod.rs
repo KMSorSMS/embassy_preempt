@@ -18,6 +18,7 @@ use core::ops::DerefMut;
 use core::ptr::NonNull;
 
 use alloc::string::String;
+use raw::state::State;
 // use spawner::SpawnToken;
 
 use crate::port::*;
@@ -56,7 +57,7 @@ pub struct OS_TCB{
     OSTCBMsg:PTR, /* Message received from OSMboxPost() or OSQPost()         */
     
     OSTCBDly:INT32U,     /* Nbr ticks to delay task or, timeout waiting for event   */
-    OSTCBStat:INT8U,     /* Task      status                                        */
+    OSTCBStat:State,     /* Task      status                                        */
     OSTCBStatPend:INT8U, /* Task PEND status                                        */
     OSTCBPrio:INT8U,     /* Task priority (0 == highest)                            */
     
@@ -163,7 +164,7 @@ impl <F: Future + 'static>OS_TASK_STORAGE<F>{
                 #[cfg(any(all(feature = "OS_Q_EN", feature = "OS_MAX_QS"), feature = "OS_MBOX_EN"))]
                 OSTCBMsg:0 as PTR,
                 OSTCBDly:0,
-                OSTCBStat:0,
+                OSTCBStat:State::new(),
                 OSTCBStatPend:0,
                 OSTCBPrio:0,
                 OSTCBX:0,
