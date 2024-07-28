@@ -13,10 +13,10 @@
 ********************************************************************************************************************************************
 */
 
-use core::{alloc::Layout, cell::{RefCell, UnsafeCell}, mem::MaybeUninit, ptr::{null_mut, NonNull}};
+use core::{alloc::Layout, cell::{RefCell, UnsafeCell}, mem::MaybeUninit, ptr::{null_mut, NonNull}, sync::atomic::{AtomicU8, AtomicU16}};
 use critical_section::{CriticalSection, Mutex};
 
-use crate::{cfg::OS_ARENA_SIZE, port::*};
+use crate::{cfg::{OS_ARENA_SIZE, OS_STACK_SIZE}, port::*, ucosii::{OS_STACK, OS_STACK_NUM, OS_STACK_TBL_SIZE}};
 
 /*
 ********************************************************************************************************************************************
@@ -43,8 +43,18 @@ pub static ARENA: Arena<{OS_ARENA_SIZE}> = Arena::new();
 
 /// The stack allocator defination of uC/OS-II.
 pub struct Arena<const N: usize> {
+    // these member vars is used to alloc memory to the task(TCB) list.
     buf: UnsafeCell<MaybeUninit<[u8; N]>>,
     ptr: Mutex<RefCell<*mut u8>>,
+    // by noah：use bitmap to find a empty stack
+    free_stack_tbl: Mutex<RefCell<[OS_STACK; OS_STACK_TBL_SIZE]>>,
+
+    #[cfg(feature = "OS_STACK_LESS_THAN_64")]
+    free_stack_grp:AtomicU8,
+    #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
+    free_stack_grp:AtomicU16,
+
+    stack_tbl: Mutex<[[OS_STK_REF;OS_STACK_SIZE]; OS_STACK_NUM]>,
 }
 
 /*
@@ -61,6 +71,7 @@ impl<const N: usize> Arena<N> {
         Self {
             buf: UnsafeCell::new(MaybeUninit::uninit()),
             ptr: Mutex::new(RefCell::new(null_mut())),
+
         }
     }
 

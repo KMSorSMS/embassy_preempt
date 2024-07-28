@@ -188,14 +188,31 @@ impl <F: Future + 'static>OS_TASK_STORAGE<F>{
     }
 
     /// init the storage of the task, just like the spawn in Embassy
-    //  this func will be called by OS_TASK_CTREATE
-    pub fn init(&'static self, _future:impl FnOnce() -> F){
-         
+    // refer to initialize_impl of AvailableTask in embassy
+    // this func will be called by OS_TASK_CTREATE
+    pub fn init(&'static mut self, future_func:impl FnOnce() -> F,prio:OS_PRIO){
+        self.task_tcb.OSTCBPrio = prio;
+        
+        unsafe{
+            self.task_tcb.OS_POLL_FN.set(Some(OS_TASK_STORAGE::<F>::poll));
+            self.future.write_in_place(future_func);
+        }
     }
 
     /// the poll fun called by the executor
-    pub fn poll(){
-
+    // by noah：this func need one para with type OS_TCB_REF to get the task and create a waker
+    pub fn poll(_task:OS_TCB_REF){
+        // let waker = waker::from_task(task);
+        // let future = unsafe{task.future.read()};
+        // let mut cx = Context::from_waker(&waker);
+        // match future.poll(&mut cx){
+        //     Poll::Pending => {
+        //         task.header().OSTCBStat.run_enqueue();
+        //     }
+        //     Poll::Ready(_) => {
+        //         task.header().OSTCBStat.run_dequeue();
+        //     }
+        // }
     }
 
     /// this func will be called to create a new task(TCB)
@@ -405,6 +422,8 @@ impl<F: Future + 'static> AvailableTask<F> {
 *                                                             type define  
 ****************************************************************************************************************************************
 */
+
+
 
 
 /// Wake a task by `TaskRef`.
