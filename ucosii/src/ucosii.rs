@@ -63,7 +63,7 @@ pub const OS_STACK_NUM:USIZE=OS_MAX_TASKS+OS_N_SYS_TASKS;
 #[cfg(feature = "OS_STACK_LESS_THAN_64")]
 pub const OS_STACK_TBL_SIZE: USIZE = OS_STACK_NUM / 8 + 1;
 #[cfg(feature = "OS_STACK_LESS_THAN_256")]
-const OS_STACK_TBL_SIZE: USIZE = (OS_STACK_NUM / 8 + 1);
+const OS_STACK_TBL_SIZE: USIZE = (OS_STACK_NUM / 16 + 1);
 
 /// the type of the STACKTBL's element. To support the stack allocator's bitmap
 #[cfg(feature = "OS_STACK_LESS_THAN_64")]

@@ -31,7 +31,7 @@ pub type USIZE = usize;
 
 
 /// Each stack entry is 32-bit wide
-pub type OS_STK = u32;
+pub type OS_STK = usize;
 /// Define size of CPU status register (PSR = 32 bits)
 pub type OS_CPU_SR = u32;
 

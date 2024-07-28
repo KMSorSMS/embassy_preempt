@@ -46,15 +46,19 @@ pub struct Arena<const N: usize> {
     // these member vars is used to alloc memory to the task(TCB) list.
     buf: UnsafeCell<MaybeUninit<[u8; N]>>,
     ptr: Mutex<RefCell<*mut u8>>,
-    // by noah：use bitmap to find a empty stack
-    free_stack_tbl: Mutex<RefCell<[OS_STACK; OS_STACK_TBL_SIZE]>>,
+    // by noah：use bitmap to find a empty stack. If a stack is used, the corresponding bit will be set to ZERO.
+    stack_bmp: Mutex<RefCell<[OS_STACK; OS_STACK_TBL_SIZE]>>,
 
-    #[cfg(feature = "OS_STACK_LESS_THAN_64")]
-    free_stack_grp:AtomicU8,
-    #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
-    free_stack_grp:AtomicU16,
+    // by noah:to avoid using feature everytime we use these primary members(because the Atomic do not support generics) 
+    // we use Mutex<RefCell<>> to define them.
+    // #[cfg(feature = "OS_STACK_LESS_THAN_64")]
+    // free_stack_grp:AtomicU8,
+    // #[cfg(feature = "OS_STACK_LESS_THAN_256")]
+    // free_stack_grp:AtomicU16,
 
-    stack_tbl: Mutex<[[OS_STK_REF;OS_STACK_SIZE]; OS_STACK_NUM]>,
+    free_stack_grp:Mutex<RefCell<OS_STACK>>,
+
+    stack_tbl: Mutex<RefCell<[[OS_STK;OS_STACK_SIZE]; OS_STACK_NUM]>>,
 }
 
 /*
@@ -72,6 +76,11 @@ impl<const N: usize> Arena<N> {
             buf: UnsafeCell::new(MaybeUninit::uninit()),
             ptr: Mutex::new(RefCell::new(null_mut())),
 
+            // all stack is not used, so every element will be set to 1.
+            stack_bmp: Mutex::new(RefCell::new([1; OS_STACK_TBL_SIZE])),
+            free_stack_grp: Mutex::new(RefCell::new(0)),
+            // clear the stack table
+            stack_tbl: Mutex::new(RefCell::new([[0;OS_STACK_SIZE]; OS_STACK_NUM])),
         }
     }
 
@@ -101,4 +110,9 @@ impl<const N: usize> Arena<N> {
 
         unsafe { &mut *(res as *mut MaybeUninit<T>) }
     }
+}
+
+// function two：alloc the stack when a future is interrupted without await.
+impl <const N: usize> Arena<N>{
+    
 }
