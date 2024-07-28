@@ -1,3 +1,4 @@
+//! ARM-specific atomic state operations.
 use core::arch::asm;
 use core::sync::atomic::{compiler_fence, AtomicBool, AtomicU32, Ordering};
 

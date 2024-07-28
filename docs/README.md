@@ -1,29 +1,26 @@
-# embassy docs
+1. 上下文切换的分类：分成抢占和让权两种；
 
-The documentation hosted at [https://embassy.dev/book](https://embassy.dev/book). Building the documentation requires the [asciidoctor](https://asciidoctor.org/) tool, and can built running `make` in this folder:
+2. 上下文切换的过程分成保存和恢复两步。抢占时的保存会占用堆栈，可视为线程；让权时的保存会让出堆栈，可视为协程。恢复过程按是否需要空栈分成线程恢复和协程恢复两种情况。
 
-```
-make
-```
-
-Then open the generated file `thebook/index.html`.
-
-## License
-
-The Embassy Docs (this folder) is distributed under the following licenses:
-
-* The code samples and free-standing Cargo projects contained within these docs are licensed under the terms of both the [MIT License] and the [Apache License v2.0].
-* The written prose contained within these docs are licensed under the terms of the Creative Commons [CC-BY-SA v4.0] license.
-
-Copies of the licenses used by this project may also be found here:
-
-* [MIT License Hosted]
-* [Apache License v2.0 Hosted]
-* [CC-BY-SA v4.0 Hosted]
-
-[MIT License]: ./../LICENSE-MIT
-[Apache License v2.0]: ./../LICENSE-APACHE
-[CC-BY-SA v4.0]: ./../LICENSE-CC-BY-SA
-[MIT License Hosted]: https://opensource.org/licenses/MIT
-[Apache License v2.0 Hosted]: http://www.apache.org/licenses/LICENSE-2.0
-[CC-BY-SA v4.0 Hosted]: https://creativecommons.org/licenses/by-sa/4.0/legalcode
+3. 可能的实施线路：
+	1. 在uCOS中**没有中断的场景**下，引入embassy，以支持协程；（线程被视为不会暂停的协程）
+		- 统一线程和协程的控制块结构TCB（Task Control Block）；
+		- 只有让权情况出现，让权时栈空，可以复用栈；（解决堆栈的分配和回收问题）
+	1. 在uCOS中没有中断的场景下，引入embassy和**优先级**，以支持线程和协程的优先级调度；
+		- 按优先级选就绪任务（可能是线程，也可能是协程）；
+	1. 在uCOS中**有中断的场景**下，引入embassy和优先级，以支持线程和协程的优先级调度；
+		- 中断就是抢占情况，需要保存堆栈，并（有可能）分配新堆栈，用于恢复下一个任务；
+	
+	时间线安排：
+	
+	7.28-7.29：完成思路设计结束
+	
+	7.30-8.5：至少完成线路1整体代码部分，测试以及debug可以留到下周
+	
+	8.6-8.12：至少完成线路1，最好线路2也完成了
+	
+	8.13-8.19： 完成线路2以及完成最终的抢占设计的代码部分，测试以及debug可以留到下周
+	
+	8.20-8.26：完成所有测试与debug
+	
+	8.27-...: 做一些数据分析以及形成较好的文档
