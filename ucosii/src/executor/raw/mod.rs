@@ -1,17 +1,15 @@
 //! Raw task storage and pool.
 
-use run_queue_atomics::RunQueue;
+
 #[cfg_attr(feature = "cortex_m", path = "state_atomics_arm.rs")]
 pub mod state;
 pub mod waker;
 mod run_queue_atomics;
-
-
-// pub mod os_task;
-// /// the executor's raw module
-// pub mod raw;
-// use executor::SpawnToken;
+use run_queue_atomics::RunQueue;
+pub use self::waker::task_from_waker;
 use core::future::Future;
+use core::marker::PhantomData;
+use core::mem;
 use core::ops::Deref;
 use core::ops::DerefMut;
 use core::ptr::NonNull;
@@ -27,6 +25,14 @@ use crate::cfg::*;
 use crate::stk_allocator::OS_STK_REF;
 use crate::util::SyncUnsafeCell;
 use crate::util::UninitCell;
+/*
+****************************************************************************************************************************************
+*                                                             global variables  
+****************************************************************************************************************************************
+*/
+// create a global executor
+/// the global executor will be initialized at os init
+pub static mut SyncExecutor: SyncUnsafeCell<Option<&'static SyncExecutor>> = SyncUnsafeCell::new(None);
 
 /*
 ****************************************************************************************************************************************
@@ -415,7 +421,7 @@ pub fn wake_task(task: OS_TCB_REF) {
     if header.OSTCBStat.run_enqueue() {
         // We have just marked the task as scheduled, so enqueue it.
         unsafe {
-            let executor = header.executor.get().unwrap_unchecked();
+            let executor = SyncExecutor.get().unwrap_unchecked();
             executor.enqueue(task);
         }
     }
@@ -465,7 +471,7 @@ impl SyncExecutor {
     }
 
     pub(super) unsafe fn spawn(&'static self, task: OS_TCB_REF) {
-        task.header().executor.set(Some(self));
+        SyncExecutor.set(Some(self));
 
         self.enqueue(task);
     }
@@ -501,4 +507,3 @@ impl SyncExecutor {
         }
     }
 }
-

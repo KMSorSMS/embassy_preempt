@@ -13,7 +13,7 @@ struct S1<T> {
 struct S2 {
     z: u8,
 }
-#[ucosii_executor_macro::task]
+// #[ucosii_executor_macro::task]
 async fn hello() {
     defmt::info!("Hello, world!");
 }
@@ -24,7 +24,7 @@ fn main() -> ! {
         x: 42,
         y: S2 { z: 43 },
     };
-    // hello();
+    hello();
     defmt::println!("s={:?}", s);
     let x = 42;
     defmt::println!("x={=u8}", x);
