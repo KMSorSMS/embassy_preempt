@@ -4,7 +4,7 @@ use core::sync::atomic::{AtomicPtr, Ordering};
 
 use crate::util::SyncUnsafeCell;
 
-use super::super::{OS_TCB, OS_TCB_REF};
+use super::{OS_TCB, OS_TCB_REF};
 
 pub(crate) struct RunQueueItem {
     next: SyncUnsafeCell<Option<OS_TCB_REF>>,
