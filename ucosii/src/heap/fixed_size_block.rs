@@ -88,6 +88,7 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
                     next: allocator.list_heads[index].take(),
                 };
                 // verify that block has size and alignment required for storing node
+                // check liam: maybe below assert code should palce at the beginning Some(index) branch
                 assert!(mem::size_of::<ListNode>() <= BLOCK_SIZES[index]);
                 assert!(mem::align_of::<ListNode>() <= BLOCK_SIZES[index]);
                 let new_node_ptr = ptr as *mut ListNode;

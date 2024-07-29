@@ -20,18 +20,6 @@ use crate::{cfg::{OS_ARENA_SIZE, OS_STACK_SIZE}, port::*, ucosii::{OS_STACK, OS_
 
 /*
 ********************************************************************************************************************************************
-*                                                               type define
-********************************************************************************************************************************************
-*/
-
-/// the ref of the stk
-pub struct OS_STK_REF{
-    /// the ref of the stk(top or bottom)
-    pub STK_REF:NonNull<OS_STK>,
-}
-
-/*
-********************************************************************************************************************************************
 *                                                              stack allocator
 *                                      The stack allocator of uC/OS-II. There are two main functions of it 
 *                                      1. alloc the stack memory for the task(TCB) list.
@@ -47,18 +35,18 @@ pub struct Arena<const N: usize> {
     buf: UnsafeCell<MaybeUninit<[u8; N]>>,
     ptr: Mutex<RefCell<*mut u8>>,
     // by noah：use bitmap to find a empty stack. If a stack is used, the corresponding bit will be set to ZERO.
-    stack_bmp: Mutex<RefCell<[OS_STACK; OS_STACK_TBL_SIZE]>>,
+//     stack_bmp: Mutex<RefCell<[OS_STACK; OS_STACK_TBL_SIZE]>>,
 
-    // by noah:to avoid using feature everytime we use these primary members(because the Atomic do not support generics) 
-    // we use Mutex<RefCell<>> to define them.
-    // #[cfg(feature = "OS_STACK_LESS_THAN_64")]
-    // free_stack_grp:AtomicU8,
-    // #[cfg(feature = "OS_STACK_LESS_THAN_256")]
-    // free_stack_grp:AtomicU16,
+//     // by noah:to avoid using feature everytime we use these primary members(because the Atomic do not support generics) 
+//     // we use Mutex<RefCell<>> to define them.
+//     // #[cfg(feature = "OS_STACK_LESS_THAN_64")]
+//     // free_stack_grp:AtomicU8,
+//     // #[cfg(feature = "OS_STACK_LESS_THAN_256")]
+//     // free_stack_grp:AtomicU16,
 
-    free_stack_grp:Mutex<RefCell<OS_STACK>>,
+//     free_stack_grp:Mutex<RefCell<OS_STACK>>,
 
-    stack_tbl: Mutex<RefCell<[[OS_STK;OS_STACK_SIZE]; OS_STACK_NUM]>>,
+//     stack_tbl: Mutex<RefCell<[[OS_STK;OS_STACK_SIZE]; OS_STACK_NUM]>>,
 }
 
 /*
@@ -76,11 +64,11 @@ impl<const N: usize> Arena<N> {
             buf: UnsafeCell::new(MaybeUninit::uninit()),
             ptr: Mutex::new(RefCell::new(null_mut())),
 
-            // all stack is not used, so every element will be set to 1.
-            stack_bmp: Mutex::new(RefCell::new([1; OS_STACK_TBL_SIZE])),
-            free_stack_grp: Mutex::new(RefCell::new(0)),
-            // clear the stack table
-            stack_tbl: Mutex::new(RefCell::new([[0;OS_STACK_SIZE]; OS_STACK_NUM])),
+            // // all stack is not used, so every element will be set to 1.
+            // stack_bmp: Mutex::new(RefCell::new([1; OS_STACK_TBL_SIZE])),
+            // free_stack_grp: Mutex::new(RefCell::new(0)),
+            // // clear the stack table
+            // stack_tbl: Mutex::new(RefCell::new([[0;OS_STACK_SIZE]; OS_STACK_NUM])),
         }
     }
 
@@ -112,7 +100,7 @@ impl<const N: usize> Arena<N> {
     }
 }
 
-// function two：alloc the stack when a future is interrupted without await.
-impl <const N: usize> Arena<N>{
+// // function two：alloc the stack when a future is interrupted without await.
+// impl <const N: usize> Arena<N>{
     
-}
+// }

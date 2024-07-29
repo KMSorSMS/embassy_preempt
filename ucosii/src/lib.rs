@@ -51,8 +51,9 @@ pub mod ucosii;
 /// the async scheduler(executor) of rust uC
 pub mod executor;
 /// the stk allocator
-pub mod stk_allocator;
-
+pub mod arena;
+/// the task interface of uC/OS-II kernel
+pub mod os_task;
 /// the the macro of atomic operation
 #[macro_use]
 /// the atomic_macros module is used to define atomic operations

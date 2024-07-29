@@ -122,6 +122,7 @@ OS_SAFETY_CRITICAL_IEC61508=[]
 cortex_m = []
 OS_STACK_LESS_THAN_64=[]
 OS_STACK_LESS_THAN_256=[]
+OS_EVENT_MULTI_EN=[]
 std = []
 host = []
 atomics = []                 # use hardware atomics from core::sync::atomic
