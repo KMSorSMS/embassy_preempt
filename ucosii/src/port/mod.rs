@@ -25,7 +25,7 @@ pub type FP32 = f32;
 /// Double precision floating point
 pub type FP64 = f64;
 /// the ptr size. define this to use raw ptr
-pub type PTR = u32;
+pub type PTR = *mut ();
 /// the usize type used in array
 pub type USIZE = usize;
 

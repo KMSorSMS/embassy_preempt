@@ -5,18 +5,25 @@ mod run_queue_atomics;
 pub mod state;
 pub mod waker;
 use alloc::string::String;
+use core::borrow::{Borrow, BorrowMut};
 use core::future::Future;
+use core::mem;
 use core::ops::{Deref, DerefMut};
 use core::ptr::NonNull;
+use core::pin::Pin;
+use core::task::{Context, Poll};
+
 
 use run_queue_atomics::RunQueue;
 use state::State;
 
 pub use self::waker::task_from_waker;
 use crate::cfg::*;
+use crate::heap::stack_allocator::OS_STK_REF;
 // use spawner::SpawnToken;
 use crate::port::*;
-use crate::stk_allocator::{ARENA, OS_STK_REF};
+use crate::arena::ARENA;
+
 use crate::ucosii::*;
 use crate::util::{SyncUnsafeCell, UninitCell};
 /*
@@ -41,7 +48,8 @@ pub struct OS_TCB {
     // it maybe None
     OSTCBStkPtr: Option<OS_STK_REF>, /* Pointer to current top of stack                         */
     // Task specific extension. If the OS_TASK_CREATE_EXT_EN feature is not active, it will be None
-    OSTCBExtInfo: Option<OS_TCB_EXT>,
+    #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+    OSTCBExtInfo: OS_TCB_EXT,
 
     OSTCBNext: SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to next     TCB in the TCB list                 */
     OSTCBPrev: SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to previous TCB in the TCB list                 */
@@ -57,7 +65,8 @@ pub struct OS_TCB {
 
     OSTCBDly: INT32U,     /* Nbr ticks to delay task or, timeout waiting for event   */
     OSTCBStat: State,     /* Task      status                                        */
-    OSTCBStatPend: INT8U, /* Task PEND status                                        */
+    // no need
+    // OSTCBStatPend: INT8U, /* Task PEND status                                        */
     OSTCBPrio: INT8U,     /* Task priority (0 == highest)                            */
 
     OSTCBX: INT8U,      /* Bit position in group  corresponding to task priority   */
@@ -72,7 +81,7 @@ pub struct OS_TCB {
     OSTCBCtxSwCtr: INT32U, /* Number of time the task was switched in                 */
     OSTCBCyclesTot: INT32U,   /* Total number of clock cycles the task has been running  */
     OSTCBCyclesStart: INT32U, /* Snapshot of cycle counter at start of task resumption   */
-    OSTCBStkBase: OS_STK,     /* Pointer to the beginning of the task stack              */
+    OSTCBStkBase:Option<OS_STK_REF>,     /* Pointer to the beginning of the task stack              */
     OSTCBStkUsed: INT32U,     /* Number of bytes used from the stack                     */
 
     #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
@@ -144,16 +153,34 @@ pub struct AvailableTask<F: Future + 'static> {
 ****************************************************************************************************************************************
 */
 
+impl OS_TCB_EXT{
+    fn init(&mut self,pext:*mut (),opt:INT16U,id:INT16U){
+        self.OSTCBExtPtr=pext;
+        // info about stack is no need to be init here
+        // self.OSTCBStkBottom=None;
+        // self.OSTCBStkSize=0;
+        self.OSTCBOpt=opt;
+        self.OSTCBId=id;
+    }
+}
+
 impl<F: Future + 'static> OS_TASK_STORAGE<F> {
     const NEW: Self = Self::new();
     /// create a new OS_TASK_STORAGE
     // Take a lazy approach, which means the TCB will be init when call the init func of TCB
     // this func will be used to init the global array
-    pub const fn new() -> Self {
+    const fn new() -> Self {
         Self {
             task_tcb: OS_TCB {
                 OSTCBStkPtr: None,
-                OSTCBExtInfo: None,
+                #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
+                OSTCBExtInfo: OS_TCB_EXT{
+                    OSTCBExtPtr: 0 as PTR,
+                    OSTCBStkBottom: None,
+                    OSTCBStkSize: 0,
+                    OSTCBOpt: 0,
+                    OSTCBId: 0,
+                },
                 OSTCBNext: SyncUnsafeCell::new(None),
                 OSTCBPrev: SyncUnsafeCell::new(None),
                 OS_POLL_FN: SyncUnsafeCell::new(None),
@@ -163,7 +190,8 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
                 OSTCBMsg: 0 as PTR,
                 OSTCBDly: 0,
                 OSTCBStat: State::new(),
-                OSTCBStatPend: 0,
+                // no need
+                // OSTCBStatPend: 0,
                 OSTCBPrio: 0,
                 OSTCBX: 0,
                 OSTCBY: 0,
@@ -175,7 +203,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
                 OSTCBCtxSwCtr: 0,
                 OSTCBCyclesTot: 0,
                 OSTCBCyclesStart: 0,
-                OSTCBStkBase: 0,
+                OSTCBStkBase: None,
                 OSTCBStkUsed: 0,
                 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
                 OSTCBRegTbl: [0; OS_TASK_REG_TBL_SIZE],
@@ -188,14 +216,77 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
 
     /// init the storage of the task, just like the spawn in Embassy
     //  this func will be called by OS_TASK_CTREATE
-    pub fn init(&'static self, _future: impl FnOnce() -> F) {}
+    //  just like OSTCBInit in uC/OS, but we don't need the stack ptr
+    pub fn init(prio:INT8U, id:INT16U, pext:*mut (), opt:INT16U, name:String, future_func: impl FnOnce() -> F) {
+        // by noah: claim a TaskStorage
+        let task_ref = OS_TASK_STORAGE::<F>::claim(); 
+        
+        let this:&mut OS_TASK_STORAGE<F>;
+        unsafe {
+            this = &mut *(task_ref.as_ptr() as *mut OS_TASK_STORAGE<F>);
+            this.task_tcb.OS_POLL_FN.set(Some(OS_TASK_STORAGE::<F>::poll));
+            this.future.write_in_place(future_func);
+        }
+        // set the prio
+        this.task_tcb.OSTCBPrio=prio;
+        // set the stat
+        if !this.task_tcb.OSTCBStat.spawn(){
+            panic!("task with prio {} spawn failed", prio);
+        }
+        // init ext info
+        #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
+        this.task_tcb.OSTCBExtInfo.init(pext,opt,id);
+
+        // add the task to ready queue
+        // the operation about the bitmap will be done in the RunQueue
+        unsafe { SyncExecutor.get().unwrap().enqueue(task_ref) };
+        
+        #[cfg(feature="OS_EVENT_EN")]
+        {
+            this.task_tcb.OSTCBEventPtr=None;
+            #[cfg(feature="OS_EVENT_MULTI_EN")]
+            {
+                // this.task_tcb.OSTCBEventMultiPtr
+                // this.task_tcb.OSTCBEventMultiPtr
+            }
+        }
+        // #[cfg(all(feature="OS_FLAG_EN",feature="OS_MAX_FLAGS",feature="OS_TASK_DEL_EN"))]
+        // this.task_tcb.OSTCBFlagNode=None;
+        #[cfg(any(feature="OS_MBOX_EN",all(feature="OS_Q_EN",feature="OS_MAX_QS")))]
+        {
+            this.task_tcb.OSTCBMsg=0 as PTR;
+        }
+        
+        #[cfg(feature="OS_TASK_NAME_EN")]
+        {
+            this.task_tcb.OSTCBTaskName=name;
+        }
+        
+    }
 
     /// the poll fun called by the executor
-    pub fn poll() {}
+    unsafe fn poll(p:OS_TCB_REF) {
+        let this = &*(p.as_ptr() as *const OS_TASK_STORAGE<F>);
+
+        let future = Pin::new_unchecked(this.future.as_mut());
+        let waker = waker::from_task(p);
+        let mut cx = Context::from_waker(&waker);
+        match future.poll(&mut cx) {
+            Poll::Ready(_) => {
+                this.future.drop_in_place();
+                this.task_tcb.OSTCBStat.despawn();
+            }
+            Poll::Pending => {}
+        }
+
+        // the compiler is emitting a virtual call for waker drop, but we know
+        // it's a noop for our waker.
+        mem::forget(waker);
+    }
 
     /// this func will be called to create a new task(TCB)
     // refer to the get of TaskPoolRef in embassy
-    pub fn claim() -> OS_TCB_REF {
+    fn claim() -> OS_TCB_REF {
         // by noah: for we can create task after OSTaskCreate, so we need a cs
         critical_section::with(|cs| {
             let task_storage = ARENA.alloc::<OS_TASK_STORAGE<F>>(cs);
@@ -226,9 +317,10 @@ impl Default for OS_TCB_REF {
 impl Deref for OS_TCB_REF {
     type Target = OS_TCB;
     fn deref(&self) -> &Self::Target {
-        unsafe { self.ptr.as_ref() }
+        unsafe { self.ptr.as_ref()}
     }
 }
+
 // impl deref for mut OS_TCB_REF
 impl DerefMut for OS_TCB_REF {
     fn deref_mut(&mut self) -> &mut Self::Target {
