@@ -9,21 +9,19 @@ use core::borrow::{Borrow, BorrowMut};
 use core::future::Future;
 use core::mem;
 use core::ops::{Deref, DerefMut};
-use core::ptr::NonNull;
 use core::pin::Pin;
+use core::ptr::NonNull;
 use core::task::{Context, Poll};
 
-
-use run_queue_atomics::RunQueue;
+// use run_queue_atomics::RunQueue;
 use state::State;
 
 pub use self::waker::task_from_waker;
+use crate::arena::ARENA;
 use crate::cfg::*;
 use crate::heap::stack_allocator::OS_STK_REF;
 // use spawner::SpawnToken;
 use crate::port::*;
-use crate::arena::ARENA;
-
 use crate::ucosii::*;
 use crate::util::{SyncUnsafeCell, UninitCell};
 /*
@@ -48,7 +46,7 @@ pub struct OS_TCB {
     // it maybe None
     OSTCBStkPtr: Option<OS_STK_REF>, /* Pointer to current top of stack                         */
     // Task specific extension. If the OS_TASK_CREATE_EXT_EN feature is not active, it will be None
-    #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+    #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
     OSTCBExtInfo: OS_TCB_EXT,
 
     OSTCBNext: SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to next     TCB in the TCB list                 */
@@ -63,11 +61,11 @@ pub struct OS_TCB {
     #[cfg(any(all(feature = "OS_Q_EN", feature = "OS_MAX_QS"), feature = "OS_MBOX_EN"))]
     OSTCBMsg: PTR, /* Message received from OSMboxPost() or OSQPost()         */
 
-    OSTCBDly: INT32U,     /* Nbr ticks to delay task or, timeout waiting for event   */
-    OSTCBStat: State,     /* Task      status                                        */
+    OSTCBDly: INT32U, /* Nbr ticks to delay task or, timeout waiting for event   */
+    OSTCBStat: State, /* Task      status                                        */
     // no need
     // OSTCBStatPend: INT8U, /* Task PEND status                                        */
-    OSTCBPrio: INT8U,     /* Task priority (0 == highest)                            */
+    OSTCBPrio: INT8U, /* Task priority (0 == highest)                            */
 
     OSTCBX: INT8U,      /* Bit position in group  corresponding to task priority   */
     OSTCBY: INT8U,      /* Index into ready table corresponding to task priority   */
@@ -79,10 +77,10 @@ pub struct OS_TCB {
 
     #[cfg(feature = "OS_TASK_PROFILE_EN")]
     OSTCBCtxSwCtr: INT32U, /* Number of time the task was switched in                 */
-    OSTCBCyclesTot: INT32U,   /* Total number of clock cycles the task has been running  */
-    OSTCBCyclesStart: INT32U, /* Snapshot of cycle counter at start of task resumption   */
-    OSTCBStkBase:Option<OS_STK_REF>,     /* Pointer to the beginning of the task stack              */
-    OSTCBStkUsed: INT32U,     /* Number of bytes used from the stack                     */
+    OSTCBCyclesTot: INT32U,           /* Total number of clock cycles the task has been running  */
+    OSTCBCyclesStart: INT32U,         /* Snapshot of cycle counter at start of task resumption   */
+    OSTCBStkBase: Option<OS_STK_REF>, /* Pointer to the beginning of the task stack              */
+    OSTCBStkUsed: INT32U,             /* Number of bytes used from the stack                     */
 
     #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
     OSTCBRegTbl: [INT32U; OS_TASK_REG_TBL_SIZE],
@@ -153,14 +151,14 @@ pub struct AvailableTask<F: Future + 'static> {
 ****************************************************************************************************************************************
 */
 
-impl OS_TCB_EXT{
-    fn init(&mut self,pext:*mut (),opt:INT16U,id:INT16U){
-        self.OSTCBExtPtr=pext;
+impl OS_TCB_EXT {
+    fn init(&mut self, pext: *mut (), opt: INT16U, id: INT16U) {
+        self.OSTCBExtPtr = pext;
         // info about stack is no need to be init here
         // self.OSTCBStkBottom=None;
         // self.OSTCBStkSize=0;
-        self.OSTCBOpt=opt;
-        self.OSTCBId=id;
+        self.OSTCBOpt = opt;
+        self.OSTCBId = id;
     }
 }
 
@@ -174,7 +172,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
             task_tcb: OS_TCB {
                 OSTCBStkPtr: None,
                 #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
-                OSTCBExtInfo: OS_TCB_EXT{
+                OSTCBExtInfo: OS_TCB_EXT {
                     OSTCBExtPtr: 0 as PTR,
                     OSTCBStkBottom: None,
                     OSTCBStkSize: 0,
@@ -217,34 +215,38 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
     /// init the storage of the task, just like the spawn in Embassy
     //  this func will be called by OS_TASK_CTREATE
     //  just like OSTCBInit in uC/OS, but we don't need the stack ptr
-    pub fn init(prio:INT8U, id:INT16U, pext:*mut (), opt:INT16U, name:String, future_func: impl FnOnce() -> F) {
+    pub fn init(prio: INT8U, id: INT16U, pext: *mut (), opt: INT16U, name: String, future_func: impl FnOnce() -> F) {
         // by noah: claim a TaskStorage
-        let task_ref = OS_TASK_STORAGE::<F>::claim(); 
-        
-        let this:&mut OS_TASK_STORAGE<F>;
+        let task_ref = OS_TASK_STORAGE::<F>::claim();
+
+        let this: &mut OS_TASK_STORAGE<F>;
         unsafe {
             this = &mut *(task_ref.as_ptr() as *mut OS_TASK_STORAGE<F>);
             this.task_tcb.OS_POLL_FN.set(Some(OS_TASK_STORAGE::<F>::poll));
             this.future.write_in_place(future_func);
         }
-        // set the prio
-        this.task_tcb.OSTCBPrio=prio;
+        // set the prio also need to set it in the bitmap
+        this.task_tcb.OSTCBPrio = prio;
+        this.task_tcb.OSTCBX = prio >> 3;
+        this.task_tcb.OSTCBY = prio & 0x07;
+        this.task_tcb.OSTCBBitX = 1 << this.task_tcb.OSTCBX;
+        this.task_tcb.OSTCBBitY = 1 << this.task_tcb.OSTCBY;
         // set the stat
-        if !this.task_tcb.OSTCBStat.spawn(){
+        if !this.task_tcb.OSTCBStat.spawn() {
             panic!("task with prio {} spawn failed", prio);
         }
         // init ext info
         #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
-        this.task_tcb.OSTCBExtInfo.init(pext,opt,id);
+        this.task_tcb.OSTCBExtInfo.init(pext, opt, id);
 
         // add the task to ready queue
         // the operation about the bitmap will be done in the RunQueue
         unsafe { SyncExecutor.get().unwrap().enqueue(task_ref) };
-        
-        #[cfg(feature="OS_EVENT_EN")]
+
+        #[cfg(feature = "OS_EVENT_EN")]
         {
-            this.task_tcb.OSTCBEventPtr=None;
-            #[cfg(feature="OS_EVENT_MULTI_EN")]
+            this.task_tcb.OSTCBEventPtr = None;
+            #[cfg(feature = "OS_EVENT_MULTI_EN")]
             {
                 // this.task_tcb.OSTCBEventMultiPtr
                 // this.task_tcb.OSTCBEventMultiPtr
@@ -252,20 +254,19 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         }
         // #[cfg(all(feature="OS_FLAG_EN",feature="OS_MAX_FLAGS",feature="OS_TASK_DEL_EN"))]
         // this.task_tcb.OSTCBFlagNode=None;
-        #[cfg(any(feature="OS_MBOX_EN",all(feature="OS_Q_EN",feature="OS_MAX_QS")))]
+        #[cfg(any(feature = "OS_MBOX_EN", all(feature = "OS_Q_EN", feature = "OS_MAX_QS")))]
         {
-            this.task_tcb.OSTCBMsg=0 as PTR;
+            this.task_tcb.OSTCBMsg = 0 as PTR;
         }
-        
-        #[cfg(feature="OS_TASK_NAME_EN")]
+
+        #[cfg(feature = "OS_TASK_NAME_EN")]
         {
-            this.task_tcb.OSTCBTaskName=name;
+            this.task_tcb.OSTCBTaskName = name;
         }
-        
     }
 
     /// the poll fun called by the executor
-    unsafe fn poll(p:OS_TCB_REF) {
+    unsafe fn poll(p: OS_TCB_REF) {
         let this = &*(p.as_ptr() as *const OS_TASK_STORAGE<F>);
 
         let future = Pin::new_unchecked(this.future.as_mut());
@@ -317,7 +318,7 @@ impl Default for OS_TCB_REF {
 impl Deref for OS_TCB_REF {
     type Target = OS_TCB;
     fn deref(&self) -> &Self::Target {
-        unsafe { self.ptr.as_ref()}
+        unsafe { self.ptr.as_ref() }
     }
 }
 
@@ -528,15 +529,27 @@ impl Pender {
 
 /// The executor for the uC/OS-II RTOS.
 pub(crate) struct SyncExecutor {
-    run_queue: RunQueue,
+    // run_queue: RunQueue,
+    os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; OS_LOWEST_PRIO + 1]>,
     pender: Pender,
+    // by liam: add a bitmap to record the status of the task
+    #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
+    OSRdyGrp: SyncUnsafeCell<u8>,
+    #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
+    OSRdyTbl: SyncUnsafeCell<[u8; OS_RDY_TBL_SIZE]>,
+    #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
+    OSRdyGrp: u16,
+    #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
+    OSRdyTbl: [u16; OS_RDY_TBL_SIZE],
 }
 impl SyncExecutor {
     /// The global executor for the uC/OS-II RTOS.
     pub(crate) fn new(pender: Pender) -> Self {
         Self {
-            run_queue: RunQueue::new(),
+            os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); OS_LOWEST_PRIO + 1]),
             pender,
+            OSRdyGrp: SyncUnsafeCell::new(0),
+            OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
         }
     }
 
@@ -548,9 +561,16 @@ impl SyncExecutor {
     /// - `task` must NOT be already enqueued (in this executor or another one).
     #[inline(always)]
     unsafe fn enqueue(&self, task: OS_TCB_REF) {
-        if self.run_queue.enqueue(task) {
-            self.pender.pend();
-        }
+        //according to the priority of the task, we place the task in the right place of os_prio_tbl
+        // also we will set the corresponding bit in the OSRdyTbl and OSRdyGrp
+        let prio = task.OSTCBPrio as usize;
+        let tmp = self.OSRdyGrp.get_mut();
+        *tmp = *tmp | task.OSTCBBitY;
+        let tmp = self.OSRdyTbl.get_mut();
+        tmp[task.OSTCBX as usize] = tmp[task.OSTCBX as usize] | task.OSTCBBitY;
+        // set the task in the right place of os_prio_tbl
+        let tmp = self.os_prio_tbl.get_mut();
+        tmp[prio] = task;
     }
 
     pub(super) unsafe fn spawn(&'static self, task: OS_TCB_REF) {
@@ -565,7 +585,7 @@ impl SyncExecutor {
     pub(crate) unsafe fn poll(&'static self) {
         #[allow(clippy::never_loop)]
         loop {
-            self.run_queue.dequeue_all(|p| {
+            self.find_highrdy_poll(|p| {
                 let task = p.header();
 
                 if !task.OSTCBStat.run_dequeue() {
@@ -585,5 +605,13 @@ impl SyncExecutor {
                 break;
             }
         }
+    }
+    unsafe fn find_highrdy_poll(&self, mut f: impl FnMut(OS_TCB_REF)) {
+        let tmp = self.OSRdyGrp.get();
+        let prio = tmp.trailing_zeros() as usize;
+        let tmp = self.OSRdyTbl.get();
+        let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
+        let task = self.os_prio_tbl.get()[prio];
+        f(task);
     }
 }
