@@ -85,8 +85,9 @@
     // "examples/stm32wl/Cargo.toml",
     // "examples/wasm/Cargo.toml",
     // "examples/stm32f401re/Cargo.toml",
-    "ucosii/Cargo.toml",
+    // "ucosii/Cargo.toml",
     // "embassy-executor/Cargo.toml",
+    "ucosii/Cargo.toml"
   ],
   "liveshare.languages.allowGuestCommandControl":true
 }
