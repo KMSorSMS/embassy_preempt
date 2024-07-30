@@ -41,7 +41,7 @@ use crate::executor::OS_TCB_REF;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
 
-use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSPrioCur, OSPrioHighRdy, OSRunning, OSTCBCur, OSTCBHighRdy, OSTaskCtr, OSTime};
+use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSPrioHighRdy, OSRunning, OSTCBCur, OSTCBHighRdy, OSTaskCtr, OSTime};
 #[cfg(feature="OS_TASK_REG_TBL_SIZE")]
 use crate::ucosii::OSTaskRegNextAvailID;
 

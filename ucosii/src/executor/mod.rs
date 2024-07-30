@@ -69,8 +69,8 @@ pub struct OS_TCB {
 
     OSTCBX: INT8U,      /* Bit position in group  corresponding to task priority   */
     OSTCBY: INT8U,      /* Index into ready table corresponding to task priority   */
-    OSTCBBitX: OS_PRIO, /* Bit mask to access bit position in ready table          */
-    OSTCBBitY: OS_PRIO, /* Bit mask to access bit position in ready group          */
+    OSTCBBitX: INT8U, /* Bit mask to access bit position in ready table          */
+    OSTCBBitY: INT8U, /* Bit mask to access bit position in ready group          */
 
     #[cfg(feature = "OS_TASK_DEL_EN")]
     OSTCBDelReq: INT8U, /* Indicates whether a task needs to delete itself         */
@@ -353,10 +353,7 @@ impl OS_TCB_REF {
     }
 }
 
-
-impl<F: Future + 'static> AvailableTask<F> {
-   
-}
+impl<F: Future + 'static> AvailableTask<F> {}
 
 /*
 ****************************************************************************************************************************************
@@ -396,7 +393,10 @@ impl Pender {
 /// The executor for the uC/OS-II RTOS.
 pub(crate) struct SyncExecutor {
     // run_queue: RunQueue,
+    // the prio tbl stores a relation between the prio and the task_ref
     os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; OS_LOWEST_PRIO + 1]>,
+    // indicate the current running task
+    OSPrioCur: SyncUnsafeCell<OS_PRIO>,
     pender: Pender,
     // by liam: add a bitmap to record the status of the task
     #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
@@ -413,6 +413,7 @@ impl SyncExecutor {
     pub(crate) fn new(pender: Pender) -> Self {
         Self {
             os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); OS_LOWEST_PRIO + 1]),
+            OSPrioCur: SyncUnsafeCell::new(OS_LOWEST_PRIO),
             pender,
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
@@ -445,44 +446,66 @@ impl SyncExecutor {
     //     self.enqueue(task);
     // }
 
-    /// # Safety
-    ///
-    /// Same as [`Executor::poll`], plus you must only call this on the thread this executor was created.
+    /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
     pub(crate) unsafe fn poll(&'static self) {
-            self.find_highrdy_poll(|p| {
-                let task = p.header();
-
-                if !task.OSTCBStat.run_dequeue() {
-                    // If task is not running, ignore it. This can happen in the following scenario:
-                    //   - Task gets dequeued, poll starts
-                    //   - While task is being polled, it gets woken. It gets placed in the queue.
-                    //   - Task poll finishes, returning done=true
-                    //   - RUNNING bit is cleared, but the task is already in the queue.
-                    return;
+        // find the highest priority task in the ready queue
+        let task = critical_section::with(|_| self.find_highrdy_set_cur());
+        if task.is_none() {
+            return;
+        }
+        let mut task = task.unwrap();
+        if task.OSTCBStat.run_dequeue() {
+            // If task is not running, ignore it. This can happen in the following scenario:
+            //   - Task gets dequeued, poll starts
+            //   - While task is being polled, it gets woken. It gets placed in the queue.
+            //   - Task poll finishes, returning done=true
+            //   - RUNNING bit is cleared, but the task is already in the queue.
+            task.OS_POLL_FN.get().unwrap_unchecked()(task);
+        }
+        // after the task is done, we need to set the task to unready(in bitmap) and also we need to find the next task to run
+        // both of this process should be done in critical section
+        loop {
+            match critical_section::with(|_| {
+                self.set_task_unready(task);
+                self.find_highrdy_set_cur()
+            }) {
+                Some(t) => {
+                    task = t;
+                    if task.OSTCBStat.run_dequeue() {
+                        task.OS_POLL_FN.get().unwrap_unchecked()(task);
+                    }
                 }
-
-                // Run the task
-                task.OS_POLL_FN.get().unwrap_unchecked()(p);
-                // after the task is done, we need to set the task to unready(in bitmap)
-                // we call this process is poll to unready
-                SyncExecutor.get_unmut().unwrap().set_task_unready(p);
-            });
+                None => {
+                    break;
+                }
+            }
+        }
     }
-    unsafe fn find_highrdy_poll(&self, mut f: impl FnMut(OS_TCB_REF)) {
-        let tmp = self.OSRdyGrp.get();
+    unsafe fn find_highrdy_set_cur(&self) -> Option<OS_TCB_REF> {
+        let tmp = self.OSRdyGrp.get_unmut();
+        // if there is no task in the ready queue, return None also set the current running task to the lowest priority
+        if *tmp == 0 {
+            self.OSPrioCur.set(OS_LOWEST_PRIO);
+            return None;
+        }
         let prio = tmp.trailing_zeros() as usize;
         let tmp = self.OSRdyTbl.get();
         let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
-        let task = self.os_prio_tbl.get()[prio];
-        f(task);
+        // set the current running task
+        self.OSPrioCur.set(prio as OS_PRIO);
+        Some(self.os_prio_tbl.get()[prio])
     }
     unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
-        let tmp = self.OSRdyTbl.get_mut();
-        tmp[task.OSTCBY as usize] &= !task.OSTCBBitX;
-        // when the group is empty, we need to set the corresponding bit in the OSRdyGrp to 0
-        if tmp[task.OSTCBY as usize] == 0 {
-            let tmp = self.OSRdyGrp.get_mut();
-            *tmp &= !task.OSTCBBitY;
-        }
+        // added by liam: we have to make this process in critical section
+        // because the bitmap is shared by all the tasks
+        critical_section::with(|_| {
+            let tmp = self.OSRdyTbl.get_mut();
+            tmp[task.OSTCBY as usize] &= !task.OSTCBBitX;
+            // when the group is empty, we need to set the corresponding bit in the OSRdyGrp to 0
+            if tmp[task.OSTCBY as usize] == 0 {
+                let tmp = self.OSRdyGrp.get_mut();
+                *tmp &= !task.OSTCBBitY;
+            }
+        });
     }
 }

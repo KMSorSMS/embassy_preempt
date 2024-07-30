@@ -514,7 +514,7 @@ pub enum OS_ERR_STATE {
 /// the prio type defination in the rust-uC
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
 #[allow(non_camel_case_types)]
-pub type OS_PRIO = INT8U;
+pub type OS_PRIO = usize;
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
 pub type OS_PRIO = INT16U;
@@ -780,8 +780,9 @@ pub static OSRdyTbl: Mutex<RefCell<[OS_PRIO; OS_RDY_TBL_SIZE]>> = Mutex::new(Ref
 /// by noah: the ref of Table of TCBs. TCBs will be stored in Arena in executor.rs
 // pub static OSTCBTbl:TaskPoolRef=TaskPoolRef::new();
 
-/// Priority of current task
-pub static OSPrioCur: AtomicU8 = AtomicU8::new(0);
+// Priority of current task
+// fix by liam: we change this to executor
+// pub static OSPrioCur: AtomicU8 = AtomicU8::new(0);
 
 /// Priority of highest priority task
 pub static OSPrioHighRdy: AtomicU8 = AtomicU8::new(0);
