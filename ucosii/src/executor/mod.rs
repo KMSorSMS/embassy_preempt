@@ -67,8 +67,8 @@ pub struct OS_TCB {
     // OSTCBStatPend: INT8U, /* Task PEND status                                        */
     OSTCBPrio: INT8U, /* Task priority (0 == highest)                            */
 
-    OSTCBX: INT8U,      /* Bit position in group  corresponding to task priority   */
-    OSTCBY: INT8U,      /* Index into ready table corresponding to task priority   */
+    OSTCBX: INT8U,    /* Bit position in group  corresponding to task priority   */
+    OSTCBY: INT8U,    /* Index into ready table corresponding to task priority   */
     OSTCBBitX: INT8U, /* Bit mask to access bit position in ready table          */
     OSTCBBitY: INT8U, /* Bit mask to access bit position in ready group          */
 
@@ -144,12 +144,46 @@ pub struct OS_TCB_REF {
 pub struct AvailableTask<F: Future + 'static> {
     task: &'static OS_TASK_STORAGE<F>,
 }
+/// the context structure store in stack
+#[repr(C, align(8))]
+struct UcStk {
+    // below are the remaining part of the task's context
+    r4: u32,
+    r5: u32,
+    r6: u32,
+    r7: u32,
+    r8: u32,
+    r9: u32,
+    r10: u32,
+    r11: u32,
+    r14: u32,
+    // below are stored when the interrupt occurs
+    r0: u32,
+    r1: u32,
+    r2: u32,
+    r3: u32,
+    r12: u32,
+    lr: u32, 
+    pc: u32,
+    xpsr: u32,
+}
 
 /*
 ****************************************************************************************************************************************
 *                                                             implement of structure
 ****************************************************************************************************************************************
 */
+
+impl OS_TCB {
+    // can only be called if the task owns the stack
+    fn restore_context_from_stk(&mut self) {
+        if self.OSTCBStkPtr.is_none() {
+            return;
+        }
+        let stk = self.OSTCBStkPtr.as_mut().unwrap();
+ 
+    }
+}
 
 impl OS_TCB_EXT {
     fn init(&mut self, pext: *mut (), opt: INT16U, id: INT16U) {
@@ -163,7 +197,7 @@ impl OS_TCB_EXT {
 }
 
 impl<F: Future + 'static> OS_TASK_STORAGE<F> {
-    const NEW: Self = Self::new();
+    // const NEW: Self = Self::new();
     /// create a new OS_TASK_STORAGE
     // Take a lazy approach, which means the TCB will be init when call the init func of TCB
     // this func will be used to init the global array
@@ -460,7 +494,13 @@ impl SyncExecutor {
             //   - While task is being polled, it gets woken. It gets placed in the queue.
             //   - Task poll finishes, returning done=true
             //   - RUNNING bit is cleared, but the task is already in the queue.
-            task.OS_POLL_FN.get().unwrap_unchecked()(task);
+
+            if task.OSTCBStkPtr.is_none() {
+                task.OS_POLL_FN.get().unwrap_unchecked()(task);
+            } else {
+                // if the task has stack, it's a thread, we need to resume it not poll it
+                task.restore_context_from_stk();
+            }
         }
         // after the task is done, we need to set the task to unready(in bitmap) and also we need to find the next task to run
         // both of this process should be done in critical section
