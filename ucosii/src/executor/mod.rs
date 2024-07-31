@@ -229,7 +229,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
     /// init the storage of the task, just like the spawn in Embassy
     //  this func will be called by OS_TASK_CTREATE
     //  just like OSTCBInit in uC/OS, but we don't need the stack ptr
-    pub fn init(prio: INT8U, id: INT16U, pext: *mut (), opt: INT16U, name: String, future_func: impl FnOnce() -> F) {
+    pub fn init(prio: INT8U, id: INT16U, pext: *mut (), opt: INT16U, name: String, future_func: impl FnOnce() -> F) -> OS_ERR_STATE{
         // by noah: claim a TaskStorage
         let task_ref = OS_TASK_STORAGE::<F>::claim();
 
@@ -277,8 +277,24 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         {
             this.task_tcb.OSTCBTaskName = name;
         }
+
+        if OS_TASK_REG_TBL_SIZE > 0{
+            for i in 0..OS_TASK_REG_TBL_SIZE{
+                this.task_tcb.OSTCBRegTbl[i]=0;
+            }
+        }
+
+        return OS_ERR_STATE::OS_ERR_NONE;
+        #[cfg(feature="OS_CPU_HOOKS_EN")]
+        {
+            // Call user defined hook
+            OSTCBInitHook(ptcb);
+            OSTaskCreateHook(ptcb); 
+        }
+        // we don't need to add the TaskRef into OSTCBPrioTbl because we did this in func enqueue
     }
 
+    
     /// the poll fun called by the executor
     unsafe fn poll(p: OS_TCB_REF) {
         let this = &*(p.as_ptr() as *const OS_TASK_STORAGE<F>);
