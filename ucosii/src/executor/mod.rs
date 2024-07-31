@@ -6,6 +6,7 @@ pub mod state;
 pub mod waker;
 use alloc::string::String;
 use core::arch::asm;
+use core::borrow::Borrow;
 use core::future::Future;
 use core::mem;
 use core::ops::{Deref, DerefMut};
@@ -13,6 +14,7 @@ use core::pin::Pin;
 use core::ptr::NonNull;
 use core::task::{Context, Poll};
 
+use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
 use state::State;
 
@@ -24,15 +26,17 @@ use crate::heap::stack_allocator::{dealloc_stack, OS_STK_REF};
 use crate::port::*;
 use crate::ucosii::*;
 use crate::util::{SyncUnsafeCell, UninitCell};
+
 /*
 ****************************************************************************************************************************************
 *                                                             global variables
 ****************************************************************************************************************************************
 */
 // create a global executor
+lazy_static! {
 /// the global executor will be initialized at os init
-pub(crate) static mut SyncExecutor: SyncUnsafeCell<Option<&'static SyncExecutor>> = SyncUnsafeCell::new(None);
-
+pub(crate) static ref GlobalSyncExecutor: SyncUnsafeCell<Option<SyncExecutor>> = SyncUnsafeCell::new(Some(SyncExecutor::new(Pender(0 as *mut ()))));
+}
 /*
 ****************************************************************************************************************************************
 *                                                             type define
@@ -255,7 +259,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
 
         // add the task to ready queue
         // the operation about the bitmap will be done in the RunQueue
-        unsafe { SyncExecutor.get_unmut().unwrap().enqueue(task_ref) };
+        unsafe { GlobalSyncExecutor.get_unmut().as_ref().unwrap().enqueue(task_ref) };
 
         #[cfg(feature = "OS_EVENT_EN")]
         {
@@ -383,7 +387,7 @@ pub fn wake_task(task: OS_TCB_REF) {
     if header.OSTCBStat.run_enqueue() {
         // We have just marked the task as scheduled, so enqueue it.
         unsafe {
-            let executor = SyncExecutor.get().unwrap_unchecked();
+            let executor = GlobalSyncExecutor.get_unmut().as_ref().unwrap_unchecked();
             executor.enqueue(task);
         }
     }
