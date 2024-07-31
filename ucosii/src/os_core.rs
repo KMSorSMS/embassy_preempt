@@ -589,7 +589,6 @@ fn OS_InitTaskIdle() {}
 #[allow(unused)]
 fn OS_InitTCBList() {
     // 
-    OS_MemClr();
 }
 
 /*

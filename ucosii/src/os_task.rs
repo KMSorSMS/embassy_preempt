@@ -12,10 +12,10 @@
 */
 
 use core::{future::{self, Future}, ptr::null_mut};
-
+use core::sync::atomic::Ordering::Acquire;
 use alloc::string::ToString;
 
-use crate::{cfg::OS_LOWEST_PRIO, executor::OS_TASK_STORAGE, heap::stack_allocator::OS_STK_REF, port::{INT8U, OS_STK}, ucosii::OS_ERR_STATE};
+use crate::{cfg::OS_LOWEST_PRIO, executor::OS_TASK_STORAGE, heap::stack_allocator::OS_STK_REF, port::{INT8U, OS_STK}, ucosii::{OSIntNesting, OS_ERR_STATE}};
 
 /*
 ********************************************************************************************************************************************
@@ -42,7 +42,15 @@ where
             task(p_arg)
         }
     };
-    //
+    // Make sure we don't create the task from within an ISR
+    if OSIntNesting.load(Acquire)>0 {
+        return OS_ERR_STATE::OS_ERR_TASK_CREATE_ISR;
+    }
+    // if 
+    // because this func can be call when the OS has started, so need a cs
+    critical_section::with(|cs|{
+    });
+
     OS_TASK_STORAGE::init(prio, 0, 0 as *mut (), 0, "".to_string(), future_func);
     return OS_ERR_STATE::OS_ERR_NONE;
 }
@@ -54,14 +62,10 @@ where
     F: Future + 'static,
     FutFn: FnOnce(*mut ()) -> F + 'static,
 {
-    // warp the normal func to a async func
-    let future_func = move ||{
-        async move{
-            // only this part is different to OSTaskCreate
-            task(p_arg).await
-        }
+    let task = ||{
+        task(p_arg)
     };
     
-    OS_TASK_STORAGE::init(prio, 0, 0 as *mut (), 0, "".to_string(), future_func);
+    OS_TASK_STORAGE::init(prio, 0, 0 as *mut (), 0, "".to_string(), task);
     return OS_ERR_STATE::OS_ERR_NONE;
 }
