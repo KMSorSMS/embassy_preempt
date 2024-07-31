@@ -31,19 +31,18 @@
 *********************************************************************************************************
 */
 
-
 use core::sync::atomic::Ordering;
+
 // use critical_section::Mutex;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::executor::OS_TCB_REF;
+use crate::executor::GlobalSyncExecutor;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
-
-use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSPrioHighRdy, OSRunning, OSTCBCur, OSTCBHighRdy, OSTaskCtr, OSTime};
-#[cfg(feature="OS_TASK_REG_TBL_SIZE")]
+#[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
 use crate::ucosii::OSTaskRegNextAvailID;
+use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSRunning, OSTaskCtr, OSTime};
 
 /*
 *********************************************************************************************************
@@ -149,24 +148,18 @@ pub fn OSEventNameSet() {}
 /// This function is used to initialize the internals of uC/OS-II and MUST be called
 /// prior to creating any uC/OS-II object and, prior to calling OSStart().
 pub fn OSInit() {
-
-    OSInitHookBegin();/* Call port specific initialization code   */
+    OSInitHookBegin(); /* Call port specific initialization code   */
 
     // by noah: this func is no need to be called because we give the static var init val
     // OS_InitMisc();/* Initialize miscellaneous variables       */
-
     // by noah：this function is not called because we use lazy_static
     // OS_InitRdyList();/* Initialize the Ready List                */
-
     // by noah：this function is not called because we can not init TCB here
     // OS_InitTCBList(); /* Initialize the free list of OS_TCBs      */
-
     // to be done: For now, we just aim to implement the task module, so we will impl OS_InitEventList in the future
     // OS_InitEventList(); /* Initialize the free list of OS_EVENTs    */
-
     // #[cfg(all(feature="OS_MEM_EN",feature="OS_MAX_MEM_PART_EN"))]
     // OS_MemInit(); /* Initialize the memory manager            */
-
     // // to be done: For now, we just aim to implement the task module, so we will impl OS_InitEventList in the future
     // #[cfg(all(feature="OS_Q_EN",feature="OS_MAX_QS"))]
     // OS_QInit();
@@ -174,23 +167,21 @@ pub fn OSInit() {
     // by noah: There is still no need to implement idle task
     // OS_InitTaskIdle();
 
-    #[cfg(all(feature="OS_FLAG_EN",feature="OS_MAX_FLAGS"))]
+    #[cfg(all(feature = "OS_FLAG_EN", feature = "OS_MAX_FLAGS"))]
     OS_FlagInit(); /* Initialize the event flag structures     */
 
-    #[cfg(feature="OS_TASK_STAT_EN")]
+    #[cfg(feature = "OS_TASK_STAT_EN")]
     OS_InitTaskStat(); /* Create the Statistic Task                */
 
-    #[cfg(feature="OS_TMR_EN")]
+    #[cfg(feature = "OS_TMR_EN")]
     OSTmr_Init(); /* Initialize the Timer Manager             */
 
-    #[cfg(feature="OS_CPU_HOOKS_EN")]
+    #[cfg(feature = "OS_CPU_HOOKS_EN")]
     OSInitHookEnd(); /* Call port specific init. code            */
 
-    #[cfg(feature="OS_DEBUG_EN")]
+    #[cfg(feature = "OS_DEBUG_EN")]
     OSDebugInit();
-
 }
-
 
 /*
 *********************************************************************************************************
@@ -311,7 +302,19 @@ pub fn OSSchedUnlock() {}
 /// uC/OS-II manages the task that you have created.  Before you can call
 /// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
-pub fn OSStart() {}
+pub fn OSStart() {
+    extern "Rust" {
+        fn run_idle();
+    }
+    // set OSRunning
+    OSRunning.store(true, Ordering::Release);
+    loop {
+        unsafe {
+            GlobalSyncExecutor.get_unmut().as_ref().unwrap().poll();
+            run_idle();
+        }
+    }
+}
 
 /*
 *********************************************************************************************************
@@ -494,31 +497,31 @@ fn OS_InitEventList() {}
 // by noah: maybe we can use Ordering::Relaxed?
 #[allow(unused)]
 fn OS_InitMisc() {
-    #[cfg(feature="OS_TIME_GET_SET_EN")]
-    OSTime.store(0, Ordering::Release);/* Clear the 32-bit system clock            */
+    #[cfg(feature = "OS_TIME_GET_SET_EN")]
+    OSTime.store(0, Ordering::Release); /* Clear the 32-bit system clock            */
 
-    OSIntNesting.store(0, Ordering::Release);/* Clear the interrupt nesting counter     */
-    OSLockNesting.store(0, Ordering::Release);/* Clear the scheduling lock counter        */
+    OSIntNesting.store(0, Ordering::Release); /* Clear the interrupt nesting counter     */
+    OSLockNesting.store(0, Ordering::Release); /* Clear the scheduling lock counter        */
 
-    OSTaskCtr.store(0, Ordering::Release);/* Clear the number of tasks                */
+    OSTaskCtr.store(0, Ordering::Release); /* Clear the number of tasks                */
 
-    OSRunning.store(false,Ordering::Release);/* Indicate that multitasking not started   */
+    OSRunning.store(false, Ordering::Release); /* Indicate that multitasking not started   */
 
-    OSCtxSwCtr.store(0,Ordering::Release);/* Clear the context switch counter         */
-    OSIdleCtr.store(0, Ordering::Release);/* Clear the 32-bit idle counter            */
+    OSCtxSwCtr.store(0, Ordering::Release); /* Clear the context switch counter         */
+    OSIdleCtr.store(0, Ordering::Release); /* Clear the 32-bit idle counter            */
 
-    #[cfg(feature="OS_TASK_STAT_EN")]
-    OSIdleCtrRun.store(0,Ordering::Release);
-    #[cfg(feature="OS_TASK_STAT_EN")]
-    OSIdleCtrMax.store(0,Ordering::Release);
-    #[cfg(feature="OS_TASK_STAT_EN")]
+    #[cfg(feature = "OS_TASK_STAT_EN")]
+    OSIdleCtrRun.store(0, Ordering::Release);
+    #[cfg(feature = "OS_TASK_STAT_EN")]
+    OSIdleCtrMax.store(0, Ordering::Release);
+    #[cfg(feature = "OS_TASK_STAT_EN")]
     OSStatRdy.store(false, Ordering::Release);
 
-    #[cfg(feature="OS_SAFETY_CRITICAL_IEC61508")]
+    #[cfg(feature = "OS_SAFETY_CRITICAL_IEC61508")]
     OSSafetyCriticalStartFlag.store(false, Ordering::Release);
 
-    #[cfg(feature="OS_TASK_REG_TBL_SIZE")]
-    OSTaskRegNextAvailID.store(0,Ordering::Release);
+    #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
+    OSTaskRegNextAvailID.store(0, Ordering::Release);
 }
 
 /*
@@ -539,7 +542,7 @@ fn OS_InitMisc() {
 fn OS_InitRdyList() {
     /* Clear the ready list                     */
     // fix by liam: the rdy list is bounded with executor, we don't need this anymore
-    // // check by liam: may be Ordering::relaxed as the os have not started 
+    // // check by liam: may be Ordering::relaxed as the os have not started
     // OSRdyGrp.store(0, Ordering::Release);
 
     // OSPrioCur.store(0, Ordering::Release);
@@ -588,7 +591,7 @@ fn OS_InitTaskIdle() {}
 
 #[allow(unused)]
 fn OS_InitTCBList() {
-    // 
+    //
 }
 
 /*
@@ -700,7 +703,7 @@ fn OS_SchedNew() {}
 */
 
 /// This function is called by other uC/OS-II services to determine the size of an ASCII string (excluding the NUL character)
-pub fn OS_StrLen(_psrc: &str)->INT8U{
+pub fn OS_StrLen(_psrc: &str) -> INT8U {
     return 0;
 }
 
@@ -726,7 +729,7 @@ pub fn OS_StrLen(_psrc: &str)->INT8U{
 */
 
 #[allow(unused)]
-fn OS_TaskIdle(){}
+fn OS_TaskIdle() {}
 
 /*
 *********************************************************************************************************
@@ -741,8 +744,8 @@ fn OS_TaskIdle(){}
 */
 
 /// his function is called by OS_TaskStat() to check the stacks of each active task.
-#[cfg(all(feature="OS_TASK_STAT_STK_CHK_EN",feature="OS_TASK_CREATE_EXT_EN"))]
-pub fn OS_TaskStatStkChk(){}
+#[cfg(all(feature = "OS_TASK_STAT_STK_CHK_EN", feature = "OS_TASK_CREATE_EXT_EN"))]
+pub fn OS_TaskStatStkChk() {}
 
 /*
 *********************************************************************************************************
@@ -788,7 +791,4 @@ pub fn OS_TaskStatStkChk(){}
 */
 
 /// need to rewrite it to use future
-pub fn OS_TCBInit(){
-
-}
-
+pub fn OS_TCBInit() {}
