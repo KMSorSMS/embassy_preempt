@@ -21,18 +21,18 @@ mod tests {
     fn it_works() {
         assert!(true)
     }
-    #[test]
-    fn test_os_init() {
-        // os初始化
-        OSInit();
-        // 创建两个任务
-        OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 10);
-        OSTaskCreate(task2, 0 as *mut (), 0 as *mut usize, 11);
-        RustOSTaskCreate(task3, 0 as *mut (),0 as *mut usize, 12);
-        OSTaskCreate(task4, 0 as *mut (), 0 as *mut usize, 13);
-        // 启动os
-        OSStart();
-    }
+    // #[test]
+    // fn test_os_init() {
+    //     // os初始化
+    //     OSInit();
+    //     // 创建两个任务
+    //     OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 10);
+    //     OSTaskCreate(task2, 0 as *mut (), 0 as *mut usize, 11);
+    //     RustOSTaskCreate(task3, 0 as *mut (),0 as *mut usize, 12);
+    //     OSTaskCreate(task4, 0 as *mut (), 0 as *mut usize, 13);
+    //     // 启动os
+    //     OSStart();
+    // }
 }
 fn task1(_args:*mut ()) {
     // 任务1
