@@ -15,7 +15,7 @@ pub fn OSInitHookBegin() {
 
 #[no_mangle]
 /// the function to start the first task
-pub extern "Rust" fn restore_arch_stk(stk: *mut usize) {
+pub extern "Rust" fn restore_arch_stk_user(stk: *mut usize) {
     unsafe {
         asm!(
             // first restore the xpsr(from r0)
