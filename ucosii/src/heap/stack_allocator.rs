@@ -34,7 +34,10 @@ pub fn dealloc_stack(stk: &OS_STK_REF) {
 
 /// the ref of the stk
 pub struct OS_STK_REF {
-    /// the ref of the stk(top or bottom)
+    /// the ref of the stk(top or bottom),because the read of this 
+    /// field is in the asm code, so we use NonNull to ensure the safety 
+    /// and use #[allow(dead_code)] 
+    #[allow(dead_code)]
     pub STK_REF: NonNull<OS_STK>,
     /// the ref of this dynamic stk's src heap
     pub HEAP_REF: NonNull<u8>,
