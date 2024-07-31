@@ -264,7 +264,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         
     }
 
-    /// the poll fun called by the executor
+    /// the poll fun called by the exutor
     unsafe fn poll(p:OS_TCB_REF) {
         let this = &*(p.as_ptr() as *const OS_TASK_STORAGE<F>);
 
