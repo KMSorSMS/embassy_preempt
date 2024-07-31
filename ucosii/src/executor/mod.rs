@@ -5,25 +5,23 @@ mod run_queue_atomics;
 pub mod state;
 pub mod waker;
 use alloc::string::String;
-use core::borrow::{Borrow, BorrowMut};
+use core::arch::asm;
 use core::future::Future;
 use core::mem;
 use core::ops::{Deref, DerefMut};
-use core::ptr::NonNull;
 use core::pin::Pin;
+use core::ptr::NonNull;
 use core::task::{Context, Poll};
 
-
-use run_queue_atomics::RunQueue;
+// use run_queue_atomics::RunQueue;
 use state::State;
 
 pub use self::waker::task_from_waker;
+use crate::arena::ARENA;
 use crate::cfg::*;
-use crate::heap::stack_allocator::OS_STK_REF;
+use crate::heap::stack_allocator::{dealloc_stack, OS_STK_REF};
 // use spawner::SpawnToken;
 use crate::port::*;
-use crate::arena::ARENA;
-
 use crate::ucosii::*;
 use crate::util::{SyncUnsafeCell, UninitCell};
 /*
@@ -48,7 +46,7 @@ pub struct OS_TCB {
     // it maybe None
     OSTCBStkPtr: Option<OS_STK_REF>, /* Pointer to current top of stack                         */
     // Task specific extension. If the OS_TASK_CREATE_EXT_EN feature is not active, it will be None
-    #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
+    #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
     OSTCBExtInfo: OS_TCB_EXT,
 
     OSTCBNext: SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to next     TCB in the TCB list                 */
@@ -63,26 +61,26 @@ pub struct OS_TCB {
     #[cfg(any(all(feature = "OS_Q_EN", feature = "OS_MAX_QS"), feature = "OS_MBOX_EN"))]
     OSTCBMsg: PTR, /* Message received from OSMboxPost() or OSQPost()         */
 
-    OSTCBDly: INT32U,     /* Nbr ticks to delay task or, timeout waiting for event   */
-    OSTCBStat: State,     /* Task      status                                        */
+    OSTCBDly: INT32U, /* Nbr ticks to delay task or, timeout waiting for event   */
+    OSTCBStat: State, /* Task      status                                        */
     // no need
     // OSTCBStatPend: INT8U, /* Task PEND status                                        */
-    OSTCBPrio: INT8U,     /* Task priority (0 == highest)                            */
+    OSTCBPrio: INT8U, /* Task priority (0 == highest)                            */
 
-    OSTCBX: INT8U,      /* Bit position in group  corresponding to task priority   */
-    OSTCBY: INT8U,      /* Index into ready table corresponding to task priority   */
-    OSTCBBitX: OS_PRIO, /* Bit mask to access bit position in ready table          */
-    OSTCBBitY: OS_PRIO, /* Bit mask to access bit position in ready group          */
+    OSTCBX: INT8U,    /* Bit position in group  corresponding to task priority   */
+    OSTCBY: INT8U,    /* Index into ready table corresponding to task priority   */
+    OSTCBBitX: INT8U, /* Bit mask to access bit position in ready table          */
+    OSTCBBitY: INT8U, /* Bit mask to access bit position in ready group          */
 
     #[cfg(feature = "OS_TASK_DEL_EN")]
     OSTCBDelReq: INT8U, /* Indicates whether a task needs to delete itself         */
 
     #[cfg(feature = "OS_TASK_PROFILE_EN")]
     OSTCBCtxSwCtr: INT32U, /* Number of time the task was switched in                 */
-    OSTCBCyclesTot: INT32U,   /* Total number of clock cycles the task has been running  */
-    OSTCBCyclesStart: INT32U, /* Snapshot of cycle counter at start of task resumption   */
-    OSTCBStkBase:Option<OS_STK_REF>,     /* Pointer to the beginning of the task stack              */
-    OSTCBStkUsed: INT32U,     /* Number of bytes used from the stack                     */
+    OSTCBCyclesTot: INT32U,           /* Total number of clock cycles the task has been running  */
+    OSTCBCyclesStart: INT32U,         /* Snapshot of cycle counter at start of task resumption   */
+    OSTCBStkBase: Option<OS_STK_REF>, /* Pointer to the beginning of the task stack              */
+    OSTCBStkUsed: INT32U,             /* Number of bytes used from the stack                     */
 
     #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
     OSTCBRegTbl: [INT32U; OS_TASK_REG_TBL_SIZE],
@@ -153,19 +151,33 @@ pub struct AvailableTask<F: Future + 'static> {
 ****************************************************************************************************************************************
 */
 
-impl OS_TCB_EXT{
-    fn init(&mut self,pext:*mut (),opt:INT16U,id:INT16U){
-        self.OSTCBExtPtr=pext;
+impl OS_TCB {
+    // can only be called if the task owns the stack
+    fn restore_context_from_stk(&mut self) {
+        extern "Rust" {
+            fn restore_arch_stk_user(stk: *mut OS_STK);
+        }
+        if self.OSTCBStkPtr.is_none() {
+            return;
+        }
+        let stk = self.OSTCBStkPtr.as_mut().unwrap().STK_REF.as_ptr();
+        unsafe { restore_arch_stk_user(stk) };
+    }
+}
+
+impl OS_TCB_EXT {
+    fn init(&mut self, pext: *mut (), opt: INT16U, id: INT16U) {
+        self.OSTCBExtPtr = pext;
         // info about stack is no need to be init here
         // self.OSTCBStkBottom=None;
         // self.OSTCBStkSize=0;
-        self.OSTCBOpt=opt;
-        self.OSTCBId=id;
+        self.OSTCBOpt = opt;
+        self.OSTCBId = id;
     }
 }
 
 impl<F: Future + 'static> OS_TASK_STORAGE<F> {
-    const NEW: Self = Self::new();
+    // const NEW: Self = Self::new();
     /// create a new OS_TASK_STORAGE
     // Take a lazy approach, which means the TCB will be init when call the init func of TCB
     // this func will be used to init the global array
@@ -174,7 +186,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
             task_tcb: OS_TCB {
                 OSTCBStkPtr: None,
                 #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
-                OSTCBExtInfo: OS_TCB_EXT{
+                OSTCBExtInfo: OS_TCB_EXT {
                     OSTCBExtPtr: 0 as PTR,
                     OSTCBStkBottom: None,
                     OSTCBStkSize: 0,
@@ -217,34 +229,38 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
     /// init the storage of the task, just like the spawn in Embassy
     //  this func will be called by OS_TASK_CTREATE
     //  just like OSTCBInit in uC/OS, but we don't need the stack ptr
-    pub fn init(prio:INT8U, id:INT16U, pext:*mut (), opt:INT16U, name:String, future_func: impl FnOnce() -> F) {
+    pub fn init(prio: INT8U, id: INT16U, pext: *mut (), opt: INT16U, name: String, future_func: impl FnOnce() -> F) {
         // by noah: claim a TaskStorage
-        let task_ref = OS_TASK_STORAGE::<F>::claim(); 
-        
-        let this:&mut OS_TASK_STORAGE<F>;
+        let task_ref = OS_TASK_STORAGE::<F>::claim();
+
+        let this: &mut OS_TASK_STORAGE<F>;
         unsafe {
             this = &mut *(task_ref.as_ptr() as *mut OS_TASK_STORAGE<F>);
             this.task_tcb.OS_POLL_FN.set(Some(OS_TASK_STORAGE::<F>::poll));
             this.future.write_in_place(future_func);
         }
-        // set the prio
-        this.task_tcb.OSTCBPrio=prio;
+        // set the prio also need to set it in the bitmap
+        this.task_tcb.OSTCBPrio = prio;
+        this.task_tcb.OSTCBY = prio >> 3;
+        this.task_tcb.OSTCBX = prio & 0x07;
+        this.task_tcb.OSTCBBitY = 1 << this.task_tcb.OSTCBX;
+        this.task_tcb.OSTCBBitX = 1 << this.task_tcb.OSTCBY;
         // set the stat
-        if !this.task_tcb.OSTCBStat.spawn(){
+        if !this.task_tcb.OSTCBStat.spawn() {
             panic!("task with prio {} spawn failed", prio);
         }
         // init ext info
         #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
-        this.task_tcb.OSTCBExtInfo.init(pext,opt,id);
+        this.task_tcb.OSTCBExtInfo.init(pext, opt, id);
 
         // add the task to ready queue
         // the operation about the bitmap will be done in the RunQueue
-        unsafe { SyncExecutor.get().unwrap().enqueue(task_ref) };
-        
-        #[cfg(feature="OS_EVENT_EN")]
+        unsafe { SyncExecutor.get_unmut().unwrap().enqueue(task_ref) };
+
+        #[cfg(feature = "OS_EVENT_EN")]
         {
-            this.task_tcb.OSTCBEventPtr=None;
-            #[cfg(feature="OS_EVENT_MULTI_EN")]
+            this.task_tcb.OSTCBEventPtr = None;
+            #[cfg(feature = "OS_EVENT_MULTI_EN")]
             {
                 // this.task_tcb.OSTCBEventMultiPtr
                 // this.task_tcb.OSTCBEventMultiPtr
@@ -252,20 +268,19 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         }
         // #[cfg(all(feature="OS_FLAG_EN",feature="OS_MAX_FLAGS",feature="OS_TASK_DEL_EN"))]
         // this.task_tcb.OSTCBFlagNode=None;
-        #[cfg(any(feature="OS_MBOX_EN",all(feature="OS_Q_EN",feature="OS_MAX_QS")))]
+        #[cfg(any(feature = "OS_MBOX_EN", all(feature = "OS_Q_EN", feature = "OS_MAX_QS")))]
         {
-            this.task_tcb.OSTCBMsg=0 as PTR;
+            this.task_tcb.OSTCBMsg = 0 as PTR;
         }
-        
-        #[cfg(feature="OS_TASK_NAME_EN")]
+
+        #[cfg(feature = "OS_TASK_NAME_EN")]
         {
-            this.task_tcb.OSTCBTaskName=name;
+            this.task_tcb.OSTCBTaskName = name;
         }
-        
     }
 
-    /// the poll fun called by the exutor
-    unsafe fn poll(p:OS_TCB_REF) {
+    /// the poll fun called by the executor
+    unsafe fn poll(p: OS_TCB_REF) {
         let this = &*(p.as_ptr() as *const OS_TASK_STORAGE<F>);
 
         let future = Pin::new_unchecked(this.future.as_mut());
@@ -317,7 +332,7 @@ impl Default for OS_TCB_REF {
 impl Deref for OS_TCB_REF {
     type Target = OS_TCB;
     fn deref(&self) -> &Self::Target {
-        unsafe { self.ptr.as_ref()}
+        unsafe { self.ptr.as_ref() }
     }
 }
 
@@ -352,144 +367,7 @@ impl OS_TCB_REF {
     }
 }
 
-// impl<F: Future + 'static, const N: usize> TaskPool<F, N> {
-//     /// Create a new TaskPool, with all tasks in non-spawned state.
-//     // by noah：this func will be called to init OSTCBTbl by using lazy_static
-//     pub const fn new() -> Self {
-//         Self {
-//             // in uC, "N" will be set as OS_MAX_TASKS + OS_N_SYS_TASKS, which is the number of the TCB
-//             pool: [OS_TASK_STORAGE::NEW; N],
-//         }
-//     }
-
-//     // fn spawn_impl<T>(&'static self, future: impl FnOnce() -> F) -> SpawnToken<T> {
-//     //     match self.pool.iter().find_map(AvailableTask::claim) {
-//     //         Some(task) => task.initialize_impl::<T>(future),
-//     //         None => SpawnToken::new_failed(),
-//     //     }
-//     // }
-
-//     // // Try to spawn a task in the pool.
-//     // //
-//     // // See [`OS_TASK_STORAGE::spawn()`] for details.
-//     // //
-//     // // This will loop over the pool and spawn the task in the first storage that
-//     // // is currently free. If none is free, a "poisoned" SpawnToken is returned,
-//     // // which will cause [`Spawner::spawn()`](super::Spawner::spawn) to return the error.
-//     // pub fn spawn(&'static self, future: impl FnOnce() -> F) -> SpawnToken<impl Sized> {
-//     //     self.spawn_impl::<F>(future)
-//     // }
-
-//     // // Like spawn(), but allows the task to be send-spawned if the args are Send even if
-//     // // the future is !Send.
-//     // //
-//     // // Not covered by semver guarantees. DO NOT call this directly. Intended to be used
-//     // // by the Embassy macros ONLY.
-//     // //
-//     // // SAFETY: `future` must be a closure of the form `move || my_async_fn(args)`, where `my_async_fn`
-//     // // is an `async fn`, NOT a hand-written `Future`.
-//     // #[doc(hidden)]
-//     // pub unsafe fn _spawn_async_fn<FutFn>(&'static self, future: FutFn) -> SpawnToken<impl Sized>
-//     // where
-//     //     FutFn: FnOnce() -> F,
-//     // {
-//     //     // See the comment in AvailableTask::__initialize_async_fn for explanation.
-//     //     self.spawn_impl::<FutFn>(future)
-//     // }
-// }
-
-// /// by noah：we need to impl Send and Sync for TaskPoolRef
-// unsafe impl Send for TaskPoolRef{}
-// unsafe impl Sync for TaskPoolRef{}
-
-// /// this part is copied from Embassy
-// impl TaskPoolRef {
-//     /// new a TaskPoolRef. the ptr is null
-//     pub const fn new() -> Self {
-//         Self {
-//             ptr: Mutex::new(RefCell::new(null_mut())),
-//         }
-//     }
-
-//     /// Get the pool for this ref, allocating it from the arena the first time.
-//     ///
-//     /// safety: for a given TaskPoolRef instance, must always call with the exact
-//     /// same generic params.
-//     pub unsafe fn get<F: Future, const N: usize>(&'static self) -> &'static TaskPool<F, N> {
-//         critical_section::with(|cs| {
-//             let mut ptr = self.ptr.borrow_ref_mut(cs);
-//             if ptr.is_null() {
-//                 // by noah：we won't use ARENA.alloc as embassy. We just define a TaskPool
-//                 let pool = ARENA.alloc::<TaskPool<F, N>>(cs);
-//                 pool.write(TaskPool::new());
-//                 *ptr = pool as *mut _ as _;
-//             }
-
-//             unsafe { &*(*ptr as *const _) }
-//         })
-//     }
-// }
-
-impl<F: Future + 'static> AvailableTask<F> {
-    // // Try to claim a [`OS_TASK_STORAGE`].
-    // //
-    // // This function returns `None` if a task has already been spawned and has not finished running.
-    // pub fn claim(task: &'static OS_TASK_STORAGE<F>) -> Option<Self> {
-    //     task.raw.state.spawn().then(|| Self { task })
-    // }
-
-    // fn initialize_impl<S>(self, future: impl FnOnce() -> F) -> SpawnToken<S> {
-    //     unsafe {
-    //         self.task.raw.poll_fn.set(Some(OS_TASK_STORAGE::<F>::poll));
-    //         self.task.future.write_in_place(future);
-
-    //         let task = OS_TCB_REF::new(self.task);
-
-    //         SpawnToken::new(task)
-    //     }
-    // }
-
-    // /// Initialize the [`OS_TASK_STORAGE`] to run the given future.
-    // pub fn initialize(self, future: impl FnOnce() -> F) -> SpawnToken<F> {
-    //     self.initialize_impl::<F>(future)
-    // }
-
-    // // Initialize the [`OS_TASK_STORAGE`] to run the given future.
-    // //
-    // // # Safety
-    // //
-    // // `future` must be a closure of the form `move || my_async_fn(args)`, where `my_async_fn`
-    // // is an `async fn`, NOT a hand-written `Future`.
-    // #[doc(hidden)]
-    // pub unsafe fn __initialize_async_fn<FutFn>(self, future: impl FnOnce() -> F) -> SpawnToken<FutFn> {
-    //     // When send-spawning a task, we construct the future in this thread, and effectively
-    //     // "send" it to the executor thread by enqueuing it in its queue. Therefore, in theory,
-    //     // send-spawning should require the future `F` to be `Send`.
-    //     //
-    //     // The problem is this is more restrictive than needed. Once the future is executing,
-    //     // it is never sent to another thread. It is only sent when spawning. It should be
-    //     // enough for the task's arguments to be Send. (and in practice it's super easy to
-    //     // accidentally make your futures !Send, for example by holding an `Rc` or a `&RefCell` across an `.await`.)
-    //     //
-    //     // We can do it by sending the task args and constructing the future in the executor thread
-    //     // on first poll. However, this cannot be done in-place, so it'll waste stack space for a copy
-    //     // of the args.
-    //     //
-    //     // Luckily, an `async fn` future contains just the args when freshly constructed. So, if the
-    //     // args are Send, it's OK to send a !Send future, as long as we do it before first polling it.
-    //     //
-    //     // (Note: this is how the generators are implemented today, it's not officially guaranteed yet,
-    //     // but it's possible it'll be guaranteed in the future. See zulip thread:
-    //     // https://rust-lang.zulipchat.com/#narrow/stream/187312-wg-async/topic/.22only.20before.20poll.22.20Send.20futures )
-    //     //
-    //     // The `FutFn` captures all the args, so if it's Send, the task can be send-spawned.
-    //     // This is why we return `SpawnToken<FutFn>` below.
-    //     //
-    //     // This ONLY holds for `async fn` futures. The other `spawn` methods can be called directly
-    //     // by the user, with arbitrary hand-implemented futures. This is why these return `SpawnToken<F>`.
-    //     self.initialize_impl::<FutFn>(future)
-    // }
-}
+impl<F: Future + 'static> AvailableTask<F> {}
 
 /*
 ****************************************************************************************************************************************
@@ -528,15 +406,31 @@ impl Pender {
 
 /// The executor for the uC/OS-II RTOS.
 pub(crate) struct SyncExecutor {
-    run_queue: RunQueue,
+    // run_queue: RunQueue,
+    // the prio tbl stores a relation between the prio and the task_ref
+    os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; OS_LOWEST_PRIO + 1]>,
+    // indicate the current running task
+    OSPrioCur: SyncUnsafeCell<OS_PRIO>,
     pender: Pender,
+    // by liam: add a bitmap to record the status of the task
+    #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
+    OSRdyGrp: SyncUnsafeCell<u8>,
+    #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
+    OSRdyTbl: SyncUnsafeCell<[u8; OS_RDY_TBL_SIZE]>,
+    #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
+    OSRdyGrp: u16,
+    #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
+    OSRdyTbl: [u16; OS_RDY_TBL_SIZE],
 }
 impl SyncExecutor {
     /// The global executor for the uC/OS-II RTOS.
     pub(crate) fn new(pender: Pender) -> Self {
         Self {
-            run_queue: RunQueue::new(),
+            os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); OS_LOWEST_PRIO + 1]),
+            OSPrioCur: SyncUnsafeCell::new(OS_LOWEST_PRIO),
             pender,
+            OSRdyGrp: SyncUnsafeCell::new(0),
+            OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
         }
     }
 
@@ -548,42 +442,94 @@ impl SyncExecutor {
     /// - `task` must NOT be already enqueued (in this executor or another one).
     #[inline(always)]
     unsafe fn enqueue(&self, task: OS_TCB_REF) {
-        if self.run_queue.enqueue(task) {
-            self.pender.pend();
-        }
+        //according to the priority of the task, we place the task in the right place of os_prio_tbl
+        // also we will set the corresponding bit in the OSRdyTbl and OSRdyGrp
+        let prio = task.OSTCBPrio as usize;
+        let tmp = self.OSRdyGrp.get_mut();
+        *tmp = *tmp | task.OSTCBBitY;
+        let tmp = self.OSRdyTbl.get_mut();
+        tmp[task.OSTCBY as usize] |= task.OSTCBBitX;
+        // set the task in the right place of os_prio_tbl
+        let tmp = self.os_prio_tbl.get_mut();
+        tmp[prio] = task;
     }
+    // check by liam: we don't need to spawn, the init of global executor will be set in the os init
+    // pub(super) unsafe fn spawn(&'static self, task: OS_TCB_REF) {
+    //     SyncExecutor.set(Some(self));
 
-    pub(super) unsafe fn spawn(&'static self, task: OS_TCB_REF) {
-        SyncExecutor.set(Some(self));
+    //     self.enqueue(task);
+    // }
 
-        self.enqueue(task);
-    }
-
-    /// # Safety
-    ///
-    /// Same as [`Executor::poll`], plus you must only call this on the thread this executor was created.
+    /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
     pub(crate) unsafe fn poll(&'static self) {
-        #[allow(clippy::never_loop)]
-        loop {
-            self.run_queue.dequeue_all(|p| {
-                let task = p.header();
+        // find the highest priority task in the ready queue
+        let task = critical_section::with(|_| self.find_highrdy_set_cur());
+        if task.is_none() {
+            return;
+        }
+        let mut task = task.unwrap();
+        if task.OSTCBStat.run_dequeue() {
+            // If task is not running, ignore it. This can happen in the following scenario:
+            //   - Task gets dequeued, poll starts
+            //   - While task is being polled, it gets woken. It gets placed in the queue.
+            //   - Task poll finishes, returning done=true
+            //   - RUNNING bit is cleared, but the task is already in the queue.
 
-                if !task.OSTCBStat.run_dequeue() {
-                    // If task is not running, ignore it. This can happen in the following scenario:
-                    //   - Task gets dequeued, poll starts
-                    //   - While task is being polled, it gets woken. It gets placed in the queue.
-                    //   - Task poll finishes, returning done=true
-                    //   - RUNNING bit is cleared, but the task is already in the queue.
-                    return;
-                }
-
-                // Run the task
-                task.OS_POLL_FN.get().unwrap_unchecked()(p);
-            });
-
-            {
-                break;
+            if task.OSTCBStkPtr.is_none() {
+                task.OS_POLL_FN.get().unwrap_unchecked()(task);
+            } else {
+                // if the task has stack, it's a thread, we need to resume it not poll it
+                task.restore_context_from_stk();
             }
         }
+        // after the task is done, we need to set the task to unready(in bitmap) and also we need to find the next task to run
+        // both of this process should be done in critical section
+        loop {
+            match critical_section::with(|_| {
+                self.set_task_unready(task);
+                // after set the task as unready, we need to revoke its stack if it has.
+                if task.OSTCBStkPtr.is_some() {
+                    dealloc_stack(task.OSTCBStkPtr.as_ref().unwrap());
+                }
+                self.find_highrdy_set_cur()
+            }) {
+                Some(t) => {
+                    task = t;
+                    if task.OSTCBStat.run_dequeue() {
+                        task.OS_POLL_FN.get().unwrap_unchecked()(task);
+                    }
+                }
+                None => {
+                    break;
+                }
+            }
+        }
+    }
+    unsafe fn find_highrdy_set_cur(&self) -> Option<OS_TCB_REF> {
+        let tmp = self.OSRdyGrp.get_unmut();
+        // if there is no task in the ready queue, return None also set the current running task to the lowest priority
+        if *tmp == 0 {
+            self.OSPrioCur.set(OS_LOWEST_PRIO);
+            return None;
+        }
+        let prio = tmp.trailing_zeros() as usize;
+        let tmp = self.OSRdyTbl.get();
+        let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
+        // set the current running task
+        self.OSPrioCur.set(prio as OS_PRIO);
+        Some(self.os_prio_tbl.get()[prio])
+    }
+    unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
+        // added by liam: we have to make this process in critical section
+        // because the bitmap is shared by all the tasks
+        critical_section::with(|_| {
+            let tmp = self.OSRdyTbl.get_mut();
+            tmp[task.OSTCBY as usize] &= !task.OSTCBBitX;
+            // when the group is empty, we need to set the corresponding bit in the OSRdyGrp to 0
+            if tmp[task.OSTCBY as usize] == 0 {
+                let tmp = self.OSRdyGrp.get_mut();
+                *tmp &= !task.OSTCBBitY;
+            }
+        });
     }
 }
