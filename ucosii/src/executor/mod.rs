@@ -121,11 +121,11 @@ pub struct OS_TASK_STORAGE<F: Future + 'static> {
 }
 
 /// the ref of the TCB. In other crate only it can be used to access the TCB
-#[derive(Clone, Copy)]
+#[derive(Clone,Copy)]
 #[allow(unused)]
 pub struct OS_TCB_REF {
     /// the pointer to the TCB
-    pub ptr: NonNull<OS_TCB>,
+    pub ptr: Option<NonNull<OS_TCB>>,
 }
 
 // /// Raw storage that can hold up to N tasks of the same type.
@@ -233,7 +233,14 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
     /// init the storage of the task, just like the spawn in Embassy
     //  this func will be called by OS_TASK_CTREATE
     //  just like OSTCBInit in uC/OS, but we don't need the stack ptr
-    pub fn init(prio: INT8U, id: INT16U, pext: *mut (), opt: INT16U, name: String, future_func: impl FnOnce() -> F) {
+    pub fn init(
+        prio: INT8U,
+        id: INT16U,
+        pext: *mut (),
+        opt: INT16U,
+        name: String,
+        future_func: impl FnOnce() -> F,
+    ) -> OS_ERR_STATE {
         // by noah: claim a TaskStorage
         let task_ref = OS_TASK_STORAGE::<F>::claim();
 
@@ -247,8 +254,8 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         this.task_tcb.OSTCBPrio = prio;
         this.task_tcb.OSTCBY = prio >> 3;
         this.task_tcb.OSTCBX = prio & 0x07;
-        this.task_tcb.OSTCBBitY = 1 << this.task_tcb.OSTCBX;
-        this.task_tcb.OSTCBBitX = 1 << this.task_tcb.OSTCBY;
+        this.task_tcb.OSTCBBitY = 1 << this.task_tcb.OSTCBY;
+        this.task_tcb.OSTCBBitX = 1 << this.task_tcb.OSTCBX;
         // set the stat
         if !this.task_tcb.OSTCBStat.spawn() {
             panic!("task with prio {} spawn failed", prio);
@@ -256,7 +263,6 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // init ext info
         #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
         this.task_tcb.OSTCBExtInfo.init(pext, opt, id);
-
         // add the task to ready queue
         // the operation about the bitmap will be done in the RunQueue
         unsafe { GlobalSyncExecutor.get_unmut().as_ref().unwrap().enqueue(task_ref) };
@@ -281,6 +287,21 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         {
             this.task_tcb.OSTCBTaskName = name;
         }
+
+        if OS_TASK_REG_TBL_SIZE > 0 {
+            for i in 0..OS_TASK_REG_TBL_SIZE {
+                this.task_tcb.OSTCBRegTbl[i] = 0;
+            }
+        }
+
+        return OS_ERR_STATE::OS_ERR_NONE;
+        #[cfg(feature = "OS_CPU_HOOKS_EN")]
+        {
+            // Call user defined hook
+            OSTCBInitHook(ptcb);
+            OSTaskCreateHook(ptcb);
+        }
+        // we don't need to add the TaskRef into OSTCBPrioTbl because we did this in func enqueue
     }
 
     /// the poll fun called by the executor
@@ -313,7 +334,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
             task_storage.write(OS_TASK_STORAGE::new());
             // by noah：no panic will occurred here because if the Arena is not enough, the program will panic when alloc
             OS_TCB_REF {
-                ptr: NonNull::new(task_storage as *mut _ as _).unwrap(),
+                ptr: Some(NonNull::new(task_storage as *mut _ as _).unwrap()),
             }
         })
     }
@@ -327,7 +348,7 @@ impl Default for OS_TCB_REF {
     fn default() -> Self {
         // by noah:dangling is used to create a dangling pointer, which is just like the null pointer in C
         OS_TCB_REF {
-            ptr: NonNull::dangling(),
+            ptr: None,
         }
     }
 }
@@ -336,38 +357,38 @@ impl Default for OS_TCB_REF {
 impl Deref for OS_TCB_REF {
     type Target = OS_TCB;
     fn deref(&self) -> &Self::Target {
-        unsafe { self.ptr.as_ref() }
+        unsafe { self.ptr.unwrap().as_ref()}
     }
 }
 
 // impl deref for mut OS_TCB_REF
 impl DerefMut for OS_TCB_REF {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        unsafe { self.ptr.as_mut() }
+        unsafe { self.ptr.unwrap().as_mut() }
     }
 }
 
 impl OS_TCB_REF {
     fn new<F: Future + 'static>(task: &'static OS_TASK_STORAGE<F>) -> Self {
         Self {
-            ptr: NonNull::from(task).cast(),
+            ptr: Some(NonNull::from(task).cast()),
         }
     }
 
     /// Safety: The pointer must have been obtained with `Task::as_ptr`
     pub(crate) unsafe fn from_ptr(ptr: *const OS_TCB) -> Self {
         Self {
-            ptr: NonNull::new_unchecked(ptr as *mut OS_TCB),
+            ptr: Some(NonNull::new_unchecked(ptr as *mut OS_TCB)),
         }
     }
 
     pub(crate) fn header(self) -> &'static OS_TCB {
-        unsafe { self.ptr.as_ref() }
+        unsafe { self.ptr.unwrap().as_ref() }
     }
 
     /// The returned pointer is valid for the entire OS_TASK_STORAGE.
     pub(crate) fn as_ptr(self) -> *const OS_TCB {
-        self.ptr.as_ptr()
+        self.ptr.unwrap().as_ptr()
     }
 }
 
@@ -383,6 +404,7 @@ impl<F: Future + 'static> AvailableTask<F> {}
 ///
 /// You can obtain a `TaskRef` from a `Waker` using [`task_from_waker`].
 pub fn wake_task(task: OS_TCB_REF) {
+
     let header = task.header();
     if header.OSTCBStat.run_enqueue() {
         // We have just marked the task as scheduled, so enqueue it.
@@ -537,5 +559,14 @@ impl SyncExecutor {
                 *tmp &= !task.OSTCBBitY;
             }
         });
+    }
+    // check if an prio is exiting
+    pub fn prio_exist(&self, prio: OS_PRIO) -> bool {
+        let tmp: [OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        unsafe {
+            tmp = self.os_prio_tbl.get();
+        }
+        tmp[prio as USIZE];
+        true
     }
 }
