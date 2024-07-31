@@ -41,7 +41,7 @@ use crate::executor::OS_TCB_REF;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
 
-use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSPrioCur, OSPrioHighRdy, OSRdyGrp, OSRdyTbl, OSRunning, OSTCBCur, OSTCBHighRdy, OSTaskCtr, OSTime};
+use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSPrioHighRdy, OSRunning, OSTCBCur, OSTCBHighRdy, OSTaskCtr, OSTime};
 #[cfg(feature="OS_TASK_REG_TBL_SIZE")]
 use crate::ucosii::OSTaskRegNextAvailID;
 
@@ -538,22 +538,23 @@ fn OS_InitMisc() {
 #[allow(unused)]
 fn OS_InitRdyList() {
     /* Clear the ready list                     */
-    // check by liam: may be Ordering::relaxed as the os have not started 
-    OSRdyGrp.store(0, Ordering::Release);
+    // fix by liam: the rdy list is bounded with executor, we don't need this anymore
+    // // check by liam: may be Ordering::relaxed as the os have not started 
+    // OSRdyGrp.store(0, Ordering::Release);
 
-    OSPrioCur.store(0, Ordering::Release);
+    // OSPrioCur.store(0, Ordering::Release);
 
-    OSPrioHighRdy.store(0, Ordering::Release);
+    // OSPrioHighRdy.store(0, Ordering::Release);
 
-    // by noah: to init static var with type Mutex, we need a cs
-    critical_section::with(|cs|{
-        // init the ready table
-        OSRdyTbl.borrow_ref_mut(cs).iter_mut().for_each(|x| {
-            *x = 0;// set the array element to 0
-        });
-        *(OSTCBCur.borrow_ref_mut(cs)) = OS_TCB_REF::default();
-        *(OSTCBHighRdy.borrow_ref_mut(cs))= OS_TCB_REF::default();
-    })
+    // // by noah: to init static var with type Mutex, we need a cs
+    // critical_section::with(|cs|{
+    //     // init the ready table
+    //     OSRdyTbl.borrow_ref_mut(cs).iter_mut().for_each(|x| {
+    //         *x = 0;// set the array element to 0
+    //     });
+    //     *(OSTCBCur.borrow_ref_mut(cs)) = OS_TCB_REF::default();
+    //     *(OSTCBHighRdy.borrow_ref_mut(cs))= OS_TCB_REF::default();
+    // })
 }
 
 /*

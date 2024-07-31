@@ -81,14 +81,14 @@ type OS_STACK = INT16U;
 // by noah：maybe because the lazy_static, the const val can be calculate when it is used for the first time
 // maybe use a static val is a good choice.
 #[allow(unused)]
-const OS_TASK_STAT_PRIO: INT32U = OS_LOWEST_PRIO - 1; /* Statistic task priority                     */
+const OS_TASK_STAT_PRIO: USIZE = OS_LOWEST_PRIO - 1; /* Statistic task priority                     */
 #[allow(unused)]
-const OS_TASK_IDLE_PRIO: INT32U = OS_LOWEST_PRIO; /* IDLE      task priority                     */
+const OS_TASK_IDLE_PRIO: USIZE = OS_LOWEST_PRIO; /* IDLE      task priority                     */
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
 const OS_EVENT_TBL_SIZE: USIZE = (OS_LOWEST_PRIO / 8 + 1) as USIZE; /* Size of event table                         */
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
-const OS_EVENT_TBL_SIZE: INT32U = OS_LOWEST_PRIO / 16 + 1; /* Size of event table                         */
+const OS_EVENT_TBL_SIZE: USIZE = OS_LOWEST_PRIO / 16 + 1; /* Size of event table                         */
 
 
 /// Size of ready table
@@ -514,7 +514,7 @@ pub enum OS_ERR_STATE {
 /// the prio type defination in the rust-uC
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
 #[allow(non_camel_case_types)]
-pub type OS_PRIO = INT8U;
+pub type OS_PRIO = usize;
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
 pub type OS_PRIO = INT16U;
@@ -765,11 +765,12 @@ pub static OSIdleCtr: AtomicU32 = AtomicU32::new(0);
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
 pub static OSTaskRegNextAvailID: AtomicU8 = AtomicU8::new(0);
 
-/// Ready list group
-#[cfg(feature = "OS_PRIO_LESS_THAN_64")]
-pub static OSRdyGrp: AtomicU8 = AtomicU8::new(0);
+// Ready list group
+// fix by liam: we put it into the executor 
+// #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
+// pub static OSRdyGrp: AtomicU8 = AtomicU8::new(0);
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
-pub static OSRdyGrp: AtomicU16 = AtomicU16::new(0);
+// pub static OSRdyGrp: AtomicU16 = AtomicU16::new(0);
 
 /// Table of tasks which are ready to run
 /// the table will be used in the scheduler(executor)
@@ -779,8 +780,9 @@ pub static OSRdyTbl: Mutex<RefCell<[OS_PRIO; OS_RDY_TBL_SIZE]>> = Mutex::new(Ref
 /// by noah: the ref of Table of TCBs. TCBs will be stored in Arena in executor.rs
 // pub static OSTCBTbl:TaskPoolRef=TaskPoolRef::new();
 
-/// Priority of current task
-pub static OSPrioCur: AtomicU8 = AtomicU8::new(0);
+// Priority of current task
+// fix by liam: we change this to executor
+// pub static OSPrioCur: AtomicU8 = AtomicU8::new(0);
 
 /// Priority of highest priority task
 pub static OSPrioHighRdy: AtomicU8 = AtomicU8::new(0);

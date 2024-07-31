@@ -1,7 +1,7 @@
 use crate::port::*;
 
 /// the const val define the lowest prio
-pub const OS_LOWEST_PRIO: INT32U = 63;
+pub const OS_LOWEST_PRIO: USIZE = 63;
 /// Size of task variables array (#of INT32U entries) 
 pub const OS_TASK_REG_TBL_SIZE: USIZE = 1;
 /// Max. number of memory partitions
