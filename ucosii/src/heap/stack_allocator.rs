@@ -14,21 +14,21 @@ pub const STACK_START: usize = 0x08002000;
 pub const STACK_SIZE: usize = 100 * 1024; // 100 KiB
 
 use crate::port::OS_STK;
-static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
+static STACK_ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 
 pub fn init_stack_allocator() {
     unsafe {
-        ALLOCATOR.lock().init(STACK_START, STACK_SIZE);
+        STACK_ALLOCATOR.lock().init(STACK_START, STACK_SIZE);
     }
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
-    unsafe { stk_from_ptr(ALLOCATOR.alloc(layout), layout) }
+    unsafe { stk_from_ptr(STACK_ALLOCATOR.alloc(layout), layout) }
 }
 /// dealloc a stack
-pub fn dealloc_stack(stk: OS_STK_REF) {
+pub fn dealloc_stack(stk: &OS_STK_REF) {
     unsafe {
-        ALLOCATOR.dealloc(stk.as_ptr(), stk.layout);
+        STACK_ALLOCATOR.dealloc(stk.as_ptr(), stk.layout);
     }
 }
 
@@ -56,7 +56,7 @@ impl Default for OS_STK_REF {
 impl Drop for OS_STK_REF {
     fn drop(&mut self) {
         unsafe {
-            ALLOCATOR.dealloc(self.HEAP_REF.as_ptr(), self.layout);
+            STACK_ALLOCATOR.dealloc(self.HEAP_REF.as_ptr(), self.layout);
         }
     }
 }

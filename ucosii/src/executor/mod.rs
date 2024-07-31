@@ -5,7 +5,7 @@ mod run_queue_atomics;
 pub mod state;
 pub mod waker;
 use alloc::string::String;
-use core::borrow::{Borrow, BorrowMut};
+use core::arch::asm;
 use core::future::Future;
 use core::mem;
 use core::ops::{Deref, DerefMut};
@@ -19,7 +19,7 @@ use state::State;
 pub use self::waker::task_from_waker;
 use crate::arena::ARENA;
 use crate::cfg::*;
-use crate::heap::stack_allocator::OS_STK_REF;
+use crate::heap::stack_allocator::{dealloc_stack, OS_STK_REF};
 // use spawner::SpawnToken;
 use crate::port::*;
 use crate::ucosii::*;
@@ -144,29 +144,6 @@ pub struct OS_TCB_REF {
 pub struct AvailableTask<F: Future + 'static> {
     task: &'static OS_TASK_STORAGE<F>,
 }
-/// the context structure store in stack
-#[repr(C, align(8))]
-struct UcStk {
-    // below are the remaining part of the task's context
-    r4: u32,
-    r5: u32,
-    r6: u32,
-    r7: u32,
-    r8: u32,
-    r9: u32,
-    r10: u32,
-    r11: u32,
-    r14: u32,
-    // below are stored when the interrupt occurs
-    r0: u32,
-    r1: u32,
-    r2: u32,
-    r3: u32,
-    r12: u32,
-    lr: u32, 
-    pc: u32,
-    xpsr: u32,
-}
 
 /*
 ****************************************************************************************************************************************
@@ -177,11 +154,14 @@ struct UcStk {
 impl OS_TCB {
     // can only be called if the task owns the stack
     fn restore_context_from_stk(&mut self) {
+        extern "Rust" {
+            fn restore_arch_stk_user(stk: *mut OS_STK);
+        }
         if self.OSTCBStkPtr.is_none() {
             return;
         }
-        let stk = self.OSTCBStkPtr.as_mut().unwrap();
- 
+        let stk = self.OSTCBStkPtr.as_mut().unwrap().STK_REF.as_ptr();
+        unsafe { restore_arch_stk_user(stk) };
     }
 }
 
@@ -507,6 +487,10 @@ impl SyncExecutor {
         loop {
             match critical_section::with(|_| {
                 self.set_task_unready(task);
+                // after set the task as unready, we need to revoke its stack if it has.
+                if task.OSTCBStkPtr.is_some() {
+                    dealloc_stack(task.OSTCBStkPtr.as_ref().unwrap());
+                }
                 self.find_highrdy_set_cur()
             }) {
                 Some(t) => {
