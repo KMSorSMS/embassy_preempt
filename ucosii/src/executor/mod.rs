@@ -507,6 +507,8 @@ impl SyncExecutor {
                 if task.OSTCBStkPtr.is_some() {
                     dealloc_stack(task.OSTCBStkPtr.as_ref().unwrap());
                 }
+                // set the task's stack to None
+                task.OSTCBStkPtr = None;
                 self.find_highrdy_set_cur()
             }) {
                 Some(t) => {
