@@ -1,12 +1,9 @@
 //! Raw task storage and pool.
 
-mod run_queue_atomics;
 #[cfg_attr(feature = "cortex_m", path = "state_atomics_arm.rs")]
 pub mod state;
 pub mod waker;
 use alloc::string::String;
-use core::arch::asm;
-use core::borrow::Borrow;
 use core::future::Future;
 use core::mem;
 use core::ops::{Deref, DerefMut};
@@ -35,7 +32,7 @@ use crate::util::{SyncUnsafeCell, UninitCell};
 // create a global executor
 lazy_static! {
 /// the global executor will be initialized at os init
-pub(crate) static ref GlobalSyncExecutor: SyncUnsafeCell<Option<SyncExecutor>> = SyncUnsafeCell::new(Some(SyncExecutor::new(Pender(0 as *mut ()))));
+    pub(crate) static ref GlobalSyncExecutor: SyncUnsafeCell<Option<SyncExecutor>> = SyncUnsafeCell::new(Some(SyncExecutor::new(Pender(0 as *mut ()))));
 }
 /*
 ****************************************************************************************************************************************
@@ -265,8 +262,10 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         this.task_tcb.OSTCBExtInfo.init(pext, opt, id);
         // add the task to ready queue
         // the operation about the bitmap will be done in the RunQueue
-        unsafe { GlobalSyncExecutor.get_unmut().as_ref().unwrap().enqueue(task_ref) };
-
+        // need a cs
+        critical_section::with(|_cs|{
+            unsafe { GlobalSyncExecutor.get_unmut().as_ref().unwrap().enqueue(task_ref) };
+        });
         #[cfg(feature = "OS_EVENT_EN")]
         {
             this.task_tcb.OSTCBEventPtr = None;
@@ -294,13 +293,13 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
             }
         }
 
-        return OS_ERR_STATE::OS_ERR_NONE;
         #[cfg(feature = "OS_CPU_HOOKS_EN")]
         {
             // Call user defined hook
             OSTCBInitHook(ptcb);
             OSTaskCreateHook(ptcb);
         }
+        return OS_ERR_STATE::OS_ERR_NONE;
         // we don't need to add the TaskRef into OSTCBPrioTbl because we did this in func enqueue
     }
 
@@ -369,12 +368,6 @@ impl DerefMut for OS_TCB_REF {
 }
 
 impl OS_TCB_REF {
-    fn new<F: Future + 'static>(task: &'static OS_TASK_STORAGE<F>) -> Self {
-        Self {
-            ptr: Some(NonNull::from(task).cast()),
-        }
-    }
-
     /// Safety: The pointer must have been obtained with `Task::as_ptr`
     pub(crate) unsafe fn from_ptr(ptr: *const OS_TCB) -> Self {
         Self {
@@ -524,6 +517,7 @@ impl SyncExecutor {
                 Some(t) => {
                     task = t;
                     if task.OSTCBStat.run_dequeue() {
+                        // in the future, we should consider thread here
                         task.OS_POLL_FN.get().unwrap_unchecked()(task);
                     }
                 }
@@ -561,12 +555,29 @@ impl SyncExecutor {
         });
     }
     // check if an prio is exiting
-    pub fn prio_exist(&self, prio: OS_PRIO) -> bool {
-        let tmp: [OS_TCB_REF; OS_LOWEST_PRIO + 1];
+    pub fn prio_exist(&self, prio: INT8U) -> bool {
+        let prio_tbl: [OS_TCB_REF; OS_LOWEST_PRIO + 1];
         unsafe {
-            tmp = self.os_prio_tbl.get();
+            prio_tbl = self.os_prio_tbl.get();
         }
-        tmp[prio as USIZE];
-        true
+        prio_tbl[prio as USIZE].ptr.is_some()
+    }
+
+    pub fn reserve_bit(&self,prio: INT8U){
+        let mut prio_tbl: [OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        unsafe {
+            prio_tbl = self.os_prio_tbl.get();
+        }
+        // use the dangling pointer(Some) to reserve the bit
+        prio_tbl[prio as USIZE].ptr=Some(NonNull::dangling());
+    }
+
+    pub fn clear_bit(&self,prio: INT8U){
+        let mut prio_tbl: [OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        unsafe {
+            prio_tbl = self.os_prio_tbl.get();
+        }
+        // use the dangling pointer(Some) to reserve the bit
+        prio_tbl[prio as USIZE].ptr=None;
     }
 }
