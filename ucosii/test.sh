@@ -8,7 +8,8 @@
 # 在后台运行cargo命令
 run_test() {
     local test_name=$1
-    rm tmp.yaml
+    # 如果tmp.yaml文件存在时才删除tmp.yaml文件
+    [ -f tmp.yaml ] && rm tmp.yaml
     cargo run --bin "$test_name" --release > tmp.yaml &
     # 记录上一次文件大小
     PREV_SIZE=0
@@ -129,12 +130,7 @@ echo "=============Start testing=============" > record.yml
 
 # 定义一个数组，包含所有测试
 tests=(
-"test_2e_4t" 
-"test_3e_6t" 
-"test_2e_8t" 
-"test_2e_20t"
-"test_3e_18t"
-"test_2e_6t_thread"
+"ucosii_main"
 )
 
 # 循环遍历数组，执行测试
