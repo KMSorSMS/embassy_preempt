@@ -36,10 +36,40 @@ pub extern "Rust" fn restore_arch_stk_user(stk: *mut usize) {
 }
 
 #[no_mangle]
+/// the function when there is no task to run
 pub extern "Rust" fn run_idle() {
     // undate the counter of the system
     // OSIdleCtr.fetch_add(1, Ordering::Relaxed);
     unsafe {
         asm!("wfe");
+    }
+}
+
+#[no_mangle]
+/// the function to set the program stack
+pub extern "Rust" fn set_program_sp(sp: *mut u8) {
+    unsafe {
+        asm!(
+            "MSR psp, r0",
+            in("r0") sp,
+            options(nostack, preserves_flags),
+        )
+    }
+}
+/// the function to set the interrupt stack and change the control register to use the psp
+pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8){
+    unsafe {
+        asm!(
+            // fisrt change the MSP
+           "MSR msp, r1",
+            // then change the control register to use the psp
+            "MRS r0, control",
+            "ORR r0, r0, #2",
+            "MSR control, r0",
+            // then we need to return to the caller, this time we explicitly use the lr
+            "BX lr",
+            in("r1") int_ptr,
+            options(nostack, preserves_flags),
+        )
     }
 }

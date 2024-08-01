@@ -75,7 +75,7 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
     }
     // because this func can be call when the OS has started, so need a cs
     if critical_section::with(|_cs| {
-        let executor = GlobalSyncExecutor.get_unmut().as_ref().unwrap();
+        let executor = GlobalSyncExecutor.as_ref().unwrap();
         if executor.prio_exist(prio) {
             return true;
         } else {
@@ -98,7 +98,7 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
         }
     } else {
         critical_section::with(|_cs| {
-            let executor = GlobalSyncExecutor.get_unmut().as_ref().unwrap();
+            let executor = GlobalSyncExecutor.as_ref().unwrap();
             // clear the reserve bit
             executor.clear_bit(prio);
         })

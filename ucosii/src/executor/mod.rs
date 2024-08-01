@@ -32,7 +32,7 @@ use crate::util::{SyncUnsafeCell, UninitCell};
 // create a global executor
 lazy_static! {
 /// the global executor will be initialized at os init
-    pub(crate) static ref GlobalSyncExecutor: SyncUnsafeCell<Option<SyncExecutor>> = SyncUnsafeCell::new(Some(SyncExecutor::new(Pender(0 as *mut ()))));
+    pub(crate) static ref GlobalSyncExecutor: Option<SyncExecutor> = Some(SyncExecutor::new(Pender(0 as *mut ())));
 }
 /*
 ****************************************************************************************************************************************
@@ -264,7 +264,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // the operation about the bitmap will be done in the RunQueue
         // need a cs
         critical_section::with(|_cs|{
-            unsafe { GlobalSyncExecutor.get_unmut().as_ref().unwrap().enqueue(task_ref) };
+            unsafe { GlobalSyncExecutor.as_ref().unwrap().enqueue(task_ref) };
         });
         #[cfg(feature = "OS_EVENT_EN")]
         {
@@ -402,7 +402,7 @@ pub fn wake_task(task: OS_TCB_REF) {
     if header.OSTCBStat.run_enqueue() {
         // We have just marked the task as scheduled, so enqueue it.
         unsafe {
-            let executor = GlobalSyncExecutor.get_unmut().as_ref().unwrap_unchecked();
+            let executor = GlobalSyncExecutor.as_ref().unwrap_unchecked();
             executor.enqueue(task);
         }
     }
