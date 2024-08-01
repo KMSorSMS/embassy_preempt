@@ -37,7 +37,7 @@ use core::sync::atomic::Ordering;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::executor::GlobalSyncExecutor;
+use crate::{executor::GlobalSyncExecutor, heap::stack_allocator::init_stack_allocator};
 // use crate::os_q::OS_QInit;
 use crate::port::*;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
@@ -181,6 +181,8 @@ pub fn OSInit() {
 
     #[cfg(feature = "OS_DEBUG_EN")]
     OSDebugInit();
+    // by liam: we need to init the stack allocator
+    init_stack_allocator();
 }
 
 /*
