@@ -37,7 +37,7 @@ use core::sync::atomic::Ordering;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::executor::GlobalSyncExecutor;
+use crate::{executor::GlobalSyncExecutor, heap::stack_allocator::init_stack_allocator};
 // use crate::os_q::OS_QInit;
 use crate::port::*;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
@@ -181,6 +181,8 @@ pub fn OSInit() {
 
     #[cfg(feature = "OS_DEBUG_EN")]
     OSDebugInit();
+    // by liam: we need to init the stack allocator
+    init_stack_allocator();
 }
 
 /*
@@ -302,6 +304,7 @@ pub fn OSSchedUnlock() {}
 /// uC/OS-II manages the task that you have created.  Before you can call
 /// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
+#[cfg(not(feature = "test"))]
 pub fn OSStart() -> !{
     extern "Rust" {
         fn run_idle();
@@ -312,6 +315,17 @@ pub fn OSStart() -> !{
         unsafe {
             GlobalSyncExecutor.get_unmut().as_ref().unwrap().poll();
             run_idle();
+        }
+    }
+}
+#[cfg(feature = "test")]
+pub fn OSStart(){
+    // set OSRunning
+    OSRunning.store(true, Ordering::Release);
+    loop {
+        unsafe {
+            GlobalSyncExecutor.get_unmut().as_ref().unwrap().poll();
+            return;
         }
     }
 }
