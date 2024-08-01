@@ -33,9 +33,9 @@ path = "executor-macro"
 [workspace.dependencies]
 
 [dependencies]
-cortex-m = { version = "0.7", features = ["critical-section-single-core"] }
+cortex-m = { version = "0.7"}
 cortex-m-rt = "0.7"
-critical-section = "1.1"
+critical-section = { version = "1.1",features=["restore-state-bool"]}
 defmt = {version = "0.3", optional = true}
 defmt-rtt = "0.4"
 log = { version = "0.4.14", optional = true }
@@ -82,7 +82,7 @@ overflow-checks = false  # <-
 [profile.release]
 codegen-units = 1
 debug = 2  # 生成完整的调试信息
-opt-level = 3
+opt-level = 0
 lto = true
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
