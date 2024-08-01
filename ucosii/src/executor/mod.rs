@@ -34,9 +34,13 @@ use crate::util::{SyncUnsafeCell, UninitCell};
 // create a global executor
 lazy_static! {
     /// the global executor will be initialized at os init
-    pub(crate) static ref mut EXECUTOR: SyncUnsafeCell<Option<SyncExecutor>> = SyncUnsafeCell::new(Some(&SyncExecutor::new(Pender(0 as *mut ()))));
+    pub(crate) static ref Executor: SyncUnsafeCell<Option<SyncExecutor>> = SyncUnsafeCell::new(Some(SyncExecutor::new(Pender(0 as *mut ()))));
 }
 
+// lazy_static! {
+//     /// the global executor will be initialized at os init
+//     pub(crate) static ref Executor: SyncUnsafeCell<Option<SyncExecutor>> = SyncUnsafeCell::new(Some(SyncExecutor::new(Pender(0 as *mut ()))));
+// }
 /*
 ****************************************************************************************************************************************
 *                                                             type define
@@ -265,7 +269,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         this.task_tcb.OSTCBExtInfo.init(pext, opt, id);
         // add the task to ready queue
         // the operation about the bitmap will be done in the RunQueue
-        unsafe { EXECUTOR.get_unmut().unwrap().enqueue(task_ref); }
+        unsafe { SyncExecutor.get_unmut().unwrap().enqueue(task_ref); }
 
         #[cfg(feature = "OS_EVENT_EN")]
         {
