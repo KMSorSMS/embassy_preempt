@@ -16,7 +16,12 @@ const SHORT_TIME: usize = 3;
 // }
 
 #[cortex_m_rt::entry]
-fn test_basic_schedule() -> ! {
+fn main_test() -> !{
+    loop {
+        test_basic_schedule();
+    }
+}
+fn test_basic_schedule() {
     // os初始化
     OSInit();
     // 创建两个任务
