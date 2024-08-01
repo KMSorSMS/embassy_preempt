@@ -302,7 +302,7 @@ pub fn OSSchedUnlock() {}
 /// uC/OS-II manages the task that you have created.  Before you can call
 /// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
-pub fn OSStart() {
+pub fn OSStart() -> !{
     extern "Rust" {
         fn run_idle();
     }
@@ -333,7 +333,12 @@ pub fn OSStart() {
 /// This function is used to signal to uC/OS-II the occurrence of a 'system tick'
 /// (also known as a 'clock tick').  This function should be called by the ticker
 /// ISR but, can also be called by a high priority task.
-pub fn OSTimeTick() {}
+/// fin this to use Timer
+pub fn OSTimeTick() {
+    // add the 
+    OSTime.fetch_add(1, Ordering::Release);
+
+}
 
 /*
 *********************************************************************************************************

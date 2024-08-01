@@ -19,6 +19,8 @@
 ********************************************************************************************************************************************
 */
 
+use cortex_m::{interrupt, register::primask};
+use critical_section::{set_impl, Impl, RawRestoreState};
 use defmt_rtt as _; // global logger
 
 extern crate alloc;
@@ -68,11 +70,28 @@ pub mod lang_items;
 
 /*
 ********************************************************************************************************************************************
-*                                                               import mod
+*                                                               critical section
 ********************************************************************************************************************************************
 */
 
 
+struct SingleCoreCriticalSection;
+set_impl!(SingleCoreCriticalSection);
+
+unsafe impl Impl for SingleCoreCriticalSection {
+    unsafe fn acquire() -> RawRestoreState {
+        let was_active = primask::read().is_active();
+        interrupt::disable();
+        was_active
+    }
+
+    unsafe fn release(was_active: RawRestoreState) {
+        // Only re-enable interrupts if they were enabled before the critical section.
+        if was_active {
+            interrupt::enable()
+        }
+    }
+}
 
 /*
 ********************************************************************************************************************************************
