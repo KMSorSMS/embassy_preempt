@@ -302,6 +302,7 @@ pub fn OSSchedUnlock() {}
 /// uC/OS-II manages the task that you have created.  Before you can call
 /// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
+#[cfg(not(feature = "test"))]
 pub fn OSStart() -> !{
     extern "Rust" {
         fn run_idle();
@@ -312,6 +313,17 @@ pub fn OSStart() -> !{
         unsafe {
             GlobalSyncExecutor.get_unmut().as_ref().unwrap().poll();
             run_idle();
+        }
+    }
+}
+#[cfg(feature = "test")]
+pub fn OSStart(){
+    // set OSRunning
+    OSRunning.store(true, Ordering::Release);
+    loop {
+        unsafe {
+            GlobalSyncExecutor.get_unmut().as_ref().unwrap().poll();
+            return;
         }
     }
 }
