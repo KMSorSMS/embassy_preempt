@@ -794,10 +794,3 @@ lazy_static! {
     /// Pointer to highest priority TCB R-to-R
     pub static ref OSTCBHighRdy:Mutex<RefCell<OS_TCB_REF>>=Mutex::new(RefCell::new(OS_TCB_REF::default()));
 }
-
-
-// by noah: this code is related to the assembly code, I can't guarantee the accuracy of the code
-// Pointer to currently running TCB
-// pub static OSTCBCur:Mutex<RefCell<OS_TCB_REF>>=Mutex::new(RefCell::new(OS_TCB_REF{ptr:NonNull::dangling()}));
-// Pointer to highest priority TCB R-to-R
-// pub static OSTCBHighRdy:Mutex<RefCell<OS_TCB_REF>>=Mutex::new(RefCell::new(OS_TCB_REF{ptr:NonNull::dangling()}));

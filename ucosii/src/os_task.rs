@@ -11,11 +11,11 @@
 ********************************************************************************************************************************************
 */
 
-use core::{future::{self, Future}, ptr::null_mut};
+use core::{future::{self, Future}};
 use core::sync::atomic::Ordering::Acquire;
 use alloc::string::ToString;
 
-use crate::{cfg::OS_LOWEST_PRIO, executor::OS_TASK_STORAGE, heap::stack_allocator::OS_STK_REF, port::{INT8U, OS_STK}, ucosii::{OSIntNesting, OS_ERR_STATE}};
+use crate::{cfg::OS_LOWEST_PRIO, executor::{GlobalSyncExecutor, OS_TASK_STORAGE}, heap::stack_allocator::OS_STK_REF, port::{INT8U, OS_STK}, ucosii::{OSIntNesting, OSRunning, OS_ERR_STATE}};
 
 /*
 ********************************************************************************************************************************************
@@ -42,17 +42,7 @@ where
             task(p_arg)
         }
     };
-    // Make sure we don't create the task from within an ISR
-    if OSIntNesting.load(Acquire)>0 {
-        return OS_ERR_STATE::OS_ERR_TASK_CREATE_ISR;
-    }
-    // if 
-    // because this func can be call when the OS has started, so need a cs
-    critical_section::with(|cs|{
-    });
-
-    OS_TASK_STORAGE::init(prio, 0, 0 as *mut (), 0, "".to_string(), future_func);
-    return OS_ERR_STATE::OS_ERR_NONE;
+    return init_task(prio,future_func);
 }
 
 /// Create a task in uC/OS-II kernel. This func is used by async Rust
@@ -62,10 +52,47 @@ where
     F: Future + 'static,
     FutFn: FnOnce(*mut ()) -> F + 'static,
 {
-    let task = ||{
+    let future_func = ||{
         task(p_arg)
     };
     
-    OS_TASK_STORAGE::init(prio, 0, 0 as *mut (), 0, "".to_string(), task);
-    return OS_ERR_STATE::OS_ERR_NONE;
+    return init_task(prio,future_func);
+}
+
+fn init_task<F:Future + 'static>(prio: INT8U,future_func: impl FnOnce() -> F)->OS_ERR_STATE{
+    // Make sure we don't create the task from within an ISR
+    if OSIntNesting.load(Acquire)>0 {
+        return OS_ERR_STATE::OS_ERR_TASK_CREATE_ISR;
+    }
+    // because this func can be call when the OS has started, so need a cs
+    if critical_section::with(|_cs|{
+        let executor = GlobalSyncExecutor.get_unmut().as_ref().unwrap();
+        if executor.prio_exist(prio) {
+            return true;
+        }else{
+            // reserve bit
+            executor.reserve_bit(prio);
+            return false;
+        }
+    }) {
+        return OS_ERR_STATE::OS_ERR_PRIO_EXIST;
+    }
+
+    let err =  OS_TASK_STORAGE::init(prio, 0, 0 as *mut (), 0, "".to_string(), future_func);
+    if err == OS_ERR_STATE::OS_ERR_NONE {
+        // check whether the task is created after the OS has started
+        if OSRunning.load(Acquire) {
+            // schedule the task, not using poll, we have to make a preemptive schedule
+            // unsafe{
+            //     GlobalSyncExecutor.get_unmut().as_ref().unwrap().poll();
+            // }
+        }
+    }else{
+        critical_section::with(|_cs|{
+            let executor = GlobalSyncExecutor.get_unmut().as_ref().unwrap();
+            // clear the reserve bit
+            executor.clear_bit(prio);
+        })
+    }
+    return err;
 }

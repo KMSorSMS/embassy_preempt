@@ -10,7 +10,7 @@ pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
 #[global_allocator]
 static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(
     FixedSizeBlockAllocator::new());
-
+#[allow(unused)]
 pub fn init_heap(){
     unsafe {
         ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
