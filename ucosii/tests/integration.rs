@@ -4,7 +4,7 @@
 use core::arch::asm;
 
 use defmt::println;
-use ucosii::{self as _, os_task::OSTaskCreate};
+use ucosii::{self as _, os_task::OSTaskCreate, os_time::Timer};
 // See https://crates.io/crates/defmt-test/0.3.0 for more documentation (e.g. about the 'state'
 // feature)
 const LONG_TIME: usize = 10;
