@@ -13,8 +13,7 @@ struct S1<T> {
 struct S2 {
     z: u8,
 }
-// #[ucosii_executor_macro::task]
-async fn hello() {
+fn hello() {
     defmt::info!("Hello, world!");
 }
 

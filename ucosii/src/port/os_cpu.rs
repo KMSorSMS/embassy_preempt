@@ -2,16 +2,20 @@
 
 use core::arch::asm;
 
-use crate::heap::init_heap;
+// use crate::ucosii::OSIdleCtr;
+// use core::sync::atomic::Ordering::Relaxed;
+
+// use crate::heap::init_heap;
 
 /// finish the init part of the CPU/MCU
-pub fn OSInitHookBegin(){
-    init_heap();
+pub fn OSInitHookBegin() {
+    // if we need heap, we can init it here
+    // init_heap();
 }
 
 #[no_mangle]
 /// the function to start the first task
-pub extern "Rust" fn restore_arch_stk(stk: *mut usize) {
+pub extern "Rust" fn restore_arch_stk_user(stk: *mut usize) {
     unsafe {
         asm!(
             // first restore the xpsr(from r0)
@@ -28,5 +32,14 @@ pub extern "Rust" fn restore_arch_stk(stk: *mut usize) {
             in("r0") stk,
             options(nostack, preserves_flags),
         )
+    }
+}
+
+#[no_mangle]
+pub extern "Rust" fn run_idle() {
+    // undate the counter of the system
+    // OSIdleCtr.fetch_add(1, Ordering::Relaxed);
+    unsafe {
+        asm!("wfe");
     }
 }
