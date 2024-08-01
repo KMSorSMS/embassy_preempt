@@ -3,7 +3,7 @@
 #![feature(impl_trait_in_assoc_type)]
 use core::arch::asm;
 
-use ucosii as _;
+use ucosii::{self as _, os_time::Timer};
 use defmt::{info, Format}; // <- derive attribute
 use ucosii::{os_core::{OSInit, OSStart}, os_task::{OSTaskCreate, RustOSTaskCreate}};
 
@@ -47,7 +47,8 @@ async fn task3(_args:*mut ()) {
     loop{
         //
         info!("---task3 begin---");
-        delay(LONG_TIME);
+        Timer::after_ticks(LONG_TIME as u64).await;
+        // delay(LONG_TIME);
         info!("---task3 end---");
         delay(SHORT_TIME);
     }
