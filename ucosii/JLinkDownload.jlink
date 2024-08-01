@@ -1,0 +1,5 @@
+h
+loadfile target/thumbv7em-none-eabi/release/stm32f401_embassy.bin 0x08000000
+r
+g
+exit
