@@ -12,7 +12,6 @@ const MID_TIME: usize = 5;
 const SHORT_TIME: usize = 3;
 #[defmt_test::tests]
 mod tests {
-    use defmt::assert;
     use ucosii::{os_core::{OSInit, OSStart}, os_task::{OSTaskCreate, RustOSTaskCreate}};
 
     use crate::{task1,task2,task3, task4};
