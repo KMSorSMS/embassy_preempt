@@ -63,6 +63,8 @@ pub mod atomic_macros;
 
 mod heap;
 
+mod sync;
+
 mod util;
 /// the mod of lang_items
 pub mod lang_items;
