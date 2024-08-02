@@ -118,7 +118,7 @@ pub struct OS_TASK_STORAGE<F: Future + 'static> {
 }
 
 /// the ref of the TCB. In other crate only it can be used to access the TCB
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 #[allow(unused)]
 pub struct OS_TCB_REF {
     /// the pointer to the TCB
@@ -263,7 +263,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // add the task to ready queue
         // the operation about the bitmap will be done in the RunQueue
         // need a cs
-        critical_section::with(|_cs|{
+        critical_section::with(|_cs| {
             unsafe { GlobalSyncExecutor.as_ref().unwrap().enqueue(task_ref) };
         });
         #[cfg(feature = "OS_EVENT_EN")]
@@ -346,9 +346,7 @@ impl Default for OS_TCB_REF {
     // this func will not be called
     fn default() -> Self {
         // by noah:dangling is used to create a dangling pointer, which is just like the null pointer in C
-        OS_TCB_REF {
-            ptr: None,
-        }
+        OS_TCB_REF { ptr: None }
     }
 }
 
@@ -356,7 +354,7 @@ impl Default for OS_TCB_REF {
 impl Deref for OS_TCB_REF {
     type Target = OS_TCB;
     fn deref(&self) -> &Self::Target {
-        unsafe { self.ptr.unwrap().as_ref()}
+        unsafe { self.ptr.unwrap().as_ref() }
     }
 }
 
@@ -397,7 +395,6 @@ impl<F: Future + 'static> AvailableTask<F> {}
 ///
 /// You can obtain a `TaskRef` from a `Waker` using [`task_from_waker`].
 pub fn wake_task(task: OS_TCB_REF) {
-
     let header = task.header();
     if header.OSTCBStat.run_enqueue() {
         // We have just marked the task as scheduled, so enqueue it.
@@ -556,28 +553,22 @@ impl SyncExecutor {
     }
     // check if an prio is exiting
     pub fn prio_exist(&self, prio: INT8U) -> bool {
-        let prio_tbl: [OS_TCB_REF; OS_LOWEST_PRIO + 1];
-        unsafe {
-            prio_tbl = self.os_prio_tbl.get();
-        }
+        let prio_tbl: &[OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        prio_tbl = self.os_prio_tbl.get_unmut();
         prio_tbl[prio as USIZE].ptr.is_some()
     }
 
-    pub fn reserve_bit(&self,prio: INT8U){
-        let mut prio_tbl: [OS_TCB_REF; OS_LOWEST_PRIO + 1];
-        unsafe {
-            prio_tbl = self.os_prio_tbl.get();
-        }
+    pub fn reserve_bit(&self, prio: INT8U) {
+        let prio_tbl: &mut [OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
-        prio_tbl[prio as USIZE].ptr=Some(NonNull::dangling());
+        prio_tbl[prio as USIZE].ptr = Some(NonNull::dangling());
     }
 
-    pub fn clear_bit(&self,prio: INT8U){
-        let mut prio_tbl: [OS_TCB_REF; OS_LOWEST_PRIO + 1];
-        unsafe {
-            prio_tbl = self.os_prio_tbl.get();
-        }
+    pub fn clear_bit(&self, prio: INT8U) {
+        let prio_tbl: &mut[OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
-        prio_tbl[prio as USIZE].ptr=None;
+        prio_tbl[prio as USIZE].ptr = None;
     }
 }

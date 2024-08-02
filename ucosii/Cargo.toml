@@ -134,7 +134,7 @@ std = []
 host = []
 atomics = []                 # use hardware atomics from core::sync::atomic
 xip = []                     # enable optimizations for execute in place
-test = []
+# test = []
 [target.'cfg(loom)'.dependencies]
 loom = { version = "0.7", features = ["checkpoint"] }
 [lints.rust]
