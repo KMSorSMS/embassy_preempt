@@ -45,8 +45,8 @@ where
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
         let layout = Layout::from_size_align(128, 8).unwrap();
-        let stk = stk_from_ptr(_ptos as *mut u8, layout);
-        dealloc_stack(&stk);
+        let mut stk = stk_from_ptr(_ptos as *mut u8, layout);
+        dealloc_stack(&mut stk);
     }
     return init_task(prio, future_func);
 }
@@ -62,8 +62,8 @@ where
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
         let layout = Layout::from_size_align(128, 8).unwrap();
-        let stk = stk_from_ptr(_ptos as *mut u8, layout);
-        dealloc_stack(&stk);
+        let mut stk = stk_from_ptr(_ptos as *mut u8, layout);
+        dealloc_stack(&mut stk);
     }
     return init_task(prio, future_func);
 }
