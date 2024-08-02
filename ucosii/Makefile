@@ -107,3 +107,7 @@ debug-lib: bin-lib
 	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(TEST_ELF_LIB)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
 	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit'  -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(RTT_ADDR_LIB) 0x$(RTT_SIZE_LIB) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
 	tmux -2 attach-session -d
+defmt-lib:
+	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW_LIB) "
+lib-run:
+	cargo test --lib --features test
