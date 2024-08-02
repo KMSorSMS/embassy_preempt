@@ -52,7 +52,7 @@ async fn task3(_args:*mut ()) {
     loop{
         //
         info!("---task3 begin---");
-        // Timer::after_ticks(LONG_TIME as u64).await;
+        Timer::after_ticks(LONG_TIME as u64).await;
         // delay(LONG_TIME);
         info!("---task3 end---");
         delay(SHORT_TIME);
@@ -60,6 +60,7 @@ async fn task3(_args:*mut ()) {
 }
 fn task4(_args:*mut ()) {
     // 任务4
+
     info!("---task4 begin---");
     // 任务3中涉及任务创建
     OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 14);
