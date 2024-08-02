@@ -12,10 +12,16 @@
 # b uc_thread/os_cpu.rs:66
 # ignore $bpnum 13
 dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables
-# b test_basic_schedule
-# b OSStart
-b ucosii/src/os_core.rs:321
-b ucosii/src/os_core.rs:322
+b test_basic_schedule
+b ucosii/src/os_core.rs:337
+b ucosii/src/os_core.rs:345
+# b ucosii/src/os_core.rs:347
+b task1
+b task2
+b task3
+b task4
+
+
 
 start
 
