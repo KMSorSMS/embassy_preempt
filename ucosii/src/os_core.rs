@@ -304,32 +304,12 @@ pub fn OSSchedUnlock() {}
 /// uC/OS-II manages the task that you have created.  Before you can call
 /// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
-#[cfg(not(feature = "test"))]
+// #[cfg(not(feature = "test"))]
 pub fn OSStart() -> !{
     use crate::heap::stack_allocator::INTERRUPT_STACK;
 
     extern "Rust" {
         fn run_idle();
-        fn set_int_change_2_psp(int_ptr: *mut u8);
-    }
-    // set OSRunning
-    OSRunning.store(true, Ordering::Release);
-    // before we step into the loop, we call set_int_change_2_psp(as part of the function of OSStartHighRdy in ucosii)
-    // to change the stack pointer to program pointer and use psp
-    let int_stk = INTERRUPT_STACK.exclusive_access();
-    unsafe {set_int_change_2_psp(int_stk.STK_REF.as_ptr() as *mut u8);}
-    drop(int_stk);
-    loop {
-        unsafe {
-            GlobalSyncExecutor.as_ref().unwrap().poll();
-            run_idle();
-        }
-    }
-}
-#[cfg(feature = "test")]
-pub fn OSStart(){
-    use crate::heap::stack_allocator::INTERRUPT_STACK;
-    extern "Rust" {
         fn set_int_change_2_psp(int_ptr: *mut u8);
     }
     // set OSRunning
@@ -343,10 +323,31 @@ pub fn OSStart(){
     loop {
         unsafe {
             GlobalSyncExecutor.as_ref().unwrap().poll();
-            return;
+            run_idle();
         }
     }
 }
+// #[cfg(feature = "test")]
+// pub fn OSStart(){
+//     use crate::heap::stack_allocator::INTERRUPT_STACK;
+//     extern "Rust" {
+//         fn set_int_change_2_psp(int_ptr: *mut u8);
+//     }
+//     // set OSRunning
+//     OSRunning.store(true, Ordering::Release);
+//     // before we step into the loop, we call set_int_change_2_psp(as part of the function of OSStartHighRdy in ucosii)
+//     // to change the stack pointer to program pointer and use psp
+//     let int_stk = INTERRUPT_STACK.exclusive_access();
+//     let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
+//     drop(int_stk);
+//     unsafe {set_int_change_2_psp(int_ptr);}
+//     loop {
+//         unsafe {
+//             GlobalSyncExecutor.as_ref().unwrap().poll();
+//             return;
+//         }
+//     }
+// }
 
 /*
 *********************************************************************************************************
