@@ -1,6 +1,7 @@
 OBJDUMP := rust-objdump --arch-name=arm
 OBJCOPY := rust-objcopy --binary-architecture=arm
-TEST_BINARY = target/thumbv7em-none-eabi/debug/integration.bin
+TEST_BINARY := target/thumbv7em-none-eabi/debug/integration.bin
+TEST_BINARY_LIB := target/thumbv7em-none-eabi/debug/ucosii_lib.bin 
 ENTRY_PA := 0x08000000
 PORT := 8765
 TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
@@ -15,11 +16,19 @@ ifeq ($(MODE), release)
 	MODE_ARG := --release
 endif
 
-ifneq ($(filter bin-test debug-test,$(MAKECMDGOALS)),)
+# ifneq ($(filter bin-test debug-test,$(MAKECMDGOALS)),)
+TEST_ELF_NEW_LIB := target/thumbv7em-none-eabi/debug/ucosii_lib
+ifneq ($(filter bin-test debug-test bin-lib debug-lib,$(MAKECMDGOALS)),)
 	TEST_ELF := $(shell cargo test --package ucosii --test integration --no-run 2>&1 | grep -oP 'Executable .* \(\K[^)]+') 
+endif
+ifneq ($(filter bin-lib debug-lib,$(MAKECMDGOALS)),)
+	TEST_ELF_LIB := $(shell cargo test --lib --no-run  2>&1 | grep -oP 'Executable .* \(\K[^)]+') 
 endif
 RTT_ADDR := $(shell rust-nm -S $(TEST_ELF) 2>/dev/null | grep RTT | awk '{print $$1}')
 RTT_SIZE := $(shell rust-nm -S $(TEST_ELF) 2>/dev/null | grep RTT | awk '{print $$2}')
+RTT_ADDR_LIB := $(shell rust-nm -S $(TEST_ELF_LIB) 2>/dev/null | grep RTT | awk '{print $$1}')
+RTT_SIZE_LIB := $(shell rust-nm -S $(TEST_ELF_LIB) 2>/dev/null | grep RTT | awk '{print $$2}')
+
 bin-test:
 # 将编译的elf文件转为二进制文件
 	$(OBJCOPY) -O binary $(TEST_ELF) $(TEST_BINARY)
@@ -78,3 +87,16 @@ run:
 	cargo run $(MODE_ARG)
 defmt:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(FILE_ELF) "
+bin-lib:
+	$(OBJCOPY) -O binary $(TEST_ELF_LIB) $(TEST_BINARY_LIB)
+	$(OBJCOPY) $(TEST_ELF_LIB) $(TEST_ELF_NEW_LIB)
+debug-lib: bin-lib
+	tmux new-session -d \
+	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(TEST_BINARY_LIB) $(ENTRY_PA)' " && \
+	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(TEST_ELF_LIB)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
+	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit'  -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(RTT_ADDR_LIB) 0x$(RTT_SIZE_LIB) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
+	tmux -2 attach-session -d
+defmt-lib:
+	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW_LIB) "
+lib-run:
+	cargo test --lib --features test
