@@ -62,7 +62,8 @@ fn task4(_args:*mut ()) {
 fn delay(time: usize){
     // 延时函数,time的单位约为0.5s
     for _ in 0..time {
-        for _ in 0..200000/2 {
+        // 记得改成/2是较慢的（后面有抢占的时候需要）
+        for _ in 0..200000/8 {
             unsafe {
                 asm!("nop");
             }
