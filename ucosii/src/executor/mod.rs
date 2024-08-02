@@ -508,7 +508,7 @@ impl SyncExecutor {
                 self.set_task_unready(task);
                 // after set the task as unready, we need to revoke its stack if it has.
                 if task.OSTCBStkPtr.is_some() {
-                    dealloc_stack(task.OSTCBStkPtr.as_ref().unwrap());
+                    dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
                 }
                 // set the task's stack to None
                 task.OSTCBStkPtr = None;

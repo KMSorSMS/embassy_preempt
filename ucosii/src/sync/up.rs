@@ -27,4 +27,8 @@ impl<T> UPSafeCell<T> {
     pub fn exclusive_access(&self) -> RefMut<'_, T> {
         self.inner.borrow_mut()
     }
+    /// set the inner data
+    pub fn set(&self, value: T) {
+        *self.inner.borrow_mut() = value;
+    }
 }
