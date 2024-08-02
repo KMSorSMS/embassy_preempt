@@ -7,9 +7,9 @@ use ucosii::{self as _, os_time::Timer};
 use defmt::info; // <- derive attribute
 use ucosii::{os_core::{OSInit, OSStart}, os_task::{OSTaskCreate, RustOSTaskCreate}};
 
-const LONG_TIME: usize = 10;
-const MID_TIME: usize = 5;
-const SHORT_TIME: usize = 3;
+const LONG_TIME: usize = 1;
+const MID_TIME: usize = 1;
+const SHORT_TIME: usize = 1;
 
 // fn hello() {
 //     defmt::info!("Hello, world!");

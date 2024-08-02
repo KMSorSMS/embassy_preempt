@@ -65,18 +65,24 @@ Jdownload: build bin
 	JLinkExe -device $(DEVICE) -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkDownload.jlink
 Jdebug: build bin Jdownload JGDBServer
 	tmux new-session -d \
-	"RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
+	"nc localhost 19021 | defmt-print -e $(FILE_ELF) " && \
+	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
 	-ex 'source ./.gdbinit' -ex 'monitor reset' " && \
 	tmux -2 attach-session -d
-# -ex 'monitor reset' -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(RTT_ADDR) 0x$(RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'
-# "nc localhost 19021 | defmt-print -e $(FILE_ELF) " && \
-# tmux split-window -h 
 JGDBServer:
 	@if ! pgrep JLinkGDBServer > /dev/null; then \
         echo "启动 JLinkGDBServer..."; \
-        JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 -log /dev/null & \
+        JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > JLinkGDBLog.yml & \
     else \
         echo "JLinkGDBServer 已经在运行。"; \
+    fi
+kill:
+	@PID=$$(lsof -t -i:2331); \
+    if [ -n "$$PID" ]; then \
+        echo "Killing process on port 2331 with PID: $$PID"; \
+        kill -9 $$PID; \
+    else \
+        echo "No process found on port 2331"; \
     fi
 Jclien:
 	nc localhost 19021 | defmt-print -e $(FILE_ELF) 
