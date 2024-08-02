@@ -81,6 +81,9 @@ ifneq ($(filter bin-lib debug-lib,$(MAKECMDGOALS)),)
 endif
 RTT_ADDR := $(shell rust-nm -S $(TEST_ELF) 2>/dev/null | grep RTT | awk '{print $$1}')
 RTT_SIZE := $(shell rust-nm -S $(TEST_ELF) 2>/dev/null | grep RTT | awk '{print $$2}')
+RTT_ADDR_LIB := $(shell rust-nm -S $(TEST_ELF_LIB) 2>/dev/null | grep RTT | awk '{print $$1}')
+RTT_SIZE_LIB := $(shell rust-nm -S $(TEST_ELF_LIB) 2>/dev/null | grep RTT | awk '{print $$2}')
+
 bin-test:
 # 将编译的elf文件转为二进制文件
 	$(OBJCOPY) -O binary $(TEST_ELF) $(TEST_BINARY)
@@ -102,5 +105,5 @@ debug-lib: bin-lib
 	tmux new-session -d \
 	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(TEST_BINARY_LIB) $(ENTRY_PA)' " && \
 	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(TEST_ELF_LIB)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
-	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit'  -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(RTT_ADDR) 0x$(RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
+	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit'  -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(RTT_ADDR_LIB) 0x$(RTT_SIZE_LIB) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
 	tmux -2 attach-session -d
