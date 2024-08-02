@@ -91,7 +91,8 @@ lto = true
 
 # this part only define features, don't decide whether the feature is active
 [features]
-default = ["OS_STACK_LESS_THAN_64","cortex_m","defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+# when a feature is set in default, it is active
+default = ["test","OS_STACK_LESS_THAN_64","cortex_m","defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
 defmt = ["dep:defmt"]
 nightly = []
 # this feature will be set in build.rs
