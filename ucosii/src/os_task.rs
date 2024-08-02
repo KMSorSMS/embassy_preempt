@@ -43,7 +43,7 @@ where
 
     // warp the normal func to a async func
     let future_func = move || async move { task(p_arg) };
-    info!("the size of future is {}",core::mem::size_of_val(&future_func));
+    // info!("the size of future is {}",core::mem::size_of_val(&future_func));
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
         let layout = Layout::from_size_align(128, 8).unwrap();
