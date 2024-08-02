@@ -326,6 +326,7 @@ pub fn OSStart() -> !{
         }
     }
 }
+
 #[cfg(feature = "test")]
 pub fn OSStart(){
     // set OSRunning

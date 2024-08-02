@@ -56,6 +56,8 @@ pub extern "Rust" fn set_program_sp(sp: *mut u8) {
         )
     }
 }
+
+#[no_mangle]
 /// the function to set the interrupt stack and change the control register to use the psp
 pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8){
     unsafe {

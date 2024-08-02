@@ -1,4 +1,0 @@
-<lvl> s=S1 { x: 42, y: S2 { z: 43 } }
-└─ ucosii_main::__cortex_m_rt_main @ src/bin/ucosii_main.rs:27  
-<lvl> x=42
-└─ ucosii_main::__cortex_m_rt_main @ src/bin/ucosii_main.rs:29  
