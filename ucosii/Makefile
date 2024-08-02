@@ -42,7 +42,7 @@ debug-test: bin-test
 defmt-test:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW) "
 test-run:
-	cargo test --package ucosii --test integration --features test
+	cargo test --package ucosii --test integration
 
 build:
 	cargo build $(MODE_ARG) 
@@ -105,4 +105,4 @@ debug-lib: bin-lib
 defmt-lib:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW_LIB) "
 lib-run:
-	cargo test --lib --features test
+	cargo test --lib

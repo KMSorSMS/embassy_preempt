@@ -26,6 +26,17 @@ b ucosii/src/bin/ucosii_main.rs:66
 b ucosii/src/bin/ucosii_main.rs:57
 # b ucosii/src/os_task.rs:78
 b ucosii/src/os_task.rs:80
+# dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables
+# b test_basic_schedule
+# b ucosii/src/os_core.rs:337
+# b ucosii/src/os_core.rs:345
+# # b ucosii/src/os_core.rs:347
+# b task1
+# b task2
+# b task3
+# b task4
+
+
 
 start
 

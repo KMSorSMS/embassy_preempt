@@ -5,7 +5,6 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
-use core::borrow::BorrowMut;
 use core::ptr::NonNull;
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
@@ -13,8 +12,8 @@ use super::Locked;
 
 pub const STACK_START: usize = 0x20000000;
 pub const STACK_SIZE: usize = 80 * 1024; // 80 KiB
-pub const PROGRAM_STACK_SIZE: usize = 1024; // 1 KiB
-pub const INTERRUPT_STACK_SIZE: usize = 1024; // 1 KiB
+pub const PROGRAM_STACK_SIZE: usize = 2048; // 2 KiB
+pub const INTERRUPT_STACK_SIZE: usize = 2048; // 2 KiB
 
 use crate::port::OS_STK;
 use crate::sync::UPSafeCell;
