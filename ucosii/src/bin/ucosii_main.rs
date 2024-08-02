@@ -4,7 +4,7 @@
 use core::arch::asm;
 
 use ucosii::{self as _, os_time::Timer};
-use defmt::{info, Format}; // <- derive attribute
+use defmt::info; // <- derive attribute
 use ucosii::{os_core::{OSInit, OSStart}, os_task::{OSTaskCreate, RustOSTaskCreate}};
 
 const LONG_TIME: usize = 10;
@@ -60,6 +60,7 @@ async fn task3(_args:*mut ()) {
 }
 fn task4(_args:*mut ()) {
     // 任务4
+
     info!("---task4 begin---");
     // 任务3中涉及任务创建
     OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 14);

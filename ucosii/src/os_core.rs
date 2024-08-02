@@ -317,9 +317,8 @@ pub fn OSStart() -> !{
     // before we step into the loop, we call set_int_change_2_psp(as part of the function of OSStartHighRdy in ucosii)
     // to change the stack pointer to program pointer and use psp
     let int_stk = INTERRUPT_STACK.exclusive_access();
-    let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
+    unsafe {set_int_change_2_psp(int_stk.STK_REF.as_ptr() as *mut u8);}
     drop(int_stk);
-    unsafe {set_int_change_2_psp(int_ptr);}
     loop {
         unsafe {
             GlobalSyncExecutor.as_ref().unwrap().poll();
