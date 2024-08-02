@@ -532,11 +532,11 @@ impl SyncExecutor {
             return None;
         }
         let prio = tmp.trailing_zeros() as usize;
-        let tmp = self.OSRdyTbl.get();
+        let tmp = self.OSRdyTbl.get_unmut();
         let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
         // set the current running task
         self.OSPrioCur.set(prio as OS_PRIO);
-        Some(self.os_prio_tbl.get()[prio])
+        Some(self.os_prio_tbl.get_unmut()[prio])
     }
     unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
         // added by liam: we have to make this process in critical section
