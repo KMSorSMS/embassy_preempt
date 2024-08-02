@@ -65,4 +65,3 @@ FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 512K
 }
 
 _stack_start = ORIGIN(RAM) + LENGTH(RAM);
-
