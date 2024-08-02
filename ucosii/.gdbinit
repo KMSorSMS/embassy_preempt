@@ -11,8 +11,13 @@
 # b uc_thread/os_cpu.rs:44
 # b uc_thread/os_cpu.rs:66
 # ignore $bpnum 13
+dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables
+# b test_basic_schedule
+# b OSStart
+b ucosii/src/os_core.rs:321
+b ucosii/src/os_core.rs:322
 
-start -y
+start
 
 define dss
   dashboard source -output /dev/pts/$arg0
