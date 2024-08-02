@@ -11,8 +11,8 @@ use core::ptr::NonNull;
 use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
 
-pub const STACK_START: usize = 0x08002000;
-pub const STACK_SIZE: usize = 100 * 1024; // 100 KiB
+pub const STACK_START: usize = 0x20000000;
+pub const STACK_SIZE: usize = 80 * 1024; // 80 KiB
 pub const PROGRAM_STACK_SIZE: usize = 1024; // 1 KiB
 pub const INTERRUPT_STACK_SIZE: usize = 1024; // 1 KiB
 
@@ -113,5 +113,34 @@ pub fn stk_from_ptr(stk_ptr: *mut u8, layout: Layout) -> OS_STK_REF {
         STK_REF: NonNull::new(unsafe { stk_ptr.offset(layout.size() as isize) as *mut OS_STK }).unwrap(),
         HEAP_REF: NonNull::new(stk_ptr).unwrap(),
         layout,
+    }
+}
+#[cfg(test)]
+#[defmt_test::tests]
+mod unit_tests {
+    use defmt::{assert, println};
+
+    use super::INTERRUPT_STACK;
+    use crate::{os_core::OSInit, port::os_cpu::set_int_change_2_psp};
+    #[init]
+    fn init() {
+        // this including set allocate stack for psp and msp, and change psp to that value(msp will chage below)
+        OSInit();
+        // before we step into the loop, we call set_int_change_2_psp(as part of the function of OSStartHighRdy in ucosii)
+        // to change the stack pointer to program pointer and use psp
+        let int_stk = INTERRUPT_STACK.exclusive_access();
+        let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
+        drop(int_stk);
+        set_int_change_2_psp(int_ptr);
+    }
+    #[test]
+    fn stack_alloc_basic_test() {
+        let layout = alloc::alloc::Layout::from_size_align(1024, 8).unwrap();
+        let stk = super::alloc_stack(layout);
+        assert!(stk.STK_REF.as_ptr() as usize > super::STACK_START);
+        assert!((stk.STK_REF.as_ptr() as usize) < (super::STACK_START + super::STACK_SIZE));
+        assert!(stk.layout.size() == 1024);
+        println!("stk ptr:{:?}", stk.STK_REF.as_ptr());
+        super::dealloc_stack(&stk);
     }
 }

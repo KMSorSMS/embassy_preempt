@@ -104,12 +104,3 @@ unsafe impl Impl for SingleCoreCriticalSection {
 // pub type Addr = *mut core::ffi::c_void;
 // /// Unsigned  8 bit quantity
 // pub type VoidPtr = *mut core::ffi::c_void;
-#[cfg(test)]
-#[defmt_test::tests]
-mod unit_tests {
-    use defmt::assert;
-    #[test]
-    fn it_works() {
-        assert!(true)
-    }
-}
