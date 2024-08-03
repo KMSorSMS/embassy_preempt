@@ -3,9 +3,11 @@
 #![feature(impl_trait_in_assoc_type)]
 use core::arch::asm;
 
-use ucosii::{self as _, os_time::Timer};
 use defmt::info; // <- derive attribute
-use ucosii::{os_core::{OSInit, OSStart}, os_task::{OSTaskCreate, RustOSTaskCreate}};
+use ucosii::os_core::{OSInit, OSStart};
+use ucosii::os_task::{OSTaskCreate, RustOSTaskCreate};
+use ucosii::os_time::Timer;
+use ucosii::{self as _};
 
 const LONG_TIME: usize = 10;
 const MID_TIME: usize = 5;
@@ -16,7 +18,7 @@ const SHORT_TIME: usize = 3;
 // }
 
 #[cortex_m_rt::entry]
-fn main_test() -> !{
+fn main_test() -> ! {
     loop {
         test_basic_schedule();
     }
@@ -28,7 +30,7 @@ fn test_basic_schedule() {
     // 调度顺序应该为：task5->task1(task5中创建)->task4->task3->task2->task1->task1(在task4中创建)->task6(由于优先级相同输出相关信息)
     OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 30);
     OSTaskCreate(task2, 0 as *mut (), 0 as *mut usize, 25);
-    RustOSTaskCreate(task3, 0 as *mut (),0 as *mut usize, 20);
+    RustOSTaskCreate(task3, 0 as *mut (), 0 as *mut usize, 20);
     OSTaskCreate(task4, 0 as *mut (), 0 as *mut usize, 15);
     OSTaskCreate(task5, 0 as *mut (), 0 as *mut usize, 10);
     OSTaskCreate(task6, 0 as *mut (), 0 as *mut usize, 35);
@@ -36,21 +38,21 @@ fn test_basic_schedule() {
     OSStart();
 }
 
-fn task1(_args:*mut ()) {
+fn task1(_args: *mut ()) {
     // 任务1
     info!("---task1 begin---");
     delay(LONG_TIME);
     info!("---task1 end---");
     delay(SHORT_TIME);
 }
-fn task2(_args:*mut ()) {
+fn task2(_args: *mut ()) {
     // 任务2
     info!("---task2 begin---");
     delay(MID_TIME);
     info!("---task2 end---");
     delay(SHORT_TIME);
 }
-async fn task3(_args:*mut ()) {
+async fn task3(_args: *mut ()) {
     // 任务3
     //
     info!("---task3 begin---");
@@ -59,7 +61,7 @@ async fn task3(_args:*mut ()) {
     info!("---task3 end---");
     delay(SHORT_TIME);
 }
-fn task4(_args:*mut ()) {
+fn task4(_args: *mut ()) {
     // 任务4
     info!("---task4 begin---");
     // 任务4中涉及任务创建
@@ -69,7 +71,7 @@ fn task4(_args:*mut ()) {
     delay(SHORT_TIME);
 }
 
-fn task5(_args:*mut ()) {
+fn task5(_args: *mut ()) {
     // 任务5
     info!("---task5 begin---");
     // 任务5中涉及任务创建
@@ -79,8 +81,8 @@ fn task5(_args:*mut ()) {
     delay(SHORT_TIME);
 }
 
-/* 任务6用于测试优先级相同的情况 */ 
-fn task6(_args:*mut ()) {
+/* 任务6用于测试优先级相同的情况 */
+fn task6(_args: *mut ()) {
     // 任务6
     info!("---task6 begin---");
     // 任务6中涉及任务创建，新创建的优先级与当前任务相同

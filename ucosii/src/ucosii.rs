@@ -51,7 +51,7 @@ const OS_PRIO_MUTEX_CEIL_DIS: INT32U = 0xFF; /* Disable mutex priority ceiling p
 
 // by noah：For there is no Task Idle, so the OS_N_SYS_TASKS is set as 0 or 1(when OS_TASK_STAT_EN)
 #[cfg(feature = "OS_TASK_STAT_EN")]
-pub const OS_N_SYS_TASKS: INT32U = 1; 
+pub const OS_N_SYS_TASKS: INT32U = 1;
 #[cfg(not(feature = "OS_TASK_STAT_EN"))]
 #[allow(unused)]
 /// Number of system tasks
@@ -68,7 +68,6 @@ const OS_TASK_IDLE_PRIO: USIZE = OS_LOWEST_PRIO; /* IDLE      task priority     
 const OS_EVENT_TBL_SIZE: USIZE = (OS_LOWEST_PRIO / 8 + 1) as USIZE; /* Size of event table                         */
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
 const OS_EVENT_TBL_SIZE: USIZE = OS_LOWEST_PRIO / 16 + 1; /* Size of event table                         */
-
 
 /// Size of ready table
 #[allow(unused)]
@@ -745,7 +744,7 @@ pub static OSIdleCtr: AtomicU32 = AtomicU32::new(0);
 pub static OSTaskRegNextAvailID: AtomicU8 = AtomicU8::new(0);
 
 // Ready list group
-// fix by liam: we put it into the executor 
+// fix by liam: we put it into the executor
 // #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
 // pub static OSRdyGrp: AtomicU8 = AtomicU8::new(0);
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]

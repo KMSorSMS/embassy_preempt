@@ -1,6 +1,7 @@
-use super::{align_up, Locked};
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::{mem, ptr};
+
+use super::{align_up, Locked};
 
 struct ListNode {
     size: usize,
@@ -28,9 +29,7 @@ pub struct LinkedListAllocator {
 impl LinkedListAllocator {
     /// Creates an empty LinkedListAllocator.
     pub const fn new() -> Self {
-        Self {
-            head: ListNode::new(0),
-        }
+        Self { head: ListNode::new(0) }
     }
 
     /// Initialize the allocator with the given heap bounds.
