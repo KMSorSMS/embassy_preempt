@@ -15,6 +15,7 @@
 
 use core::{alloc::Layout, cell::{Cell, RefCell, UnsafeCell}, mem::MaybeUninit, ptr::{null_mut, NonNull}, sync::atomic::{AtomicU16, AtomicU8}};
 use critical_section::{CriticalSection, Mutex};
+use defmt::info;
 
 use crate::{cfg::{OS_ARENA_SIZE, OS_STACK_SIZE}, port::*, ucosii::{OS_STACK, OS_STACK_NUM, OS_STACK_TBL_SIZE}};
 
@@ -69,7 +70,7 @@ impl<const N: usize> Arena<N> {
         if align_offset + layout.size() > bytes_left {
             panic!("embassy-executor: task arena is full. You must increase the arena size, see the documentation for details: https://docs.embassy.dev/embassy-executor/");
         }
-
+        info!("size of the task storage is {}", layout.size());
         let res = unsafe { ptr.add(align_offset) };
         let ptr = unsafe { ptr.add(align_offset + layout.size()) };
 

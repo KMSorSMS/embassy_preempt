@@ -60,7 +60,6 @@ async fn task3(_args:*mut ()) {
 }
 fn task4(_args:*mut ()) {
     // 任务4
-
     info!("---task4 begin---");
     // 任务3中涉及任务创建
     OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 14);
