@@ -89,5 +89,9 @@
     // "embassy-executor/Cargo.toml",
     "ucosii/Cargo.toml"
   ],
-  "liveshare.languages.allowGuestCommandControl": true
+  "liveshare.languages.allowGuestCommandControl": true,
+  "files.associations": {
+    ".gdb": "shell",
+    ".gdbinit": "shell"
+  }
 }

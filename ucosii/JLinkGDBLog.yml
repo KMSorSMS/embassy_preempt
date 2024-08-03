@@ -1216,3 +1216,282 @@ Reading register 'iepsr' = 0x01000000
 Read 4 bytes @ address 0x200168BC (Data = 0x2001691E)
 Read 1 bytes @ address 0x2001691E (Data = 0x0B)
 GDB closed TCP/IP connection (Socket 12)
+Connected to 127.0.0.1
+GDB client (conn. 12) requested target.xml from GDB Server
+Reading common registers: Read register 'r0' (4 bytes) from hardware: 0x1E690120
+Read register 'r1' (4 bytes) from hardware: 0x01000000
+Read register 'r2' (4 bytes) from hardware: 0xACB60008
+Read register 'r3' (4 bytes) from hardware: 0x98B20008
+Read register 'r4' (4 bytes) from hardware: 0x00000000
+Read register 'r5' (4 bytes) from hardware: 0x00000000
+Read register 'r6' (4 bytes) from hardware: 0x00000000
+Read register 'r7' (4 bytes) from hardware: 0xD0680120
+Read register 'r8' (4 bytes) from hardware: 0x00000000
+Read register 'r9' (4 bytes) from hardware: 0x00000000
+Read register 'r10' (4 bytes) from hardware: 0x00000000
+Read register 'r11' (4 bytes) from hardware: 0x00000000
+Read register 'r12' (4 bytes) from hardware: 0x01000000
+Read register 'sp' (4 bytes) from hardware: 0xB0680120
+Read register 'lr' (4 bytes) from hardware: 0x7F050008
+Read register 'pc' (4 bytes) from hardware: 0x0E230008
+Read register 'xpsr' (4 bytes) from hardware: 0x00000001
+Read 4 bytes @ address 0x200168C8 (Data = 0x200168D0)
+Read 4 bytes @ address 0x200168C8 (Data = 0x200168D0)
+Read 4 bytes @ address 0x0800230E (Data = 0x60D0F64B)
+Read 4 bytes @ address 0x0800230A (Data = 0x9003B088)
+Read 4 bytes @ address 0x0800230E (Data = 0x60D0F64B)
+Read 4 bytes @ address 0x0800230A (Data = 0x9003B088)
+Read 2 bytes @ address 0x0800230E (Data = 0xF64B)
+Read 2 bytes @ address 0x0800230C (Data = 0x9003)
+Read 2 bytes @ address 0x0800230A (Data = 0xB088)
+Read 2 bytes @ address 0x0800230E (Data = 0xF64B)
+Read 2 bytes @ address 0x0800230C (Data = 0x9003)
+Read 2 bytes @ address 0x0800230A (Data = 0xB088)
+Read 4 bytes @ address 0x0800230E (Data = 0x60D0F64B)
+Read 4 bytes @ address 0x0800230A (Data = 0x9003B088)
+Read 4 bytes @ address 0x0800230E (Data = 0x60D0F64B)
+Read 4 bytes @ address 0x0800230A (Data = 0x9003B088)
+Read 4 bytes @ address 0x0800230E (Data = 0x60D0F64B)
+Read 4 bytes @ address 0x0800230E (Data = 0x60D0F64B)
+Read 4 bytes @ address 0x0800230E (Data = 0x60D0F64B)
+Reading 64 bytes @ address 0x200168C0
+Reading 64 bytes @ address 0x080022C0
+Reading 64 bytes @ address 0x08002300
+Reading 64 bytes @ address 0x08002340
+Reading register 'fpscr' = 0x00000000
+Reading register 'msp' = 0x200168B0
+Reading register 'psp' = 0x20000400
+Reading register 'primask' = 0x00000001
+Reading register 'basepri' = 0x00000000
+Reading register 'faultmask' = 0x00000000
+Reading register 'control' = 0x00000000
+Reading register 'apsr' = 0x00000000
+Reading register 'epsr' = 0x01000000
+Reading register 'ipsr' = 0x00000000
+Reading register 'iapsr' = 0x00000000
+Reading register 'eapsr' = 0x01000000
+Reading register 'iepsr' = 0x01000000
+Read 4 bytes @ address 0x0800057E (Data = 0xF1A79002)
+Read 4 bytes @ address 0x0800057A (Data = 0xFEC4F001)
+Read 4 bytes @ address 0x0800057E (Data = 0xF1A79002)
+Read 4 bytes @ address 0x0800057A (Data = 0xFEC4F001)
+Read 2 bytes @ address 0x0800057E (Data = 0x9002)
+Read 2 bytes @ address 0x0800057C (Data = 0xFEC4)
+Read 2 bytes @ address 0x0800057A (Data = 0xF001)
+Read 2 bytes @ address 0x0800057E (Data = 0x9002)
+Read 2 bytes @ address 0x0800057C (Data = 0xFEC4)
+Read 2 bytes @ address 0x0800057A (Data = 0xF001)
+Read 4 bytes @ address 0x0800057E (Data = 0xF1A79002)
+Read 4 bytes @ address 0x0800057A (Data = 0xFEC4F001)
+Read 4 bytes @ address 0x0800057E (Data = 0xF1A79002)
+Read 4 bytes @ address 0x0800057A (Data = 0xFEC4F001)
+Read 4 bytes @ address 0x0800057E (Data = 0xF1A79002)
+Read 4 bytes @ address 0x0800057E (Data = 0xF1A79002)
+Read 4 bytes @ address 0x0800057E (Data = 0xF1A79002)
+Read 4 bytes @ address 0x0800219A (Data = 0xE003BB30)
+Read 4 bytes @ address 0x08002196 (Data = 0xF9E3F7FE)
+Read 4 bytes @ address 0x0800219A (Data = 0xE003BB30)
+Read 4 bytes @ address 0x08002196 (Data = 0xF9E3F7FE)
+Read 2 bytes @ address 0x0800219A (Data = 0xBB30)
+Read 2 bytes @ address 0x08002198 (Data = 0xF9E3)
+Read 2 bytes @ address 0x08002196 (Data = 0xF7FE)
+Read 2 bytes @ address 0x0800219A (Data = 0xBB30)
+Read 2 bytes @ address 0x08002198 (Data = 0xF9E3)
+Read 2 bytes @ address 0x08002196 (Data = 0xF7FE)
+Read 4 bytes @ address 0x0800219A (Data = 0xE003BB30)
+Read 4 bytes @ address 0x08002196 (Data = 0xF9E3F7FE)
+Read 4 bytes @ address 0x0800219A (Data = 0xE003BB30)
+Read 4 bytes @ address 0x08002196 (Data = 0xF9E3F7FE)
+Read 4 bytes @ address 0x0800219A (Data = 0xE003BB30)
+Read 4 bytes @ address 0x0800219A (Data = 0xE003BB30)
+Read 4 bytes @ address 0x0800219A (Data = 0xE003BB30)
+Reading 64 bytes @ address 0x20016940
+Read 4 bytes @ address 0x08001DEA (Data = 0xF817E7FF)
+Read 4 bytes @ address 0x08001DE6 (Data = 0xF9B8F000)
+Read 4 bytes @ address 0x08001DEA (Data = 0xF817E7FF)
+Read 4 bytes @ address 0x08001DE6 (Data = 0xF9B8F000)
+Read 2 bytes @ address 0x08001DEA (Data = 0xE7FF)
+Read 2 bytes @ address 0x08001DE8 (Data = 0xF9B8)
+Read 2 bytes @ address 0x08001DE6 (Data = 0xF000)
+Read 2 bytes @ address 0x08001DEA (Data = 0xE7FF)
+Read 2 bytes @ address 0x08001DE8 (Data = 0xF9B8)
+Read 2 bytes @ address 0x08001DE6 (Data = 0xF000)
+Read 4 bytes @ address 0x08001DEA (Data = 0xF817E7FF)
+Read 4 bytes @ address 0x08001DE6 (Data = 0xF9B8F000)
+Read 4 bytes @ address 0x08001DEA (Data = 0xF817E7FF)
+Read 4 bytes @ address 0x08001DE6 (Data = 0xF9B8F000)
+Read 4 bytes @ address 0x08001DEA (Data = 0xF817E7FF)
+Read 4 bytes @ address 0x08001DEA (Data = 0xF817E7FF)
+Read 4 bytes @ address 0x08001DEA (Data = 0xF817E7FF)
+Reading 64 bytes @ address 0x20016980
+Read 4 bytes @ address 0x0800394E (Data = 0xA8069A01)
+Read 4 bytes @ address 0x0800394A (Data = 0xF9DCF7FE)
+Read 4 bytes @ address 0x0800394E (Data = 0xA8069A01)
+Read 4 bytes @ address 0x0800394A (Data = 0xF9DCF7FE)
+Read 2 bytes @ address 0x0800394E (Data = 0x9A01)
+Read 2 bytes @ address 0x0800394C (Data = 0xF9DC)
+Read 2 bytes @ address 0x0800394A (Data = 0xF7FE)
+Read 2 bytes @ address 0x0800394E (Data = 0x9A01)
+Read 2 bytes @ address 0x0800394C (Data = 0xF9DC)
+Read 2 bytes @ address 0x0800394A (Data = 0xF7FE)
+Read 4 bytes @ address 0x0800394E (Data = 0xA8069A01)
+Read 4 bytes @ address 0x0800394A (Data = 0xF9DCF7FE)
+Read 4 bytes @ address 0x0800394E (Data = 0xA8069A01)
+Read 4 bytes @ address 0x0800394A (Data = 0xF9DCF7FE)
+Read 4 bytes @ address 0x0800394E (Data = 0xA8069A01)
+Read 4 bytes @ address 0x0800394E (Data = 0xA8069A01)
+Read 4 bytes @ address 0x0800394E (Data = 0xA8069A01)
+Reading 64 bytes @ address 0x200169C0
+Read 4 bytes @ address 0x08003BB2 (Data = 0xB580E7FC)
+Read 4 bytes @ address 0x08003BAE (Data = 0xFEBCF7FF)
+Read 4 bytes @ address 0x08003BB2 (Data = 0xB580E7FC)
+Read 4 bytes @ address 0x08003BAE (Data = 0xFEBCF7FF)
+Read 2 bytes @ address 0x08003BB2 (Data = 0xE7FC)
+Read 2 bytes @ address 0x08003BB0 (Data = 0xFEBC)
+Read 2 bytes @ address 0x08003BAE (Data = 0xF7FF)
+Read 2 bytes @ address 0x08003BB2 (Data = 0xE7FC)
+Read 2 bytes @ address 0x08003BB0 (Data = 0xFEBC)
+Read 2 bytes @ address 0x08003BAE (Data = 0xF7FF)
+Read 4 bytes @ address 0x08003BB2 (Data = 0xB580E7FC)
+Read 4 bytes @ address 0x08003BAE (Data = 0xFEBCF7FF)
+Read 4 bytes @ address 0x08003BB2 (Data = 0xB580E7FC)
+Read 4 bytes @ address 0x08003BAE (Data = 0xFEBCF7FF)
+Read 4 bytes @ address 0x08003BB2 (Data = 0xB580E7FC)
+Read 4 bytes @ address 0x08003BB2 (Data = 0xB580E7FC)
+Read 4 bytes @ address 0x08003BB2 (Data = 0xB580E7FC)
+Read 4 bytes @ address 0x08003BA8 (Data = 0x466FB580)
+Read 4 bytes @ address 0x08003BA4 (Data = 0xF800F000)
+Read 4 bytes @ address 0x08003BA8 (Data = 0x466FB580)
+Read 4 bytes @ address 0x08003BA4 (Data = 0xF800F000)
+Read 2 bytes @ address 0x08003BA8 (Data = 0xB580)
+Read 2 bytes @ address 0x08003BA6 (Data = 0xF800)
+Read 2 bytes @ address 0x08003BA4 (Data = 0xF000)
+Read 2 bytes @ address 0x08003BA8 (Data = 0xB580)
+Read 2 bytes @ address 0x08003BA6 (Data = 0xF800)
+Read 2 bytes @ address 0x08003BA4 (Data = 0xF000)
+Read 4 bytes @ address 0x08003BA8 (Data = 0x466FB580)
+Read 4 bytes @ address 0x08003BA4 (Data = 0xF800F000)
+Read 4 bytes @ address 0x08003BA8 (Data = 0x466FB580)
+Read 4 bytes @ address 0x08003BA4 (Data = 0xF800F000)
+Read 4 bytes @ address 0x08003BA8 (Data = 0x466FB580)
+Read 4 bytes @ address 0x08003BA8 (Data = 0x466FB580)
+Read 4 bytes @ address 0x08003BA8 (Data = 0x466FB580)
+Read 4 bytes @ address 0x08000426 (Data = 0x6A30DE00)
+Read 4 bytes @ address 0x08000422 (Data = 0xFBBDF003)
+Read 4 bytes @ address 0x08000426 (Data = 0x6A30DE00)
+Read 4 bytes @ address 0x08000422 (Data = 0xFBBDF003)
+Read 2 bytes @ address 0x08000426 (Data = 0xDE00)
+Read 2 bytes @ address 0x08000424 (Data = 0xFBBD)
+Read 2 bytes @ address 0x08000422 (Data = 0xF003)
+Read 2 bytes @ address 0x08000426 (Data = 0xDE00)
+Read 2 bytes @ address 0x08000424 (Data = 0xFBBD)
+Read 2 bytes @ address 0x08000422 (Data = 0xF003)
+Read 4 bytes @ address 0x08000426 (Data = 0x6A30DE00)
+Read 4 bytes @ address 0x08000422 (Data = 0xFBBDF003)
+Read 4 bytes @ address 0x08000426 (Data = 0x6A30DE00)
+Read 4 bytes @ address 0x08000422 (Data = 0xFBBDF003)
+Read 4 bytes @ address 0x08000426 (Data = 0x6A30DE00)
+Read 4 bytes @ address 0x08000426 (Data = 0x6A30DE00)
+Read 4 bytes @ address 0x08000426 (Data = 0x6A30DE00)
+Read 4 bytes @ address 0x200168C8 (Data = 0x200168D0)
+Read 4 bytes @ address 0x200168C8 (Data = 0x200168D0)
+Read 4 bytes @ address 0x200168BC (Data = 0x2001691E)
+Read 1 bytes @ address 0x2001691E (Data = 0x0B)
+Reset target CPU...
+Reset target CPU...
+GDB client (conn. 12) requested target.xml from GDB Server
+Reading common registers: Read register 'r0' (4 bytes) from hardware: 0x00000000
+Read register 'r1' (4 bytes) from hardware: 0x00000000
+Read register 'r2' (4 bytes) from hardware: 0x00000000
+Read register 'r3' (4 bytes) from hardware: 0x00000000
+Read register 'r4' (4 bytes) from hardware: 0x00000000
+Read register 'r5' (4 bytes) from hardware: 0x00000000
+Read register 'r6' (4 bytes) from hardware: 0x00000000
+Read register 'r7' (4 bytes) from hardware: 0x00000000
+Read register 'r8' (4 bytes) from hardware: 0x00000000
+Read register 'r9' (4 bytes) from hardware: 0x00000000
+Read register 'r10' (4 bytes) from hardware: 0x00000000
+Read register 'r11' (4 bytes) from hardware: 0x00000000
+Read register 'r12' (4 bytes) from hardware: 0x00000000
+Read register 'sp' (4 bytes) from hardware: 0xF8690120
+Read register 'lr' (4 bytes) from hardware: 0xFFFFFFFF
+Read register 'pc' (4 bytes) from hardware: 0x00040008
+Read register 'xpsr' (4 bytes) from hardware: 0x00000001
+Reading 64 bytes @ address 0x08003AC0
+Read 2 bytes @ address 0x08003ADC (Data = 0xF817)
+Read 4 bytes @ address 0x08003ADC (Data = 0x0C1BF817)
+Read 2 bytes @ address 0x08003ADC (Data = 0xF817)
+Setting breakpoint @ address 0x08003ADC, Kind = 3, Type = THUMB, BPHandle = 0x002D
+Starting target CPU...
+...Breakpoint (set by 'GDB') reached @ address 0x08003ADC
+Reading common registers: Read register 'r0' (4 bytes) from hardware: 0x03000000
+Read register 'r1' (4 bytes) from hardware: 0xA06B0120
+Read register 'r2' (4 bytes) from hardware: 0x00000000
+Read register 'r3' (4 bytes) from hardware: 0x00000000
+Read register 'r4' (4 bytes) from hardware: 0x00000000
+Read register 'r5' (4 bytes) from hardware: 0x00000000
+Read register 'r6' (4 bytes) from hardware: 0x00000000
+Read register 'r7' (4 bytes) from hardware: 0x40030020
+Read register 'r8' (4 bytes) from hardware: 0x00000000
+Read register 'r9' (4 bytes) from hardware: 0x00000000
+Read register 'r10' (4 bytes) from hardware: 0x00000000
+Read register 'r11' (4 bytes) from hardware: 0x00000000
+Read register 'r12' (4 bytes) from hardware: 0x01000000
+Read register 'sp' (4 bytes) from hardware: 0x18030020
+Read register 'lr' (4 bytes) from hardware: 0x9B3A0008
+Read register 'pc' (4 bytes) from hardware: 0xDC3A0008
+Read register 'xpsr' (4 bytes) from hardware: 0x00000001
+Removing breakpoint @ address 0x08003ADC, Size = 3
+Read 4 bytes @ address 0x08003ADC (Data = 0x0C1BF817)
+Read 4 bytes @ address 0x08003AD8 (Data = 0x75082003)
+Read 4 bytes @ address 0x08003ADC (Data = 0x0C1BF817)
+Read 4 bytes @ address 0x08003AD8 (Data = 0x75082003)
+Read 2 bytes @ address 0x08003ADC (Data = 0xF817)
+Read 2 bytes @ address 0x08003ADA (Data = 0x7508)
+Read 2 bytes @ address 0x08003AD8 (Data = 0x2003)
+Read 2 bytes @ address 0x08003ADC (Data = 0xF817)
+Read 2 bytes @ address 0x08003ADA (Data = 0x7508)
+Read 2 bytes @ address 0x08003AD8 (Data = 0x2003)
+Read 4 bytes @ address 0x08003ADC (Data = 0x0C1BF817)
+Read 4 bytes @ address 0x08003AD8 (Data = 0x75082003)
+Read 4 bytes @ address 0x08003ADC (Data = 0x0C1BF817)
+Read 4 bytes @ address 0x08003AD8 (Data = 0x75082003)
+Read 4 bytes @ address 0x08003ADC (Data = 0x0C1BF817)
+Read 4 bytes @ address 0x08003ADC (Data = 0x0C1BF817)
+Read 4 bytes @ address 0x08003ADC (Data = 0x0C1BF817)
+Reading 64 bytes @ address 0x20000340
+Read 4 bytes @ address 0x08003678 (Data = 0x0C19F807)
+Read 4 bytes @ address 0x08003674 (Data = 0xF9D9F000)
+Read 4 bytes @ address 0x08003678 (Data = 0x0C19F807)
+Read 4 bytes @ address 0x08003674 (Data = 0xF9D9F000)
+Read 2 bytes @ address 0x08003678 (Data = 0xF807)
+Read 2 bytes @ address 0x08003676 (Data = 0xF9D9)
+Read 2 bytes @ address 0x08003674 (Data = 0xF000)
+Read 2 bytes @ address 0x08003678 (Data = 0xF807)
+Read 2 bytes @ address 0x08003676 (Data = 0xF9D9)
+Read 2 bytes @ address 0x08003674 (Data = 0xF000)
+Read 4 bytes @ address 0x08003678 (Data = 0x0C19F807)
+Read 4 bytes @ address 0x08003674 (Data = 0xF9D9F000)
+Read 4 bytes @ address 0x08003678 (Data = 0x0C19F807)
+Read 4 bytes @ address 0x08003674 (Data = 0xF9D9F000)
+Read 4 bytes @ address 0x08003678 (Data = 0x0C19F807)
+Read 4 bytes @ address 0x08003678 (Data = 0x0C19F807)
+Read 4 bytes @ address 0x08003678 (Data = 0x0C19F807)
+Reading 64 bytes @ address 0x20000380
+Reading 64 bytes @ address 0x08003AC0
+Reading register 'fpscr' = 0x00000000
+Reading register 'msp' = 0x20001000
+Reading register 'psp' = 0x20000318
+Reading register 'primask' = 0x00000000
+Reading register 'basepri' = 0x00000000
+Reading register 'faultmask' = 0x00000000
+Reading register 'control' = 0x00000002
+Reading register 'apsr' = 0x00000000
+Reading register 'epsr' = 0x01000000
+Reading register 'ipsr' = 0x00000000
+Reading register 'iapsr' = 0x00000000
+Reading register 'eapsr' = 0x01000000
+Reading register 'iepsr' = 0x01000000
+Received monitor command: reset
+Resetting target
+GDB closed TCP/IP connection (Socket 12)
