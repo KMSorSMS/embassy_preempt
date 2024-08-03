@@ -33,6 +33,7 @@
 
 use core::sync::atomic::Ordering;
 
+use defmt::info;
 // use critical_section::Mutex;
 // use core::cell::RefCell;
 use os_cpu::*;
@@ -323,7 +324,9 @@ pub fn OSStart() -> !{
     loop {
         unsafe {
             GlobalSyncExecutor.as_ref().unwrap().poll();
+            info!("==========enter Task Idle...===========");
             run_idle();
+            info!("==============wake up!==============");
         }
     }
 }
