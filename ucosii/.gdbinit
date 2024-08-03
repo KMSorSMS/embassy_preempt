@@ -21,7 +21,7 @@ b ucosii/src/bin/ucosii_main.rs:18
 # b ucosii/src/bin/ucosii_main.rs:39
 # b ucosii/src/bin/ucosii_main.rs:46
 # b ucosii/src/bin/ucosii_main.rs:55
-b ucosii/src/bin/ucosii_main.rs:66
+b ucosii/src/bin/ucosii_main.rs:65
 # can be reached
 b ucosii/src/bin/ucosii_main.rs:57
 # b ucosii/src/os_task.rs:78

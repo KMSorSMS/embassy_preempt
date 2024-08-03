@@ -4,6 +4,7 @@
 pub mod state;
 pub mod waker;
 use alloc::string::String;
+use defmt::info;
 use core::future::Future;
 use core::mem;
 use core::ops::{Deref, DerefMut};
