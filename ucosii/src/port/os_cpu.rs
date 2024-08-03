@@ -46,6 +46,7 @@ pub extern "Rust" fn run_idle() {
 }
 
 #[no_mangle]
+#[inline]
 /// the function to set the program stack
 pub extern "Rust" fn set_program_sp(sp: *mut u8) {
     unsafe {
@@ -57,6 +58,7 @@ pub extern "Rust" fn set_program_sp(sp: *mut u8) {
     }
 }
 #[no_mangle]
+#[inline]
 /// the function to set the interrupt stack and change the control register to use the psp
 pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8){
     unsafe {
@@ -67,8 +69,9 @@ pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8){
             "MRS r0, control",
             "ORR r0, r0, #2",
             "MSR control, r0",
-            // then we need to return to the caller, this time we explicitly use the lr
-            "BX lr",
+            // make sure the function will be inlined as we don't use lr to return
+            // // then we need to return to the caller, this time we explicitly use the lr
+            // "BX lr",
             in("r1") int_ptr,
             options(nostack, preserves_flags),
         )
