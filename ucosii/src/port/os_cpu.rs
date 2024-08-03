@@ -2,8 +2,6 @@
 
 use core::arch::asm;
 
-use defmt::info;
-
 // use crate::ucosii::OSIdleCtr;
 // use core::sync::atomic::Ordering::Relaxed;
 

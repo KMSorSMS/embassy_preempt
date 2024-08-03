@@ -99,7 +99,7 @@ pub struct Timer {
 
 impl Future for Timer {
     type Output = ();
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+    fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Self::Output> {
         // if self.yielded_once && self.expires_at <= Instant::now() {
         //     Poll::Ready(())
         // } else {
@@ -107,6 +107,7 @@ impl Future for Timer {
         //     self.yielded_once = true;
         //     Poll::Pending
         // }
+        self.yielded_once = true;
         Poll::Pending
     }
 }

@@ -13,11 +13,11 @@
 ********************************************************************************************************************************************
 */
 
-use core::{alloc::Layout, cell::{Cell, RefCell, UnsafeCell}, mem::MaybeUninit, ptr::{null_mut, NonNull}, sync::atomic::{AtomicU16, AtomicU8}};
+use core::{alloc::Layout, cell::{Cell, UnsafeCell}, mem::MaybeUninit, ptr::null_mut};
 use critical_section::{CriticalSection, Mutex};
 use defmt::info;
 
-use crate::{cfg::{OS_ARENA_SIZE, OS_STACK_SIZE}, port::*, ucosii::{OS_STACK, OS_STACK_NUM, OS_STACK_TBL_SIZE}};
+use crate::cfg::OS_ARENA_SIZE;
 
 /*
 ********************************************************************************************************************************************
