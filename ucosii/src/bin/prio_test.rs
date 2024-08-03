@@ -25,7 +25,7 @@ fn test_basic_schedule() {
     // os初始化
     OSInit();
     // 创建6个任务，测试优先级调度的顺序是否正确
-    // 调度顺序应该为：task5->task1(task5中创建)->task4->task1(在task4中创建)->task3->task2->task1->task6->由于优先级相同输出相关信息
+    // 调度顺序应该为：task5->task1(task5中创建)->task4->task3->task2->task1->task1(在task4中创建)->task6(由于优先级相同输出相关信息)
     OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 30);
     OSTaskCreate(task2, 0 as *mut (), 0 as *mut usize, 25);
     RustOSTaskCreate(task3, 0 as *mut (),0 as *mut usize, 20);
@@ -63,7 +63,7 @@ fn task4(_args:*mut ()) {
     // 任务4
     info!("---task4 begin---");
     // 任务4中涉及任务创建
-    OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 16);
+    OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 34);
     delay(SHORT_TIME);
     info!("---task4 end---");
     delay(SHORT_TIME);
