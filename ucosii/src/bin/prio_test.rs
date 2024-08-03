@@ -7,9 +7,9 @@ use ucosii::{self as _, os_time::Timer};
 use defmt::info; // <- derive attribute
 use ucosii::{os_core::{OSInit, OSStart}, os_task::{OSTaskCreate, RustOSTaskCreate}};
 
-const LONG_TIME: usize = 1;
-const MID_TIME: usize = 1;
-const SHORT_TIME: usize = 1;
+const LONG_TIME: usize = 10;
+const MID_TIME: usize = 5;
+const SHORT_TIME: usize = 3;
 
 // fn hello() {
 //     defmt::info!("Hello, world!");
@@ -90,13 +90,26 @@ fn task6(_args:*mut ()) {
     delay(SHORT_TIME);
 }
 
-fn delay(time: usize){
-    // 延时函数,time的单位约为0.5s
-    for _ in 0..time {
-        for _ in 0..200000/2 {
-            unsafe {
-                asm!("nop");
-            }
-        }
+#[inline]
+fn delay(time: usize) {
+    // 延时函数,time的单位约为0.5s，使用汇编编写从而不会被优化
+    unsafe {
+        asm!(
+            // 先来个循环（总共是两层循环，内层循环次数8000000）
+            "mov r0, #0",
+            "1:",
+            // 内层循环
+            "mov r1, #0",
+            "2:",
+            "add r1, r1, #1",
+            "cmp r1, r3",
+            "blt 2b",
+            // 外层循环
+            "add r0, r0, #1",
+            "cmp r0, r2",
+            "blt 1b",
+            in("r2") time,
+            in("r3") 8000000/8,
+        )
     }
 }
