@@ -86,6 +86,7 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
             return false;
         }
     }) {
+        info!("the prio is exist");
         return OS_ERR_STATE::OS_ERR_PRIO_EXIST;
     }
 

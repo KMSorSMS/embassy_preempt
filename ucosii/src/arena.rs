@@ -79,4 +79,3 @@ impl<const N: usize> Arena<N> {
         unsafe { &mut *(res as *mut MaybeUninit<T>) }
     }
 }
-

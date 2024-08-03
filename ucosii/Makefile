@@ -67,7 +67,7 @@ Jdebug: build bin Jdownload JGDBServer
 	tmux new-session -d \
 	"nc localhost 19021 | defmt-print -e $(FILE_ELF) " && \
 	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
-	-ex 'source ./.gdbinit' -ex 'monitor reset' " && \
+	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'source ./bp.gdb'" && \
 	tmux -2 attach-session -d
 JGDBServer:
 	@if ! pgrep JLinkGDBServer > /dev/null; then \
