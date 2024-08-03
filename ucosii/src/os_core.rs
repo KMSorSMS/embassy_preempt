@@ -330,27 +330,6 @@ pub fn OSStart() -> !{
         }
     }
 }
-// #[cfg(feature = "test")]
-// pub fn OSStart(){
-//     use crate::heap::stack_allocator::INTERRUPT_STACK;
-//     extern "Rust" {
-//         fn set_int_change_2_psp(int_ptr: *mut u8);
-//     }
-//     // set OSRunning
-//     OSRunning.store(true, Ordering::Release);
-//     // before we step into the loop, we call set_int_change_2_psp(as part of the function of OSStartHighRdy in ucosii)
-//     // to change the stack pointer to program pointer and use psp
-//     let int_stk = INTERRUPT_STACK.exclusive_access();
-//     let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
-//     drop(int_stk);
-//     unsafe {set_int_change_2_psp(int_ptr);}
-//     loop {
-//         unsafe {
-//             GlobalSyncExecutor.as_ref().unwrap().poll();
-//             return;
-//         }
-//     }
-// }
 
 /*
 *********************************************************************************************************
@@ -370,11 +349,11 @@ pub fn OSStart() -> !{
 /// (also known as a 'clock tick').  This function should be called by the ticker
 /// ISR but, can also be called by a high priority task.
 /// fin this to use Timer
-pub fn OSTimeTick() {
-    // add the 
-    OSTime.fetch_add(1, Ordering::Release);
-
-}
+// by noah:we do not need the function because we use the Timer. Sysytem tick will be stopped when the MCU is in lower power mode
+// pub fn OSTimeTick() {
+//     // add the 
+//     OSTime.fetch_add(1, Ordering::Release);
+// }
 
 /*
 *********************************************************************************************************
@@ -831,5 +810,3 @@ pub fn OS_TaskStatStkChk() {}
 *********************************************************************************************************
 */
 
-/// need to rewrite it to use future
-pub fn OS_TCBInit() {}

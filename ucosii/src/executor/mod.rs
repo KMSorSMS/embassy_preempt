@@ -4,7 +4,6 @@
 pub mod state;
 pub mod waker;
 use alloc::string::String;
-use defmt::info;
 use core::future::Future;
 use core::mem;
 use core::ops::{Deref, DerefMut};
@@ -236,7 +235,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         id: INT16U,
         pext: *mut (),
         opt: INT16U,
-        name: String,
+        _name: String,
         future_func: impl FnOnce() -> F,
     ) -> OS_ERR_STATE {
         // by noah: claim a TaskStorage
@@ -407,12 +406,14 @@ pub fn wake_task(task: OS_TCB_REF) {
 }
 
 #[derive(Clone, Copy)]
+#[allow(unused)]
 pub(crate) struct Pender(*mut ());
 
 unsafe impl Send for Pender {}
 unsafe impl Sync for Pender {}
 
 impl Pender {
+    #[allow(unused)]
     pub(crate) fn pend(self) {
         extern "Rust" {
             fn __pender(context: *mut ());
@@ -428,7 +429,7 @@ pub(crate) struct SyncExecutor {
     os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; OS_LOWEST_PRIO + 1]>,
     // indicate the current running task
     OSPrioCur: SyncUnsafeCell<OS_PRIO>,
-    pender: Pender,
+    _pender: Pender,
     // by liam: add a bitmap to record the status of the task
     #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
     OSRdyGrp: SyncUnsafeCell<u8>,
@@ -445,7 +446,7 @@ impl SyncExecutor {
         Self {
             os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); OS_LOWEST_PRIO + 1]),
             OSPrioCur: SyncUnsafeCell::new(OS_LOWEST_PRIO),
-            pender,
+            _pender:pender,
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
         }
