@@ -50,6 +50,10 @@ define dsa
   dashboard assembly -style height 0
 end
 
+define ash
+  dashboard assembly -style height $arg0
+end
+
 define sbp
   save breakpoints bp.gdb
 end
