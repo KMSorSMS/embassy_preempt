@@ -53,7 +53,7 @@ async fn task3(_args:*mut ()) {
 fn task4(_args:*mut ()) {
     // 任务4
     println!("---task4 begin---");
-    // 任务3中涉及任务创建
+    // 任务4中涉及任务创建
     OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 14);
     delay(SHORT_TIME);
     println!("---task4 end---");
@@ -62,7 +62,8 @@ fn task4(_args:*mut ()) {
 fn delay(time: usize){
     // 延时函数,time的单位约为0.5s
     for _ in 0..time {
-        for _ in 0..200000/2 {
+        // 记得改成/2是较慢的（后面有抢占的时候需要）
+        for _ in 0..200000/8 {
             unsafe {
                 asm!("nop");
             }
