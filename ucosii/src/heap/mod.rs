@@ -1,5 +1,5 @@
-pub mod linked_list;
 pub mod fixed_size_block;
+pub mod linked_list;
 pub mod stack_allocator;
 
 use fixed_size_block::FixedSizeBlockAllocator;
@@ -8,10 +8,9 @@ pub const HEAP_START: usize = 0x08000200;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
 
 #[global_allocator]
-static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(
-    FixedSizeBlockAllocator::new());
+static ALLOCATOR: Locked<FixedSizeBlockAllocator> = Locked::new(FixedSizeBlockAllocator::new());
 #[allow(unused)]
-pub fn init_heap(){
+pub fn init_heap() {
     unsafe {
         ALLOCATOR.lock().init(HEAP_START, HEAP_SIZE);
     }

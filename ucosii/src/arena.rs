@@ -3,7 +3,7 @@
 /*
 ****************************************************************************************************************************************
 *                                                      the stack  of uC/OS-II
-*                                                        code by liam and noah  
+*                                                        code by liam and noah
 ****************************************************************************************************************************************
 */
 
@@ -13,7 +13,11 @@
 ********************************************************************************************************************************************
 */
 
-use core::{alloc::Layout, cell::{Cell, UnsafeCell}, mem::MaybeUninit, ptr::null_mut};
+use core::alloc::Layout;
+use core::cell::{Cell, UnsafeCell};
+use core::mem::MaybeUninit;
+use core::ptr::null_mut;
+
 use critical_section::{CriticalSection, Mutex};
 use defmt::info;
 
@@ -22,13 +26,13 @@ use crate::cfg::OS_ARENA_SIZE;
 /*
 ********************************************************************************************************************************************
 *                                                              stack allocator
-*                                      The stack allocator of uC/OS-II. There are two main functions of it 
+*                                      The stack allocator of uC/OS-II. There are two main functions of it
 *                                      1. alloc the stack memory for the task(TCB) list.
 *                                      2. alloc the stack when a future is interrupted without await.
 ********************************************************************************************************************************************
 */
 /// Every TCB(here, we store TaskStorage) will be stored here.
-pub static ARENA: Arena<{OS_ARENA_SIZE}> = Arena::new();
+pub static ARENA: Arena<{ OS_ARENA_SIZE }> = Arena::new();
 
 /// The stack allocator defination of uC/OS-II.
 

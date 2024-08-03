@@ -38,7 +38,8 @@ use defmt::info;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::{executor::GlobalSyncExecutor, heap::stack_allocator::init_stack_allocator};
+use crate::executor::GlobalSyncExecutor;
+use crate::heap::stack_allocator::init_stack_allocator;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
@@ -306,7 +307,7 @@ pub fn OSSchedUnlock() {}
 /// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
 // #[cfg(not(feature = "test"))]
-pub fn OSStart() -> !{
+pub fn OSStart() -> ! {
     use crate::heap::stack_allocator::INTERRUPT_STACK;
 
     extern "Rust" {
@@ -320,7 +321,9 @@ pub fn OSStart() -> !{
     let int_stk = INTERRUPT_STACK.exclusive_access();
     let int_ptr = int_stk.STK_REF.as_ptr() as *mut u8;
     drop(int_stk);
-    unsafe {set_int_change_2_psp(int_ptr);}
+    unsafe {
+        set_int_change_2_psp(int_ptr);
+    }
     loop {
         unsafe {
             GlobalSyncExecutor.as_ref().unwrap().poll();
@@ -351,7 +354,7 @@ pub fn OSStart() -> !{
 /// fin this to use Timer
 // by noah:we do not need the function because we use the Timer. Sysytem tick will be stopped when the MCU is in lower power mode
 // pub fn OSTimeTick() {
-//     // add the 
+//     // add the
 //     OSTime.fetch_add(1, Ordering::Release);
 // }
 
@@ -809,4 +812,3 @@ pub fn OS_TaskStatStkChk() {}
 * Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
-

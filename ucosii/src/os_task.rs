@@ -12,16 +12,19 @@
 */
 
 use alloc::string::ToString;
-use defmt::info;
 use core::alloc::Layout;
 use core::future::Future;
 use core::sync::atomic::Ordering::Acquire;
 
+use defmt::info;
+
 use crate::cfg::OS_LOWEST_PRIO;
 use crate::executor::{GlobalSyncExecutor, OS_TASK_STORAGE};
+use crate::heap;
 use crate::heap::stack_allocator::{dealloc_stack, stk_from_ptr};
 use crate::port::{INT8U, OS_STK};
 use crate::ucosii::{OSIntNesting, OSRunning, OS_ERR_STATE};
+const DEFAULT_REVOKE_STACK_SIZE: usize = 128;
 
 /*
 ********************************************************************************************************************************************
@@ -46,8 +49,9 @@ where
     // info!("the size of future is {}",core::mem::size_of_val(&future_func));
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
-        let layout = Layout::from_size_align(128, 8).unwrap();
-        let mut stk = stk_from_ptr(_ptos as *mut u8, layout);
+        let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 8).unwrap();
+        let heap_ptr = unsafe { (_ptos as *mut u8).offset(-(DEFAULT_REVOKE_STACK_SIZE as isize)) };
+        let mut stk = stk_from_ptr(heap_ptr as *mut u8, layout);
         dealloc_stack(&mut stk);
     }
     return init_task(prio, future_func);
@@ -63,8 +67,9 @@ where
     let future_func = || task(p_arg);
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
-        let layout = Layout::from_size_align(128, 8).unwrap();
-        let mut stk = stk_from_ptr(_ptos as *mut u8, layout);
+        let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 8).unwrap();
+        let heap_ptr = unsafe { (_ptos as *mut u8).offset(-(DEFAULT_REVOKE_STACK_SIZE as isize)) };
+        let mut stk = stk_from_ptr(heap_ptr as *mut u8, layout);
         dealloc_stack(&mut stk);
     }
     return init_task(prio, future_func);

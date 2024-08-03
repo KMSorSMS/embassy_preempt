@@ -11,7 +11,7 @@ use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
 
 pub const STACK_START: usize = 0x20000000;
-pub const STACK_SIZE: usize = 80 * 1024; // 80 KiB
+pub const STACK_SIZE: usize = 40 * 1024; // 40 KiB
 pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 256 B also ok
 pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
 
@@ -111,10 +111,10 @@ impl OS_STK_REF {
     }
 }
 
-pub fn stk_from_ptr(stk_ptr: *mut u8, layout: Layout) -> OS_STK_REF {
+pub fn stk_from_ptr(heap_ptr: *mut u8, layout: Layout) -> OS_STK_REF {
     OS_STK_REF {
-        STK_REF: NonNull::new(unsafe { stk_ptr.offset(layout.size() as isize) as *mut OS_STK }).unwrap(),
-        HEAP_REF: NonNull::new(stk_ptr).unwrap(),
+        STK_REF: NonNull::new(unsafe { heap_ptr.offset(layout.size() as isize) as *mut OS_STK }).unwrap(),
+        HEAP_REF: NonNull::new(heap_ptr).unwrap(),
         layout,
     }
 }
@@ -182,7 +182,7 @@ mod unit_tests {
         let layout1 = alloc::alloc::Layout::from_size_align(1024, 8).unwrap();
         let layout2 = alloc::alloc::Layout::from_size_align(2048, 8).unwrap();
         let layout3 = alloc::alloc::Layout::from_size_align(4096, 8).unwrap();
-        
+
         let stk1 = super::alloc_stack(layout1);
         println!("stk1 ptr:{:?}", stk1.STK_REF.as_ptr());
         assert!(stk1.STK_REF.as_ptr() as usize == 0x20000c00);
