@@ -59,7 +59,6 @@ run_test() {
 
     # 继续执行脚本的其他部分
     # 得到程序执行时间的信息task[0-9]+ *counted *execute *times:
-    
     if [[ $test_name == *thread ]]; then
         cat tmp.yaml | grep -E "((=)*task((_[0-9]+)*|[0-9]+) execute time(=)*)|((=)*thread[0-9]+ is scheduled(=)*)" 
     else
