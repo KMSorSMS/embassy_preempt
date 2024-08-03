@@ -188,6 +188,6 @@ impl Timer {
 }
 
 /// an async delay
-pub async fn OSTimeDly(_ticks:INT32U){
+pub fn OSTimeDly(_ticks:INT32U){
      
 }
