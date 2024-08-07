@@ -45,6 +45,17 @@ pub extern "Rust" fn run_idle() {
     }
 }
 
+// #[no_mangle]
+// #[inline]
+// /// the function to return from interrupt(cortex-m)
+// pub extern "Rust" fn OSIntExit(){
+//     unsafe {
+//         asm!(
+            
+//         )
+//     }
+// }
+
 #[no_mangle]
 #[inline]
 /// the function to set the program stack
