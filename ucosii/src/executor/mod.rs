@@ -446,7 +446,7 @@ impl SyncExecutor {
         Self {
             os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); OS_LOWEST_PRIO + 1]),
             OSPrioCur: SyncUnsafeCell::new(OS_LOWEST_PRIO),
-            _pender:pender,
+            _pender: pender,
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
         }
@@ -568,7 +568,7 @@ impl SyncExecutor {
     }
 
     pub fn clear_bit(&self, prio: INT8U) {
-        let prio_tbl: &mut[OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        let prio_tbl: &mut [OS_TCB_REF; OS_LOWEST_PRIO + 1];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
         prio_tbl[prio as USIZE].ptr = None;

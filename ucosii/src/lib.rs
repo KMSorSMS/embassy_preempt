@@ -1,6 +1,5 @@
 #![no_std]
 #![no_main]
-
 #![allow(non_camel_case_types)]
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
@@ -18,7 +17,6 @@
 *                                                               pub mod
 ********************************************************************************************************************************************
 */
-
 use cortex_m::{interrupt, register::primask};
 use critical_section::{set_impl, Impl, RawRestoreState};
 use defmt_rtt as _; // global logger
@@ -38,24 +36,24 @@ pub mod os_mutex;
 pub mod os_q;
 // /// the mod of task of uC/OS-II kernel
 // pub mod os_task;
+/// the stk allocator
+pub mod arena;
+/// need to import port here
+pub mod cfg;
+/// the async scheduler(executor) of rust uC
+pub mod executor;
 /// the mod of semaphore of uC/OS-II kernel
 pub mod os_sem;
+/// the task interface of uC/OS-II kernel
+pub mod os_task;
 /// the mod of time of uC/OS-II kernel
 pub mod os_time;
 /// the mod of timer of uC/OS-II kernel
 pub mod os_tmr;
 /// need to import port here
 pub mod port;
-/// need to import port here
-pub mod cfg;
 /// the mod which define the data structure of uC/OS-II kernel
 pub mod ucosii;
-/// the async scheduler(executor) of rust uC
-pub mod executor;
-/// the stk allocator
-pub mod arena;
-/// the task interface of uC/OS-II kernel
-pub mod os_task;
 /// the the macro of atomic operation
 #[macro_use]
 /// the atomic_macros module is used to define atomic operations
@@ -65,17 +63,15 @@ mod heap;
 
 mod sync;
 
-mod util;
 /// the mod of lang_items
 pub mod lang_items;
-
+mod util;
 
 /*
 ********************************************************************************************************************************************
 *                                                               critical section
 ********************************************************************************************************************************************
 */
-
 
 struct SingleCoreCriticalSection;
 set_impl!(SingleCoreCriticalSection);

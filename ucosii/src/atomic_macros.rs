@@ -93,17 +93,17 @@ macro_rules! load_modify_atomic {
 
 #[allow(unused_macros)]
 macro_rules! load_try_modify_atomic {
-($atomic:expr, $ordering_read:ident, $ordering_cas:ident, | $old:ident | $new:expr) => {{
-    #[cfg(not(any(feature = "atomics", loom)))]
-    {
-        $atomic.try_modify(|$old| $new)
-    }
-    #[cfg(any(feature = "atomics", loom))]
-    {
-        let mut $old = $atomic.load(core::sync::atomic::Ordering::$ordering_read);
-        try_modify_atomic!($atomic, $ordering_read, $ordering_cas, |$old| $new)
-    }
-}};
+    ($atomic:expr, $ordering_read:ident, $ordering_cas:ident, | $old:ident | $new:expr) => {{
+        #[cfg(not(any(feature = "atomics", loom)))]
+        {
+            $atomic.try_modify(|$old| $new)
+        }
+        #[cfg(any(feature = "atomics", loom))]
+        {
+            let mut $old = $atomic.load(core::sync::atomic::Ordering::$ordering_read);
+            try_modify_atomic!($atomic, $ordering_read, $ordering_cas, |$old| $new)
+        }
+    }};
 }
 
 #[allow(unused)]
