@@ -20,7 +20,6 @@ use defmt::info;
 
 use crate::cfg::OS_LOWEST_PRIO;
 use crate::executor::{GlobalSyncExecutor, OS_TASK_STORAGE};
-use crate::heap;
 use crate::heap::stack_allocator::{dealloc_stack, stk_from_ptr};
 use crate::port::{INT8U, OS_STK};
 use crate::ucosii::{OSIntNesting, OSRunning, OS_ERR_STATE};
@@ -31,13 +30,18 @@ const DEFAULT_REVOKE_STACK_SIZE: usize = 128;
 *                                                           interface
 ********************************************************************************************************************************************
 */
+/// the trait to check whether the return type is unit or never return
+pub trait ReturnUnitOrNeverReturn {}
 
+impl ReturnUnitOrNeverReturn for ! {}
+impl ReturnUnitOrNeverReturn for () {}
 /// Create a task in uC/OS-II kernel. This func is used by C
 // _ptos is not used in this func, because stack allocation is done by the stack allocator when scheduling
-pub fn OSTaskCreate<F>(task: F, p_arg: *mut (), _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
+pub fn OSTaskCreate<F,R>(task: F, p_arg: *mut (), _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
-    F: FnOnce(*mut ()) + 'static,
+    F: FnOnce(*mut ())-> R + 'static,
+    R: ReturnUnitOrNeverReturn,
 {
     // check the priority
     if prio >= OS_LOWEST_PRIO as u8 {

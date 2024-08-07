@@ -33,13 +33,14 @@
 
 use core::sync::atomic::Ordering;
 
-use defmt::info;
 // use critical_section::Mutex;
 // use core::cell::RefCell;
 use os_cpu::*;
 
+use crate::cfg::OS_LOWEST_PRIO;
 use crate::executor::GlobalSyncExecutor;
 use crate::heap::stack_allocator::init_stack_allocator;
+use crate::os_task::OSTaskCreate;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
@@ -183,6 +184,7 @@ pub fn OSInit() {
 
     #[cfg(feature = "OS_DEBUG_EN")]
     OSDebugInit();
+    OS_InitTaskIdle(); /* Create the Idle Task                     */
     // by liam: we need to init the stack allocator
     init_stack_allocator();
 }
@@ -311,7 +313,6 @@ pub fn OSStart() -> ! {
     use crate::heap::stack_allocator::INTERRUPT_STACK;
 
     extern "Rust" {
-        fn run_idle();
         fn set_int_change_2_psp(int_ptr: *mut u8);
     }
     // set OSRunning
@@ -323,14 +324,7 @@ pub fn OSStart() -> ! {
     drop(int_stk);
     unsafe {
         set_int_change_2_psp(int_ptr);
-    }
-    loop {
-        unsafe {
-            GlobalSyncExecutor.as_ref().unwrap().poll();
-            info!("==========enter Task Idle...===========");
-            run_idle();
-            info!("==============wake up!==============");
-        }
+        GlobalSyncExecutor.as_ref().unwrap().poll();
     }
 }
 
@@ -595,9 +589,20 @@ fn OS_InitRdyList() {
 * Returns    : none
 *********************************************************************************************************
 */
-
-#[allow(unused)]
-fn OS_InitTaskIdle() {}
+// must use this function
+fn OS_InitTaskIdle() {
+    extern "Rust" {
+        fn run_idle();
+    }
+    let idle_fn = |_args: *mut ()| -> ! {
+        loop {
+            unsafe {
+                run_idle();
+            }
+        }
+    };
+    OSTaskCreate(idle_fn, 0 as *mut (), 0 as *mut usize, OS_LOWEST_PRIO);
+}
 
 /*
 *********************************************************************************************************
