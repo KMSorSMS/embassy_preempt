@@ -517,7 +517,12 @@ impl SyncExecutor {
                     task = t;
                     if task.OSTCBStat.run_dequeue() {
                         // in the future, we should consider thread here
-                        task.OS_POLL_FN.get().unwrap_unchecked()(task);
+                        if task.OSTCBStkPtr.is_none() {
+                            task.OS_POLL_FN.get().unwrap_unchecked()(task);
+                        } else {
+                            // if the task has stack, it's a thread, we need to resume it not poll it
+                            task.restore_context_from_stk();
+                        }
                     }
                 }
                 None => {
