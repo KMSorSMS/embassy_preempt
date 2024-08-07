@@ -471,12 +471,21 @@ impl SyncExecutor {
         let tmp = self.os_prio_tbl.get_mut();
         tmp[prio] = task;
     }
-    // check by liam: we don't need to spawn, the init of global executor will be set in the os init
-    // pub(super) unsafe fn spawn(&'static self, task: OS_TCB_REF) {
-    //     SyncExecutor.set(Some(self));
 
-    //     self.enqueue(task);
-    // }
+    /// this function must be called in the interrupt context
+    /// return false if no need to switch the task
+    pub(crate) unsafe fn interrupt_poll(&'static self) -> bool {
+        extern "Rust" {
+            fn OSIntExit();
+        }
+        // find the highest priority task in the ready queue
+        let mut task = critical_section::with(|_| self.find_highrdy_set_cur());
+        // judge if the highest priority task is the current running task(which has been preemped by the interrupt)
+        if (task.OSTCBPrio) < self.OSPrioCur.get() {
+            return false;
+        } 
+        true
+    }
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
     pub(crate) unsafe fn poll(&'static self) -> ! {
@@ -499,37 +508,6 @@ impl SyncExecutor {
             // set the task's stack to None
             task.OSTCBStkPtr = None;
         }
-
-        // // after the task is done, we need to set the task to unready(in bitmap) and also we need to find the next task to run
-        // // both of this process should be done in critical section
-        // loop {
-        //     match critical_section::with(|_| {
-        //         self.set_task_unready(task);
-        //         // after set the task as unready, we need to revoke its stack if it has.
-        //         if task.OSTCBStkPtr.is_some() {
-        //             dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
-        //         }
-        //         // set the task's stack to None
-        //         task.OSTCBStkPtr = None;
-        //         self.find_highrdy_set_cur()
-        //     }) {
-        //         Some(t) => {
-        //             task = t;
-        //             if task.OSTCBStat.run_dequeue() {
-        //                 // in the future, we should consider thread here
-        //                 if task.OSTCBStkPtr.is_none() {
-        //                     task.OS_POLL_FN.get().unwrap_unchecked()(task);
-        //                 } else {
-        //                     // if the task has stack, it's a thread, we need to resume it not poll it
-        //                     task.restore_context_from_stk();
-        //                 }
-        //             }
-        //         }
-        //         None => {
-        //             break;
-        //         }
-        //     }
-        // }
     }
     unsafe fn find_highrdy_set_cur(&self) -> OS_TCB_REF {
         let tmp = self.OSRdyGrp.get_unmut();
