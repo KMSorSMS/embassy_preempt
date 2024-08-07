@@ -1,4 +1,7 @@
-use core::{future::Future, ops::Add, pin::Pin, task::{Context, Poll}};
+use core::future::Future;
+use core::ops::Add;
+use core::pin::Pin;
+use core::task::{Context, Poll};
 
 use crate::port::INT32U;
 #[allow(unused)]
@@ -193,6 +196,4 @@ pub fn TimerInit(){
 }
 
 /// an async delay
-pub fn OSTimeDly(_ticks:INT32U){
-     
-}
+pub fn OSTimeDly(_ticks: INT32U) {}

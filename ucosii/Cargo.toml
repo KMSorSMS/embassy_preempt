@@ -24,11 +24,11 @@ name = "integration"
 harness = false
 
 [workspace]
-members = ["executor-macro"]
+members = []
 
-[workspace.dependencies.ucosii-executor-macro]
-version = "0.1.0"
-path = "executor-macro"
+# [workspace.dependencies.ucosii-executor-macro]
+# version = "0.1.0"
+# path = "executor-macro"
 
 [workspace.dependencies]
 
