@@ -60,9 +60,9 @@ pub const OS_N_SYS_TASKS: USIZE = 0;
 // by noah：maybe because the lazy_static, the const val can be calculate when it is used for the first time
 // maybe use a static val is a good choice.
 #[allow(unused)]
-const OS_TASK_STAT_PRIO: USIZE = OS_LOWEST_PRIO - 1; /* Statistic task priority                     */
+pub(crate) const OS_TASK_STAT_PRIO: OS_PRIO = OS_LOWEST_PRIO - 1; /* Statistic task priority                     */
 #[allow(unused)]
-const OS_TASK_IDLE_PRIO: USIZE = OS_LOWEST_PRIO; /* IDLE      task priority                     */
+pub(crate) const OS_TASK_IDLE_PRIO: OS_PRIO = OS_LOWEST_PRIO; /* IDLE      task priority                     */
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
 const OS_EVENT_TBL_SIZE: USIZE = (OS_LOWEST_PRIO / 8 + 1) as USIZE; /* Size of event table                         */
@@ -492,7 +492,7 @@ pub enum OS_ERR_STATE {
 /// the prio type defination in the rust-uC
 #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
 #[allow(non_camel_case_types)]
-pub type OS_PRIO = usize;
+pub type OS_PRIO = u8;
 
 #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
 pub type OS_PRIO = INT16U;

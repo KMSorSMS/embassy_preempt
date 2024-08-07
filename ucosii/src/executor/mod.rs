@@ -426,7 +426,7 @@ impl Pender {
 pub(crate) struct SyncExecutor {
     // run_queue: RunQueue,
     // the prio tbl stores a relation between the prio and the task_ref
-    os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; OS_LOWEST_PRIO + 1]>,
+    os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize]>,
     // indicate the current running task
     OSPrioCur: SyncUnsafeCell<OS_PRIO>,
     _pender: Pender,
@@ -444,8 +444,8 @@ impl SyncExecutor {
     /// The global executor for the uC/OS-II RTOS.
     pub(crate) fn new(pender: Pender) -> Self {
         Self {
-            os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); OS_LOWEST_PRIO + 1]),
-            OSPrioCur: SyncUnsafeCell::new(OS_LOWEST_PRIO),
+            os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); (OS_LOWEST_PRIO + 1) as usize]),
+            OSPrioCur: SyncUnsafeCell::new(OS_TASK_IDLE_PRIO),
             _pender: pender,
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
@@ -479,71 +479,71 @@ impl SyncExecutor {
     // }
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
-    pub(crate) unsafe fn poll(&'static self) {
-        // find the highest priority task in the ready queue
-        let task = critical_section::with(|_| self.find_highrdy_set_cur());
-        if task.is_none() {
-            return;
-        }
-        let mut task = task.unwrap();
-        if task.OSTCBStat.run_dequeue() {
-            // If task is not running, ignore it. This can happen in the following scenario:
-            //   - Task gets dequeued, poll starts
-            //   - While task is being polled, it gets woken. It gets placed in the queue.
-            //   - Task poll finishes, returning done=true
-            //   - RUNNING bit is cleared, but the task is already in the queue.
-
+    pub(crate) unsafe fn poll(&'static self) -> ! {
+        // build this as a loop
+        loop {
+            // find the highest priority task in the ready queue
+            let mut task = critical_section::with(|_| self.find_highrdy_set_cur());
+            // execute the task depending on if it has stack
             if task.OSTCBStkPtr.is_none() {
                 task.OS_POLL_FN.get().unwrap_unchecked()(task);
             } else {
                 // if the task has stack, it's a thread, we need to resume it not poll it
                 task.restore_context_from_stk();
             }
-        }
-        // after the task is done, we need to set the task to unready(in bitmap) and also we need to find the next task to run
-        // both of this process should be done in critical section
-        loop {
-            match critical_section::with(|_| {
-                self.set_task_unready(task);
-                // after set the task as unready, we need to revoke its stack if it has.
-                if task.OSTCBStkPtr.is_some() {
-                    dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
-                }
-                // set the task's stack to None
-                task.OSTCBStkPtr = None;
-                self.find_highrdy_set_cur()
-            }) {
-                Some(t) => {
-                    task = t;
-                    if task.OSTCBStat.run_dequeue() {
-                        // in the future, we should consider thread here
-                        if task.OSTCBStkPtr.is_none() {
-                            task.OS_POLL_FN.get().unwrap_unchecked()(task);
-                        } else {
-                            // if the task has stack, it's a thread, we need to resume it not poll it
-                            task.restore_context_from_stk();
-                        }
-                    }
-                }
-                None => {
-                    break;
-                }
+            critical_section::with(|_| self.set_task_unready(task));
+            // after set the task as unready, we need to revoke its stack if it has.
+            if task.OSTCBStkPtr.is_some() {
+                dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
             }
+            // set the task's stack to None
+            task.OSTCBStkPtr = None;
         }
+
+        // // after the task is done, we need to set the task to unready(in bitmap) and also we need to find the next task to run
+        // // both of this process should be done in critical section
+        // loop {
+        //     match critical_section::with(|_| {
+        //         self.set_task_unready(task);
+        //         // after set the task as unready, we need to revoke its stack if it has.
+        //         if task.OSTCBStkPtr.is_some() {
+        //             dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
+        //         }
+        //         // set the task's stack to None
+        //         task.OSTCBStkPtr = None;
+        //         self.find_highrdy_set_cur()
+        //     }) {
+        //         Some(t) => {
+        //             task = t;
+        //             if task.OSTCBStat.run_dequeue() {
+        //                 // in the future, we should consider thread here
+        //                 if task.OSTCBStkPtr.is_none() {
+        //                     task.OS_POLL_FN.get().unwrap_unchecked()(task);
+        //                 } else {
+        //                     // if the task has stack, it's a thread, we need to resume it not poll it
+        //                     task.restore_context_from_stk();
+        //                 }
+        //             }
+        //         }
+        //         None => {
+        //             break;
+        //         }
+        //     }
+        // }
     }
-    unsafe fn find_highrdy_set_cur(&self) -> Option<OS_TCB_REF> {
+    unsafe fn find_highrdy_set_cur(&self) -> OS_TCB_REF {
         let tmp = self.OSRdyGrp.get_unmut();
         // if there is no task in the ready queue, return None also set the current running task to the lowest priority
         if *tmp == 0 {
-            self.OSPrioCur.set(OS_LOWEST_PRIO);
-            return None;
+            self.OSPrioCur.set(OS_TASK_IDLE_PRIO);
+            return self.os_prio_tbl.get_unmut()[OS_TASK_IDLE_PRIO as usize];
         }
         let prio = tmp.trailing_zeros() as usize;
         let tmp = self.OSRdyTbl.get_unmut();
         let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
         // set the current running task
         self.OSPrioCur.set(prio as OS_PRIO);
-        Some(self.os_prio_tbl.get_unmut()[prio])
+        self.os_prio_tbl.get_unmut()[prio]
     }
     unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
         // added by liam: we have to make this process in critical section
@@ -560,20 +560,20 @@ impl SyncExecutor {
     }
     // check if an prio is exiting
     pub fn prio_exist(&self, prio: INT8U) -> bool {
-        let prio_tbl: &[OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        let prio_tbl: &[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_unmut();
         prio_tbl[prio as USIZE].ptr.is_some()
     }
 
     pub fn reserve_bit(&self, prio: INT8U) {
-        let prio_tbl: &mut [OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
         prio_tbl[prio as USIZE].ptr = Some(NonNull::dangling());
     }
 
     pub fn clear_bit(&self, prio: INT8U) {
-        let prio_tbl: &mut [OS_TCB_REF; OS_LOWEST_PRIO + 1];
+        let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
         prio_tbl[prio as USIZE].ptr = None;

@@ -9,6 +9,7 @@
 #![feature(sync_unsafe_cell)]
 #![feature(alloc_error_handler)]
 #![feature(const_mut_refs)]
+#![feature(never_type)]
 #![warn(missing_docs)]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
 /// This mod MUST go first, so that the others see its macros.
@@ -100,3 +101,4 @@ unsafe impl Impl for SingleCoreCriticalSection {
 // pub type Addr = *mut core::ffi::c_void;
 // /// Unsigned  8 bit quantity
 // pub type VoidPtr = *mut core::ffi::c_void;
+// pub type PRIO = u8;
