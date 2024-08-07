@@ -46,6 +46,7 @@ lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
 panic-probe = { version = "0.3", features = ["print-defmt"] }
 cortex-m-semihosting = "0.5.0"
 # ucosii-executor-macro.workspace = true
+embassy-stm32 = { version = "0.1.0", features = ["memory-x", "stm32f401re", "time-driver-any", "exti", "unstable-pac"] }
 
 [dev-dependencies]
 defmt-test = "0.3"

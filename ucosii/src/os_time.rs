@@ -190,5 +190,10 @@ impl Timer {
     // }
 }
 
+/// init the Timer as the Systick
+pub fn TimerInit(){
+
+}
+
 /// an async delay
 pub fn OSTimeDly(_ticks: INT32U) {}
