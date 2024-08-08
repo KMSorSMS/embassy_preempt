@@ -157,13 +157,18 @@ impl OS_TCB {
     // can only be called if the task owns the stack
     fn restore_context_from_stk(&mut self) {
         extern "Rust" {
-            fn restore_arch_stk_user(stk: *mut OS_STK);
+            fn restore_thread_task();
         }
         if self.OSTCBStkPtr.is_none() {
             return;
         }
-        let stk = self.OSTCBStkPtr.as_mut().unwrap().STK_REF.as_ptr();
-        unsafe { restore_arch_stk_user(stk) };
+        // let stk = self.OSTCBStkPtr.as_mut().unwrap().STK_REF.as_ptr();
+        // in restore_task it will set PROGRAM_STACK a new stk
+        unsafe { restore_thread_task() };
+    }
+    /// get the stk ptr of tcb, make sure it exists
+    pub fn get_stk(&self) -> &OS_STK_REF {
+        self.OSTCBStkPtr.as_ref().unwrap()
     }
 }
 
@@ -427,9 +432,11 @@ impl Pender {
 pub(crate) struct SyncExecutor {
     // run_queue: RunQueue,
     // the prio tbl stores a relation between the prio and the task_ref
-    os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize]>,
+    pub os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize]>,
     // indicate the current running task
-    OSPrioCur: SyncUnsafeCell<OS_PRIO>,
+    pub OSPrioCur: SyncUnsafeCell<OS_PRIO>,
+    // // highest priority task in the ready queue
+    // OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
     _pender: Pender,
     // by liam: add a bitmap to record the status of the task
     #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
@@ -447,6 +454,7 @@ impl SyncExecutor {
         Self {
             os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); (OS_LOWEST_PRIO + 1) as usize]),
             OSPrioCur: SyncUnsafeCell::new(OS_TASK_IDLE_PRIO),
+            // OSPrioHighRdy: SyncUnsafeCell::new(OS_TASK_IDLE_PRIO),
             _pender: pender,
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
@@ -454,11 +462,6 @@ impl SyncExecutor {
     }
 
     /// Enqueue a task in the task queue
-    ///
-    /// # Safety
-    /// - `task` must be a valid pointer to a spawned task.
-    /// - `task` must be set up to run in this executor.
-    /// - `task` must NOT be already enqueued (in this executor or another one).
     #[inline(always)]
     unsafe fn enqueue(&self, task: OS_TCB_REF) {
         //according to the priority of the task, we place the task in the right place of os_prio_tbl
@@ -480,11 +483,13 @@ impl SyncExecutor {
             fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
         }
         // find the highest priority task in the ready queue
+        // let prio = self.OSPrioCur.get();
         let mut task = critical_section::with(|_| self.find_highrdy_set_cur());
         // judge if the highest priority task is the current running task(which has been preemped by the interrupt)
-        if (task.OSTCBPrio) < self.OSPrioCur.get() {
-            return false;
-        }
+        // prio's number is small indicates the priority is high
+        // if prio <= self.OSPrioCur.get() {
+        //     return false;
+        // }
         // if we need to switch the task, we have to alloc the current stack to the current running task
         let cur_task = &mut (self.os_prio_tbl.get_mut()[self.OSPrioCur.get() as usize]);
         let cur_stk = PROGRAM_STACK.get();
@@ -517,10 +522,10 @@ impl SyncExecutor {
             }
             critical_section::with(|_| {
                 self.set_task_unready(task);
-                // after set the task as unready, we need to revoke its stack if it has.
-                if task.OSTCBStkPtr.is_some() {
-                    dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
-                }
+                // // after set the task as unready, we need to revoke its stack if it has.
+                // if task.OSTCBStkPtr.is_some() {
+                //     dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
+                // }
                 // set the task's stack to None
                 task.OSTCBStkPtr = None;
             });

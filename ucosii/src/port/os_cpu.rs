@@ -1,6 +1,8 @@
 //! about the cpu
 
-use core::{arch::asm, ptr::NonNull};
+use core::{arch::asm, borrow::Borrow, ptr::NonNull};
+
+use cortex_m_rt::exception;
 
 use crate::executor::GlobalSyncExecutor;
 
@@ -17,10 +19,28 @@ pub fn OSInitHookBegin() {
     // init_heap();
 }
 
+const NVIC_INT_CTRL: u32 = 0xE000ED04;
+const NVIC_PENDSVSET: u32 = 0x10000000;
 #[no_mangle]
 /// the function to start the first task
-pub extern "Rust" fn restore_arch_stk_user(stk: *mut usize) {
+pub extern "Rust" fn restore_thread_task() {
     unsafe {
+        asm!(
+            "STR     R1, [R0]",
+            "BX      LR",
+            in("r0") NVIC_INT_CTRL,
+            in("r1") NVIC_PENDSVSET,
+        )
+    }
+}
+    
+// the pendsv handler used to switch the task
+#[exception]
+fn PendSV(){
+    let cur_task_prio = GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut();
+    let prio_tbl = &GlobalSyncExecutor.as_ref().unwrap().os_prio_tbl.get_unmut();
+    unsafe {
+    let stk_ptr = prio_tbl[*cur_task_prio as usize].get_stk();
         asm!(
             // first restore the xpsr(from r0)
             "LDR r0, [r0, #64]",
@@ -33,7 +53,7 @@ pub extern "Rust" fn restore_arch_stk_user(stk: *mut usize) {
             "LDMFD  sp!, {{r0-r3, r12, lr}}",
             // then we need to jump to the task(resotre pc),8 is important, we need to skip xpsr
             "LDR  pc,[sp], #8",
-            in("r0") stk,
+            in("r0") stk_ptr,
             options(nostack, preserves_flags),
         )
     }
