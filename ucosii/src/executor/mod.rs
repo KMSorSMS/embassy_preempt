@@ -4,6 +4,7 @@
 pub mod state;
 pub mod waker;
 use alloc::string::String;
+use core::alloc::Layout;
 use core::future::Future;
 use core::mem;
 use core::ops::{Deref, DerefMut};
@@ -18,7 +19,7 @@ use state::State;
 pub use self::waker::task_from_waker;
 use crate::arena::ARENA;
 use crate::cfg::*;
-use crate::heap::stack_allocator::{dealloc_stack, OS_STK_REF};
+use crate::heap::stack_allocator::{alloc_stack, dealloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
 // use spawner::SpawnToken;
 use crate::port::*;
 use crate::ucosii::*;
@@ -476,14 +477,28 @@ impl SyncExecutor {
     /// return false if no need to switch the task
     pub(crate) unsafe fn interrupt_poll(&'static self) -> bool {
         extern "Rust" {
-            fn OSIntExit();
+            fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
         }
         // find the highest priority task in the ready queue
         let mut task = critical_section::with(|_| self.find_highrdy_set_cur());
         // judge if the highest priority task is the current running task(which has been preemped by the interrupt)
         if (task.OSTCBPrio) < self.OSPrioCur.get() {
             return false;
-        } 
+        }
+        // if we need to switch the task, we have to alloc the current stack to the current running task
+        let cur_task = &mut (self.os_prio_tbl.get_mut()[self.OSPrioCur.get() as usize]);
+        let cur_stk = PROGRAM_STACK.get();
+        cur_task.OSTCBStkPtr = Some(cur_stk.clone());
+        // then we need to restore the highest priority task
+        if task.OSTCBStkPtr.is_none() {
+            // if the task has no stack, it's a task, we need to mock a stack for it.
+            // we need to alloc a stack for the task
+            let layout = Layout::from_size_align(TASK_STACK_SIZE, 8).unwrap();
+            let mut stk = alloc_stack(layout);
+            // then we need to mock the stack for the task(the stk will change during the mock)
+            stk.STK_REF = OSTaskStkInit(stk.STK_REF);
+            task.OSTCBStkPtr = Some(stk);
+        }
         true
     }
 
@@ -500,13 +515,15 @@ impl SyncExecutor {
                 // if the task has stack, it's a thread, we need to resume it not poll it
                 task.restore_context_from_stk();
             }
-            critical_section::with(|_| self.set_task_unready(task));
-            // after set the task as unready, we need to revoke its stack if it has.
-            if task.OSTCBStkPtr.is_some() {
-                dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
-            }
-            // set the task's stack to None
-            task.OSTCBStkPtr = None;
+            critical_section::with(|_| {
+                self.set_task_unready(task);
+                // after set the task as unready, we need to revoke its stack if it has.
+                if task.OSTCBStkPtr.is_some() {
+                    dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
+                }
+                // set the task's stack to None
+                task.OSTCBStkPtr = None;
+            });
         }
     }
     unsafe fn find_highrdy_set_cur(&self) -> OS_TCB_REF {

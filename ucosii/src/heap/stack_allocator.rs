@@ -5,6 +5,7 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
+use core::clone;
 use core::ptr::NonNull;
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
@@ -14,6 +15,7 @@ pub const STACK_START: usize = 0x20000000;
 pub const STACK_SIZE: usize = 40 * 1024; // 40 KiB
 pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 256 B also ok
 pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
+pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
 use crate::port::OS_STK;
 use crate::sync::UPSafeCell;
@@ -79,6 +81,16 @@ pub struct OS_STK_REF {
     pub layout: Layout,
 }
 unsafe impl Send for OS_STK_REF {}
+
+impl Clone for OS_STK_REF {
+    fn clone(&self) -> Self {
+        OS_STK_REF {
+            STK_REF: self.STK_REF,
+            HEAP_REF: self.HEAP_REF,
+            layout: self.layout,
+        }
+    }
+}
 
 /// when the OS_STK_REF is default, we will not alloc a stack
 impl Default for OS_STK_REF {
