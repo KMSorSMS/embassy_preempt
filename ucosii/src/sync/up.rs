@@ -1,5 +1,5 @@
 //! Uniprocessor interior mutability primitives
-use core::cell::{RefCell, RefMut};
+use core::cell::{Ref, RefCell, RefMut};
 
 /// Wrap a static data structure inside it so that we are
 /// able to access it without any `unsafe`.
@@ -30,5 +30,9 @@ impl<T> UPSafeCell<T> {
     /// set the inner data
     pub fn set(&self, value: T) {
         *self.inner.borrow_mut() = value;
+    }
+    /// get the unmutable reference of inner data
+    pub fn get(&self) -> Ref<'_,T>{
+        self.inner.borrow()
     }
 }
