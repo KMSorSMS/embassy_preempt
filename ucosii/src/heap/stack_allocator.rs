@@ -5,7 +5,6 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
-use core::clone;
 use core::ptr::NonNull;
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
