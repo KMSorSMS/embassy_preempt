@@ -19,7 +19,7 @@ use state::State;
 pub use self::waker::task_from_waker;
 use crate::arena::ARENA;
 use crate::cfg::*;
-use crate::heap::stack_allocator::{alloc_stack, dealloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
+use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, TASK_STACK_SIZE};
 // use spawner::SpawnToken;
 use crate::port::*;
 use crate::ucosii::*;
@@ -489,7 +489,8 @@ impl SyncExecutor {
         tmp[prio] = task;
     }
 
-    /// this function must be called in the interrupt context
+    /// this function must be called in the interrupt context, and it will trigger pendsv to switch the task
+    /// when this function return, the caller interrupt will also return and the pendsv will run.
     pub(crate) unsafe fn interrupt_poll(&'static self) {
         extern "Rust" {
             fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;

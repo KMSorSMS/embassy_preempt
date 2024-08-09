@@ -1,7 +1,6 @@
 //! about the cpu
 
 use core::arch::asm;
-use core::borrow::Borrow;
 use core::ptr::NonNull;
 
 use cortex_m_rt::exception;
