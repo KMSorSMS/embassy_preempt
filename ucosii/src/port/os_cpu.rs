@@ -43,12 +43,19 @@ fn PendSV() {
     unsafe {
         asm!("CPSID I", options(nostack, preserves_flags));
     }
-    let cur_task_prio = GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut();
-    let prio_tbl = &GlobalSyncExecutor.as_ref().unwrap().os_prio_tbl.get_unmut();
+    // then switch the task
+    let stk_ptr = GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_unmut().get_stk();
+    // the set will drop PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
+    let old_stk = PROGRAM_STACK.swap(stk_ptr.clone());
+    if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
+        // we need to give the current task the old_stk to store the context
+        GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk);
+    } else {
+        // just realloc the stack, we use drop
+        drop(old_stk);
+    }
+    let stk_ptr = stk_ptr.STK_REF.as_ptr();
     unsafe {
-        let stk_ptr = prio_tbl[*cur_task_prio as usize].get_stk();
-        PROGRAM_STACK.set(stk_ptr.clone());
-        let stk_ptr = stk_ptr.STK_REF.as_ptr();
         asm!(
             "ORR     LR,  R4, #0x04 ",
             "LDMFD   R0!, {{R4-R11, R14}}",
