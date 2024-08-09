@@ -45,9 +45,21 @@ fn PendSV() {
     // then switch the task
     let stk_ptr = GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_unmut().get_stk();
     // the set will drop PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
-    let old_stk = PROGRAM_STACK.swap(stk_ptr.clone());
+    let mut old_stk = PROGRAM_STACK.swap(stk_ptr.clone());
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
         // we need to give the current task the old_stk to store the context
+        // first we will store the remaining context to the old_stk
+        let mut old_stk_ptr = old_stk.STK_REF.as_ptr();
+        unsafe {
+            asm!(
+                "STMFD   R0!, {{R4-R11, R14}}",
+                "MSR     PSP, R0",
+                inout("r0") old_stk_ptr,
+                options(nostack, preserves_flags),
+            )
+        }
+        // then as we have stored the context, we need to update the old_stk's top
+        old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OS_STK).unwrap();
         GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk);
     } else {
         // just realloc the stack, we use drop
