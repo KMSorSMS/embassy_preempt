@@ -19,6 +19,7 @@
   //"rust-analyzer.cargo.target": "thumbv7em-none-eabihf",
   //"rust-analyzer.cargo.target": "thumbv8m.main-none-eabihf",
   "rust-analyzer.cargo.features": [
+    "default"
     // Comment out these features when working on the examples. Most example crates do not have any cargo features.
     // "stm32f446re",
     // "time-driver-any",
