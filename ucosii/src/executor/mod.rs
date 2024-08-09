@@ -165,12 +165,15 @@ impl OS_TCB {
         // let stk = self.OSTCBStkPtr.as_mut().unwrap().STK_REF.as_ptr();
         // in restore_task it will set PROGRAM_STACK a new stk
         // revoke the stk
-        dealloc_stack(&mut PROGRAM_STACK.exclusive_access());
         unsafe { restore_thread_task() };
     }
     /// get the stk ptr of tcb, make sure it exists
     pub fn get_stk(&self) -> &OS_STK_REF {
         self.OSTCBStkPtr.as_ref().unwrap()
+    }
+    /// set the stk ptr of tcb
+    pub fn set_stk(&mut self, stk: OS_STK_REF) {
+        self.OSTCBStkPtr = Some(stk);
     }
 }
 
@@ -434,11 +437,13 @@ impl Pender {
 pub(crate) struct SyncExecutor {
     // run_queue: RunQueue,
     // the prio tbl stores a relation between the prio and the task_ref
-    pub os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize]>,
+    os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize]>,
     // indicate the current running task
     pub OSPrioCur: SyncUnsafeCell<OS_PRIO>,
+    pub OSTCBCur: SyncUnsafeCell<OS_TCB_REF>,
     // highest priority task in the ready queue
-    OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
+    pub OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
+    pub OSTCBHighRdy: SyncUnsafeCell<OS_TCB_REF>,
     _pender: Pender,
     // by liam: add a bitmap to record the status of the task
     #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
@@ -455,9 +460,15 @@ impl SyncExecutor {
     pub(crate) fn new(pender: Pender) -> Self {
         Self {
             os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); (OS_LOWEST_PRIO + 1) as usize]),
+
             OSPrioCur: SyncUnsafeCell::new(OS_TASK_IDLE_PRIO),
+            OSTCBCur: SyncUnsafeCell::new(OS_TCB_REF::default()),
+
             OSPrioHighRdy: SyncUnsafeCell::new(OS_TASK_IDLE_PRIO),
+            OSTCBHighRdy: SyncUnsafeCell::new(OS_TCB_REF::default()),
+
             _pender: pender,
+
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
         }
@@ -485,17 +496,13 @@ impl SyncExecutor {
             fn restore_thread_task();
         }
         // find the highest priority task in the ready queue
-        // let prio = self.OSPrioCur.get();
-        let mut task = critical_section::with(|_| self.find_highrdy_set_cur());
+        critical_section::with(|_| self.set_highrdy());
         // judge if the highest priority task is the current running task(which has been preemped by the interrupt)
         // prio's number is small indicates the priority is high
-        // if prio <= self.OSPrioCur.get() {
-        //     return false;
-        // }
-        // if we need to switch the task, we have to alloc the current stack to the current running task
-        let cur_task = &mut (self.os_prio_tbl.get_mut()[self.OSPrioCur.get() as usize]);
-        let cur_stk = PROGRAM_STACK.get();
-        cur_task.OSTCBStkPtr = Some(cur_stk.clone());
+        if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
+            return;
+        }
+        let mut task  = self.OSTCBHighRdy.get();
         // then we need to restore the highest priority task
         if task.OSTCBStkPtr.is_none() {
             // if the task has no stack, it's a task, we need to mock a stack for it.
@@ -507,7 +514,7 @@ impl SyncExecutor {
             task.OSTCBStkPtr = Some(stk);
         }
         // restore the task from stk
-        unsafe{restore_thread_task()};
+        unsafe { restore_thread_task() };
     }
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
@@ -515,7 +522,11 @@ impl SyncExecutor {
         // build this as a loop
         loop {
             // find the highest priority task in the ready queue
-            let mut task = critical_section::with(|_| self.find_highrdy_set_cur());
+            critical_section::with(|_| self.set_highrdy());
+            // in the executor's thead poll, the highrdy task must be polled
+            let mut task = self.OSTCBHighRdy.get();
+            self.OSPrioCur.set(task.OSTCBPrio);
+            self.OSTCBCur.set(task); 
             // execute the task depending on if it has stack
             if task.OSTCBStkPtr.is_none() {
                 task.OS_POLL_FN.get().unwrap_unchecked()(task);
@@ -525,28 +536,26 @@ impl SyncExecutor {
             }
             critical_section::with(|_| {
                 self.set_task_unready(task);
-                // // after set the task as unready, we need to revoke its stack if it has.
-                // if task.OSTCBStkPtr.is_some() {
-                //     dealloc_stack(task.OSTCBStkPtr.as_mut().unwrap());
-                // }
                 // set the task's stack to None
+                // check: this seems no need to set it to None as it will always be None
                 task.OSTCBStkPtr = None;
             });
         }
     }
-    unsafe fn find_highrdy_set_cur(&self) -> OS_TCB_REF {
+    unsafe fn set_highrdy(&self) {
         let tmp = self.OSRdyGrp.get_unmut();
         // if there is no task in the ready queue, return None also set the current running task to the lowest priority
         if *tmp == 0 {
-            self.OSPrioCur.set(OS_TASK_IDLE_PRIO);
-            return self.os_prio_tbl.get_unmut()[OS_TASK_IDLE_PRIO as usize];
+            self.OSPrioHighRdy.set(OS_TASK_IDLE_PRIO);
+            self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[OS_TASK_IDLE_PRIO as usize]);
+            return ;
         }
         let prio = tmp.trailing_zeros() as usize;
         let tmp = self.OSRdyTbl.get_unmut();
         let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
         // set the current running task
-        self.OSPrioCur.set(prio as OS_PRIO);
-        self.os_prio_tbl.get_unmut()[prio]
+        self.OSPrioHighRdy.set(prio as OS_PRIO);
+        self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio]);
     }
     unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
         // added by liam: we have to make this process in critical section

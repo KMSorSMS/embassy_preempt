@@ -35,4 +35,9 @@ impl<T> UPSafeCell<T> {
     pub fn get(&self) -> Ref<'_,T>{
         self.inner.borrow()
     }
+    /// set and return the old value
+    pub fn swap(&self, value: T) -> T {
+        let mut inner = self.inner.borrow_mut();
+        core::mem::replace(&mut *inner, value)
+    }
 }
