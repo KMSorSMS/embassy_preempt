@@ -40,21 +40,29 @@ pub extern "Rust" fn restore_thread_task() {
 fn PendSV() {
     // first close the interrupt
     unsafe {
-        asm!("CPSID I", options(nostack, preserves_flags));
+        asm!(
+            "CPSID I",
+            "MRS     R0, PSP",
+            "STMFD   R0!, {{R4-R11, R14}}",
+            options(nostack, preserves_flags)
+        );
     }
     // then switch the task
     let stk_ptr = GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_unmut().get_stk();
     // the set will drop PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
     let mut old_stk = PROGRAM_STACK.swap(stk_ptr.clone());
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
+        // set the current task to be the highrdy
+        unsafe {
+            GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
+        }
         // we need to give the current task the old_stk to store the context
         // first we will store the remaining context to the old_stk
-        let mut old_stk_ptr = old_stk.STK_REF.as_ptr();
+        let old_stk_ptr: *mut usize;
         unsafe {
             asm!(
-                "STMFD   R0!, {{R4-R11, R14}}",
-                "MSR     PSP, R0",
-                inout("r0") old_stk_ptr,
+                "MRS     R0, PSP",
+                out("r0") old_stk_ptr,
                 options(nostack, preserves_flags),
             )
         }

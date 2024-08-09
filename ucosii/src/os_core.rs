@@ -324,6 +324,8 @@ pub fn OSStart() -> ! {
     drop(int_stk);
     unsafe {
         set_int_change_2_psp(int_ptr);
+        // find the highest priority task in the ready queue
+        critical_section::with(|_| GlobalSyncExecutor.as_ref().unwrap().set_highrdy());
         GlobalSyncExecutor.as_ref().unwrap().poll();
     }
 }

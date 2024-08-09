@@ -48,6 +48,14 @@ impl <T: PartialOrd> PartialOrd for SyncUnsafeCell<T> {
         self.get_unmut().partial_cmp(other.get_unmut())
     }
 }
+// imple clone for SyncUnsafeCell
+impl<T: Clone> Clone for SyncUnsafeCell<T> {
+    fn clone(&self) -> Self {
+        Self {
+            value: UnsafeCell::new(self.get_unmut().clone()),
+        }
+    }
+}
 
 impl<T> SyncUnsafeCell<T> {
     #[inline]

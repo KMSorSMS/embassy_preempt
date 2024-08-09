@@ -473,7 +473,11 @@ impl SyncExecutor {
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
         }
     }
-
+    /// set the current to be highrdy
+    pub(crate) unsafe fn set_cur_highrdy(&self) {
+        self.OSPrioCur.set(self.OSPrioHighRdy.get());
+        self.OSTCBCur.set(self.OSTCBHighRdy.get());
+    }
     /// Enqueue a task in the task queue
     #[inline(always)]
     unsafe fn enqueue(&self, task: OS_TCB_REF) {
@@ -503,7 +507,7 @@ impl SyncExecutor {
         if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
             return;
         }
-        let mut task  = self.OSTCBHighRdy.get();
+        let mut task = self.OSTCBHighRdy.get();
         // then we need to restore the highest priority task
         if task.OSTCBStkPtr.is_none() {
             // if the task has no stack, it's a task, we need to mock a stack for it.
@@ -522,12 +526,10 @@ impl SyncExecutor {
     pub(crate) unsafe fn poll(&'static self) -> ! {
         // build this as a loop
         loop {
-            // find the highest priority task in the ready queue
-            critical_section::with(|_| self.set_highrdy());
             // in the executor's thead poll, the highrdy task must be polled
             let mut task = self.OSTCBHighRdy.get();
             self.OSPrioCur.set(task.OSTCBPrio);
-            self.OSTCBCur.set(task); 
+            self.OSTCBCur.set(task);
             // execute the task depending on if it has stack
             if task.OSTCBStkPtr.is_none() {
                 task.OS_POLL_FN.get().unwrap_unchecked()(task);
@@ -541,15 +543,18 @@ impl SyncExecutor {
                 // check: this seems no need to set it to None as it will always be None
                 task.OSTCBStkPtr = None;
             });
+            // find the highest priority task in the ready queue
+            critical_section::with(|_| self.set_highrdy());
         }
     }
-    unsafe fn set_highrdy(&self) {
+    pub(crate) unsafe fn set_highrdy(&self) {
         let tmp = self.OSRdyGrp.get_unmut();
         // if there is no task in the ready queue, return None also set the current running task to the lowest priority
         if *tmp == 0 {
             self.OSPrioHighRdy.set(OS_TASK_IDLE_PRIO);
-            self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[OS_TASK_IDLE_PRIO as usize]);
-            return ;
+            self.OSTCBHighRdy
+                .set(self.os_prio_tbl.get_unmut()[OS_TASK_IDLE_PRIO as usize]);
+            return;
         }
         let prio = tmp.trailing_zeros() as usize;
         let tmp = self.OSRdyTbl.get_unmut();
