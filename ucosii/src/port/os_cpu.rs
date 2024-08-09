@@ -1,12 +1,14 @@
 //! about the cpu
 
-use core::{arch::asm, borrow::Borrow, ptr::NonNull};
+use core::arch::asm;
+use core::borrow::Borrow;
+use core::ptr::NonNull;
 
 use cortex_m_rt::exception;
 
-use crate::executor::GlobalSyncExecutor;
-
 use super::OS_STK;
+use crate::executor::GlobalSyncExecutor;
+use crate::heap::stack_allocator::PROGRAM_STACK;
 
 // use crate::ucosii::OSIdleCtr;
 // use core::sync::atomic::Ordering::Relaxed;
@@ -33,26 +35,26 @@ pub extern "Rust" fn restore_thread_task() {
         )
     }
 }
-    
+
 // the pendsv handler used to switch the task
 #[exception]
-fn PendSV(){
+fn PendSV() {
+    // first close the interrupt
+    unsafe {
+        asm!("CPSID I", options(nostack, preserves_flags));
+    }
     let cur_task_prio = GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut();
     let prio_tbl = &GlobalSyncExecutor.as_ref().unwrap().os_prio_tbl.get_unmut();
     unsafe {
-    let stk_ptr = prio_tbl[*cur_task_prio as usize].get_stk();
+        let stk_ptr = prio_tbl[*cur_task_prio as usize].get_stk();
+        PROGRAM_STACK.set(stk_ptr.clone());
+        let stk_ptr = stk_ptr.STK_REF.as_ptr();
         asm!(
-            // first restore the xpsr(from r0)
-            "LDR r0, [r0, #64]",
-            "MSR xpsr, r0",
-            // then we restore the context
-            "LDMFD  r0!, {{r4-r11, r14}}",
-            // then set the psp as stk
-            "MSR psp, r0",
-            // then we need to restore the interrupt context
-            "LDMFD  sp!, {{r0-r3, r12, lr}}",
-            // then we need to jump to the task(resotre pc),8 is important, we need to skip xpsr
-            "LDR  pc,[sp], #8",
+            "ORR     LR,  R4, #0x04 ",
+            "LDMFD   R0!, {{R4-R11, R14}}",
+            "MSR     PSP, R0",
+            "CPSIE   I",
+            "BX      LR",
             in("r0") stk_ptr,
             options(nostack, preserves_flags),
         )
@@ -75,7 +77,7 @@ pub extern "Rust" fn run_idle() {
 // pub extern "Rust" fn OSIntExit(){
 //     unsafe {
 //         asm!(
-            
+
 //         )
 //     }
 // }
@@ -99,7 +101,7 @@ struct UcStk {
     r2: u32,
     r3: u32,
     r12: u32,
-    lr: u32, 
+    lr: u32,
     pc: u32,
     xpsr: u32,
 }
@@ -109,11 +111,11 @@ const CONTEXT_STACK_SIZE: usize = 16;
 #[inline]
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
-pub extern "Rust" fn OSTaskStkInit(stk_ref:NonNull<OS_STK>) -> NonNull<OS_STK> {
+pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> {
     let executor_function_ptr: fn() = || unsafe { GlobalSyncExecutor.as_ref().unwrap().poll() };
     let executor_function_ptr = executor_function_ptr as *const () as usize;
     let ptos = stk_ref.as_ptr() as *mut usize;
-    let ptos = ((unsafe {ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
+    let ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
     let ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
     let psp = ptos as *mut UcStk;
     // initialize the stack

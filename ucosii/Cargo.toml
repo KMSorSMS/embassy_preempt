@@ -90,7 +90,7 @@ lto = true
 # this part only define features, don't decide whether the feature is active
 [features]
 # when a feature is set in default, it is active
-default = ["OS_STACK_LESS_THAN_64","cortex_m","defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+default = ["time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
 defmt = ["dep:defmt"]
 nightly = []
 # this feature will be set in build.rs
@@ -133,6 +133,20 @@ std = []
 host = []
 atomics = []                 # use hardware atomics from core::sync::atomic
 xip = []                     # enable optimizations for execute in place
+time_driver_tim1=[]
+time_driver_tim2=[]
+time_driver_tim3=[]
+time_driver_tim4=[]
+time_driver_tim5=[]
+time_driver_tim8=[]
+time_driver_tim9=[]
+time_driver_tim12=[]
+time_driver_tim15=[]
+time_driver_tim20=[]
+time_driver_tim21=[]
+time_driver_tim22=[]
+time_driver_tim23=[]
+time_driver_tim24=[]
 [target.'cfg(loom)'.dependencies]
 loom = { version = "0.7", features = ["checkpoint"] }
 [lints.rust]

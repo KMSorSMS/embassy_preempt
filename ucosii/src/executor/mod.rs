@@ -164,6 +164,8 @@ impl OS_TCB {
         }
         // let stk = self.OSTCBStkPtr.as_mut().unwrap().STK_REF.as_ptr();
         // in restore_task it will set PROGRAM_STACK a new stk
+        // revoke the stk
+        dealloc_stack(&mut PROGRAM_STACK.exclusive_access());
         unsafe { restore_thread_task() };
     }
     /// get the stk ptr of tcb, make sure it exists
@@ -435,8 +437,8 @@ pub(crate) struct SyncExecutor {
     pub os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize]>,
     // indicate the current running task
     pub OSPrioCur: SyncUnsafeCell<OS_PRIO>,
-    // // highest priority task in the ready queue
-    // OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
+    // highest priority task in the ready queue
+    OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
     _pender: Pender,
     // by liam: add a bitmap to record the status of the task
     #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
@@ -454,7 +456,7 @@ impl SyncExecutor {
         Self {
             os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); (OS_LOWEST_PRIO + 1) as usize]),
             OSPrioCur: SyncUnsafeCell::new(OS_TASK_IDLE_PRIO),
-            // OSPrioHighRdy: SyncUnsafeCell::new(OS_TASK_IDLE_PRIO),
+            OSPrioHighRdy: SyncUnsafeCell::new(OS_TASK_IDLE_PRIO),
             _pender: pender,
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
@@ -477,10 +479,10 @@ impl SyncExecutor {
     }
 
     /// this function must be called in the interrupt context
-    /// return false if no need to switch the task
-    pub(crate) unsafe fn interrupt_poll(&'static self) -> bool {
+    pub(crate) unsafe fn interrupt_poll(&'static self) {
         extern "Rust" {
             fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
+            fn restore_thread_task();
         }
         // find the highest priority task in the ready queue
         // let prio = self.OSPrioCur.get();
@@ -504,7 +506,8 @@ impl SyncExecutor {
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
             task.OSTCBStkPtr = Some(stk);
         }
-        true
+        // restore the task from stk
+        unsafe{restore_thread_task()};
     }
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
