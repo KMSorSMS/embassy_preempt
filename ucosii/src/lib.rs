@@ -68,6 +68,22 @@ mod sync;
 pub mod lang_items;
 mod util;
 
+// This must go last, so that it sees all the impl_foo! macros defined earlier.
+pub(crate) mod _generated {
+    #![allow(dead_code)]
+    #![allow(unused_imports)]
+    #![allow(non_snake_case)]
+    #![allow(missing_docs)]
+
+    include!(concat!(env!("OUT_DIR"), "/_generated.rs"));
+}
+
+// pac
+#[cfg(feature = "unstable-pac")]
+pub use stm32_metapac as pac;
+#[cfg(not(feature = "unstable-pac"))]
+pub(crate) use stm32_metapac as pac;
+
 /*
 ********************************************************************************************************************************************
 *                                                               critical section

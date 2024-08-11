@@ -44,6 +44,18 @@ linked_list_allocator = "0.9.0"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
 panic-probe = { version = "0.3", features = ["print-defmt"] }
 cortex-m-semihosting = "0.5.0"
+embassy-hal-internal = {version = "0.1.0", features = ["cortex-m", "prio-bits-4"] }
+#stm32-metapac = { version = "15" }
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645" }
+
+
+[build-dependencies]
+proc-macro2 = "1.0.36"
+quote = "1.0.15"
+
+#stm32-metapac = { version = "15", default-features = false, features = ["metadata"]}
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", default-features = false, features = ["metadata"] }
+
 
 [dev-dependencies]
 defmt-test = "0.3"
@@ -90,7 +102,7 @@ lto = true
 # this part only define features, don't decide whether the feature is active
 [features]
 # when a feature is set in default, it is active
-default = ["time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+default = ["unstable-pac","stm32f401re","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
 defmt = ["dep:defmt"]
 nightly = []
 # this feature will be set in build.rs
@@ -147,6 +159,13 @@ time_driver_tim21=[]
 time_driver_tim22=[]
 time_driver_tim23=[]
 time_driver_tim24=[]
+stm32f401re = [ "stm32-metapac/stm32f401re" ]
+## Re-export stm32-metapac at `embassy_stm32::pac`.
+## This is unstable because semver-minor (non-breaking) releases of embassy-stm32 may major-bump (breaking) the stm32-metapac version.
+## If this is an issue for you, you're encouraged to directly depend on a fixed version of the PAC.
+## There are no plans to make this stable.
+unstable-pac = []
+# unstable-pac=[]
 [target.'cfg(loom)'.dependencies]
 loom = { version = "0.7", features = ["checkpoint"] }
 [lints.rust]
