@@ -6,7 +6,7 @@ use core::arch::asm;
 use defmt::info; // <- derive attribute
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::{OSTaskCreate, RustOSTaskCreate};
-use ucosii::os_time::Timer;
+use ucosii::os_time::timer::Timer;
 use ucosii::{self as _};
 
 const LONG_TIME: usize = 10;
@@ -54,8 +54,9 @@ async fn task3(_args: *mut ()) {
     loop {
         //
         info!("---task3 begin---");
-        Timer::after_ticks(LONG_TIME as u64).await;
+        Timer::after_ticks(LONG_TIME).await;
         // delay(LONG_TIME);
+        Timer::after_millis(3000).await;
         info!("---task3 end---");
         delay(SHORT_TIME);
     }
