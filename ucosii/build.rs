@@ -1,6 +1,20 @@
-//! handle environment variables to make conditional compilation with feature flags
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::fmt::Write as _;
+use std::io::Write;
+use std::path::{Path, PathBuf};
+use std::process::Command;
+use std::{env, fs};
 
-use std::env;
+use proc_macro2::{Ident, TokenStream};
+use quote::{format_ident, quote};
+use stm32_metapac::metadata::ir::BitOffset;
+use stm32_metapac::metadata::{
+    MemoryRegionKind, PeripheralRccKernelClock, PeripheralRccRegister, PeripheralRegisters, StopMode, ALL_CHIPS,
+    ALL_PERIPHERAL_VERSIONS, METADATA,
+};
+
+// #[path = "./build_common.rs"]
+// mod common;
 
 fn main() {
     // get the value of the environment variable "OS_MAX_MEM_PART"
@@ -46,6 +60,4 @@ fn main() {
     if os_event_name_en == 1 {
         println!("cargo:rustc-cfg=feature=\"OS_EVENT_NAME_EN\"");
     }
-    // about loom cfg
-    // println!("cargo::rustc-check-cfg=cfg(loom)");
 }
