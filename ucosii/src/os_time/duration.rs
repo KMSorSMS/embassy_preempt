@@ -1,4 +1,5 @@
 use core::ops::Add;
+
 use crate::cfg::TICK_HZ;
 
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -15,6 +16,7 @@ const fn gcd(a: usize, b: usize) -> usize {
     }
 }
 pub(crate) const GCD_1K: usize = gcd(TICK_HZ, 1_000);
+pub(crate) const GCD_1M: usize = gcd(TICK_HZ, 1_000_000);
 
 impl Duration {
     // /// The smallest value that can be represented by the `Duration` type.
@@ -47,10 +49,43 @@ impl Duration {
         Duration { ticks }
     }
 
+    /// Creates a duration from the specified number of seconds, rounding up.
+    pub const fn from_secs(secs: usize) -> Duration {
+        Duration { ticks: secs * TICK_HZ }
+    }
+
     /// Creates a duration from the specified number of milliseconds, rounding up.
     pub const fn from_millis(millis: usize) -> Duration {
         Duration {
             ticks: div_ceil(millis * (TICK_HZ / GCD_1K), 1000 / GCD_1K),
+        }
+    }
+
+    /// Creates a duration from the specified number of microseconds, rounding up.
+    /// NOTE: Delays this small may be inaccurate.
+    pub const fn from_micros(micros: usize) -> Duration {
+        Duration {
+            ticks: div_ceil(micros * (TICK_HZ / GCD_1M), 1_000_000 / GCD_1M),
+        }
+    }
+
+    /// Creates a duration from the specified number of seconds, rounding down.
+    pub const fn from_secs_floor(secs: usize) -> Duration {
+        Duration { ticks: secs * TICK_HZ }
+    }
+
+    /// Creates a duration from the specified number of milliseconds, rounding down.
+    pub const fn from_millis_floor(millis: usize) -> Duration {
+        Duration {
+            ticks: millis * (TICK_HZ / GCD_1K) / (1000 / GCD_1K),
+        }
+    }
+
+    /// Creates a duration from the specified number of microseconds, rounding down.
+    /// NOTE: Delays this small may be inaccurate.
+    pub const fn from_micros_floor(micros: usize) -> Duration {
+        Duration {
+            ticks: micros * (TICK_HZ / GCD_1M) / (1_000_000 / GCD_1M),
         }
     }
 
