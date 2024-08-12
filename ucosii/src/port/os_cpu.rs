@@ -44,6 +44,7 @@ fn PendSV() {
             "CPSID I",
             "MRS     R0, PSP",
             "STMFD   R0!, {{R4-R11, R14}}",
+            // "CPSIE   I",
             options(nostack, preserves_flags)
         );
     }
@@ -76,7 +77,7 @@ fn PendSV() {
     let stk_ptr = stk_ptr.STK_REF.as_ptr();
     unsafe {
         asm!(
-            "ORR     LR,  R4, #0x04 ",
+            // "CPSID I",
             "LDMFD   R0!, {{R4-R11, R14}}",
             "MSR     PSP, R0",
             "CPSIE   I",
