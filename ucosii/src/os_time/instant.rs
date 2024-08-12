@@ -1,4 +1,5 @@
 use core::ops::Add;
+
 use super::duration::Duration;
 #[allow(unused)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -25,6 +26,10 @@ impl Instant {
     pub fn checked_add(&self, duration: Duration) -> Option<Instant> {
         self.ticks.checked_add(duration.ticks).map(|ticks| Instant { ticks })
     }
+    /// Tick count since system boot.
+    pub const fn as_ticks(&self) -> usize {
+        self.ticks
+    }
 }
 
 impl Add<Duration> for Instant {
@@ -35,4 +40,3 @@ impl Add<Duration> for Instant {
             .expect("overflow when adding duration to instant")
     }
 }
-
