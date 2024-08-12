@@ -65,3 +65,4 @@ type T = peripherals::TIM24;
 
 
 pub mod os_cpu;
+pub mod time_driver;
