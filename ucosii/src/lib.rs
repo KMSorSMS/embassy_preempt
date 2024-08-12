@@ -69,14 +69,14 @@ pub mod lang_items;
 mod util;
 
 // This must go last, so that it sees all the impl_foo! macros defined earlier.
-pub(crate) mod _generated {
-    #![allow(dead_code)]
-    #![allow(unused_imports)]
-    #![allow(non_snake_case)]
-    #![allow(missing_docs)]
+// pub(crate) mod _generated {
+//     #![allow(dead_code)]
+//     #![allow(unused_imports)]
+//     #![allow(non_snake_case)]
+//     #![allow(missing_docs)]
 
-    include!(concat!(env!("OUT_DIR"), "/_generated.rs"));
-}
+//     include!(concat!(env!("OUT_DIR"), "/_generated.rs"));
+// }
 
 // pac
 #[cfg(feature = "unstable-pac")]

@@ -1,4 +1,6 @@
 use crate::{port::*, ucosii::OS_PRIO};
+// TODO: Make all the config to be feature!!!
+
 /// the const val define the lowest prio
 pub const OS_LOWEST_PRIO: OS_PRIO = 63;
 /// Size of task variables array (#of INT32U entries)
@@ -12,3 +14,5 @@ pub const OS_MAX_TASKS: USIZE = 20;
 pub const OS_ARENA_SIZE: USIZE = 1024;
 /// frequency of the Systick(run on Timer)
 pub const OS_TICK_FREQ: USIZE = 5000;
+/// frequency of the Timer
+pub const TICK_HZ: USIZE = 100_000;
