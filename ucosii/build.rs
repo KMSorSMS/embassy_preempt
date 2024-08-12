@@ -1,20 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
-use std::fmt::Write as _;
-use std::io::Write;
-use std::path::{Path, PathBuf};
-use std::process::Command;
-use std::{env, fs};
-
-use proc_macro2::{Ident, TokenStream};
-use quote::{format_ident, quote};
-use stm32_metapac::metadata::ir::BitOffset;
-use stm32_metapac::metadata::{
-    MemoryRegionKind, PeripheralRccKernelClock, PeripheralRccRegister, PeripheralRegisters, StopMode, ALL_CHIPS,
-    ALL_PERIPHERAL_VERSIONS, METADATA,
-};
-
-// #[path = "./build_common.rs"]
-// mod common;
+use std::env;
 
 fn main() {
     // get the value of the environment variable "OS_MAX_MEM_PART"
