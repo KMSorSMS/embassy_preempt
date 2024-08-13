@@ -54,7 +54,7 @@ async fn task3(_args: *mut ()) {
     loop {
         //
         info!("---task3 begin---");
-        Timer::after_ticks(LONG_TIME).await;
+        Timer::after_ticks(LONG_TIME as u64).await;
         // delay(LONG_TIME);
         Timer::after_millis(3000).await;
         info!("---task3 end---");

@@ -4,12 +4,13 @@
 *********************************************************************************************************
 */
 
-use core::{cell::Cell, ptr, sync::atomic::{AtomicU32, AtomicU8}};
+use core::{cell::Cell, mem, ptr, sync::atomic::{compiler_fence, AtomicU32, AtomicU8, Ordering}};
 
-use critical_section::Mutex;
-use stm32_metapac::{rcc::vals::{Pllm, Plln}, timer::TimGp16, RCC};
+use critical_section::{CriticalSection, Mutex};
+use embassy_hal_internal::interrupt::InterruptExt;
+use stm32_metapac::{flash::vals::Latency, rcc::vals::*, timer::{regs, vals, TimGp16}, Interrupt, FLASH, RCC};
 
-use crate::{cfg::TICK_HZ, port::{BOOLEAN, INT64U, INT8U, TIMER, USIZE}};
+use crate::{cfg::{APB_HZ, TICK_HZ}, port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, TIMER, USIZE}};
 
 #[cfg(any(feature="time_driver_tim9", feature="time_driver_tim12", feature="time_driver_tim15", feature="time_driver_tim21", feature="time_driver_tim22"))]
 const ALARM_COUNT: USIZE = 1;
@@ -126,42 +127,56 @@ impl AlarmHandle {
 
 impl RtcDriver {
     fn init(&'static self) {
-        // let r = regs_gp16();
-        rcc_clock_init();
-        // rcc::enable_and_reset_with_cs::<TIMER>();
+        // rcc config
+        rcc_init();
+        // enable the Timer Driver
+        enable_Timer();
 
-        let timer_freq = T::frequency();
-
+        // disable the Timer
         TIMER.cr1().modify(|w| w.set_cen(false));
+        // clear the cnt num
         TIMER.cnt().write(|w| w.set_cnt(0));
 
-        let psc = timer_freq.0 / TICK_HZ as u32 - 1;
-        let psc: u16 = match psc.try_into() {
+        // calculate the psc
+        let psc = (APB_HZ / TICK_HZ) as INT32U - 1;
+        let psc: INT16U = match psc.try_into() {
             Err(_) => panic!("psc division overflow: {}", psc),
             Ok(n) => n,
         };
-
+        // set the psc
         TIMER.psc().write_value(psc);
-        TIMER.arr().write(|w| w.set_arr(u16::MAX));
+        // set the auto reload value(Timer 3 is INT16U)
+        TIMER.arr().write(|w| w.set_arr(INT16U::MAX));
 
         // Set URS, generate update and clear URS
+        // by noah： when set ug bit, a update event will be generated immediately.
+        // In the update event, the counter(including prescaler counter) will be clear.
+        // So in this way, we can init the counter by this way
         TIMER.cr1().modify(|w| w.set_urs(vals::Urs::COUNTERONLY));
         TIMER.egr().write(|w| w.set_ug(true));
         TIMER.cr1().modify(|w| w.set_urs(vals::Urs::ANYEVENT));
 
-        // Mid-way point
+        // Mid-way point, there will be a cc(capture/compare) interrupt at 0x8000
         TIMER.ccr(0).write(|w| w.set_ccr(0x8000));
 
-        // Enable overflow and half-overflow interrupts
         TIMER.dier().write(|w| {
+            // Enable overflow
             w.set_uie(true);
+            // and half-overflow interrupts
             w.set_ccie(0, true);
         });
 
-        <T as GeneralInstance1Channel>::CaptureCompareInterrupt::unpend();
-        unsafe { <T as GeneralInstance1Channel>::CaptureCompareInterrupt::enable() };
+        // by noah：the InterruptNumber trait is implemented by the stm32_metapac crate
+        // so in embassy, the InterruptExt trait will be implemented for the interrupt in pac
+        #[cfg(feature="time_driver_tim3")]
+        Interrupt::TIM3.unpend();
+        #[cfg(feature="time_driver_tim3")]
+        unsafe { Interrupt::TIM3.enable() };
+        // <T as GeneralInstance1Channel>::CaptureCompareInterrupt::unpend();
+        // unsafe { <T as GeneralInstance1Channel>::CaptureCompareInterrupt::enable() };
 
-        TIMER.cr1().modify(|w| w.set_cen(true));
+        // enable the Timer
+        TIMER.cr1().modify(|w| w.set_cen(ENABLE));
     }
 
     fn on_interrupt(&self) {
@@ -246,7 +261,7 @@ impl Driver for RtcDriver {
 
         let period = self.period.load(Ordering::Relaxed);
         compiler_fence(Ordering::Acquire);
-        let counter = r.cnt().read().cnt();
+        let counter = TIMER.cnt().read().cnt();
         calc_now(period, counter)
     }
 
@@ -283,7 +298,7 @@ impl Driver for RtcDriver {
             if timestamp <= t {
                 // If alarm timestamp has passed the alarm will not fire.
                 // Disarm the alarm and return `false` to indicate that.
-                r.dier().modify(|w| w.set_ccie(n + 1, false));
+                TIMER.dier().modify(|w| w.set_ccie(n + 1, false));
 
                 alarm.timestamp.set(u64::MAX);
 
@@ -292,11 +307,11 @@ impl Driver for RtcDriver {
 
             // Write the CCR value regardless of whether we're going to enable it now or not.
             // This way, when we enable it later, the right value is already set.
-            r.ccr(n + 1).write(|w| w.set_ccr(timestamp as u16));
+            TIMER.ccr(n + 1).write(|w| w.set_ccr(timestamp as u16));
 
             // Enable it if it'll happen soon. Otherwise, `next_period` will enable it.
             let diff = timestamp - t;
-            r.dier().modify(|w| w.set_ccie(n + 1, diff < 0xc000));
+            TIMER.dier().modify(|w| w.set_ccie(n + 1, diff < 0xc000));
 
             // Reevaluate if the alarm timestamp is still in the future
             let t = self.now();
@@ -305,7 +320,7 @@ impl Driver for RtcDriver {
                 // the alarm may or may not have fired.
                 // Disarm the alarm and return `false` to indicate that.
                 // It is the caller's responsibility to handle this ambiguity.
-                r.dier().modify(|w| w.set_ccie(n + 1, false));
+                TIMER.dier().modify(|w| w.set_ccie(n + 1, false));
 
                 alarm.timestamp.set(u64::MAX);
 
@@ -348,7 +363,7 @@ static DRIVER: RtcDriver = RtcDriver {
 // }
 
 // set the rcc of the Timer
-fn rcc_clock_init(){
+pub fn rcc_init(){
     RCC.cr().modify(|v| {
         // disable PLL
         v.set_pllon(DISABLE);
@@ -356,11 +371,54 @@ fn rcc_clock_init(){
         v.set_plli2son(DISABLE);
     });
     RCC.pllcfgr().modify(|v|{
-        // PLLP=2, PLLQ=4，并且设置HSE为PLL的输入源
         // set PLLM=4
         v.set_pllm(Pllm::DIV4);
         // set PLLN=84
         v.set_plln(Plln::MUL84);
+        // set PLLP=2
+        v.set_pllp(Pllp::DIV2);
+        // set PLLQ=4
+        v.set_pllq(Pllq::DIV4);
+        // set the HSE as the PLL source
+        v.set_pllsrc(Pllsrc::HSE);
+    });
+    RCC.cfgr().modify(|v|{
+        // set the frequency division coefficient of AHB as 1
+        v.set_hpre(Hpre::DIV1);
+        // set the frequency division coefficient of APB1 as 2
+        v.set_ppre1(Ppre::DIV2);
+        // set the frequency division coefficient of APB2 as 1
+        v.set_ppre2(Ppre::DIV1);
+    });
+    RCC.cr().modify(|v|{
+        // enable the HSE
+        v.set_hseon(ENABLE);
+        // enable the PLL
+        v.set_pllon(ENABLE);
+        // enable the PLL2S
+        v.set_plli2son(ENABLE);
+    });
+    // check the state of HSE, PLL, PLL2S
+    while !RCC.cr().read().hserdy() || !RCC.cr().read().pllrdy() || !RCC.cr().read().plli2srdy(){}
+    // enable FLASH prefetch buffer
+    FLASH.acr().modify(|v| v.set_prften(ENABLE));
+    // set the wait state of FLASH as 2
+    FLASH.acr().modify(|v| v.set_latency(Latency::WS2));
+    // set the system clock as PLL
+    RCC.cfgr().modify(|v| v.set_sw(Sw::PLL1_P));
+    // close the HSI
+    RCC.cr().modify(|v| v.set_hsion(DISABLE));
+}
 
-    })
+fn enable_Timer(){
+    #[cfg(feature="time_driver_tim3")]
+    // by noah: in current project, we use Timer 3 as the time driver
+    RCC.apb1enr().modify(|v| v.set_tim3en(ENABLE));
+    #[cfg(not(feature="time_driver_tim3"))]
+    panic!("the Timer is not surpport. You can add it in Func enable_Timer()");
+}
+
+// by noah: here the period is shifted 15 bit because period will be increased when the counter is overflowed or half-overflowed
+fn calc_now(period: INT32U, counter: INT16U) -> INT64U {
+    ((period as INT64U) << 15) + ((counter as u32 ^ ((period & 1) << 15)) as u64)
 }

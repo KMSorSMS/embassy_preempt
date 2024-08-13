@@ -12,5 +12,7 @@ pub const OS_MAX_TASKS: USIZE = 20;
 /// This const val is used to config the size of ARENA.
 /// You can set it refer to the number of tasks in your application(OS_MAX_TASKS) and the number of system tasks(OS_N_SYS_TASKS).
 pub const OS_ARENA_SIZE: USIZE = 1024;
-/// frequency of the Timer. frequency of the Systick(run on Timer)
-pub const TICK_HZ: USIZE = 100_000;
+/// output frequency of the Timer. frequency of the Systick(run on Timer)
+pub const TICK_HZ: INT64U = 100_000;
+/// input frequency of the Timer, you should config it yourself(set the Hardware)
+pub const APB_HZ: INT64U = 84000000;
