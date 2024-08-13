@@ -15,4 +15,4 @@ pub const OS_ARENA_SIZE: USIZE = 1024;
 /// frequency of the Systick(run on Timer)
 pub const OS_TICK_FREQ: USIZE = 5000;
 /// frequency of the Timer
-pub const TICK_HZ: USIZE = 100_000;
+pub const TICK_HZ: u64 = 100_000;

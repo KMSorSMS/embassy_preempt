@@ -11,11 +11,11 @@ pub struct Timer {
 }
 
 extern "Rust" {
-    fn _embassy_time_schedule_wake(at: usize, waker: &Waker);
+    fn _embassy_time_schedule_wake(at: u64, waker: &Waker);
 }
 
 /// Schedule the given waker to be woken at `at`.
-pub fn schedule_wake(at: usize, waker: &Waker) {
+pub fn schedule_wake(at: u64, waker: &Waker) {
     unsafe { _embassy_time_schedule_wake(at, waker) }
 }
 
@@ -68,7 +68,7 @@ impl Timer {
     /// This method is a convenience wrapper for calling `Timer::after(Duration::from_ticks())`.
     /// For more details, refer to [`Timer::after()`] and [`Duration::from_ticks()`].
     #[inline]
-    pub fn after_ticks(ticks: usize) -> Self {
+    pub fn after_ticks(ticks: u64) -> Self {
         Self::after(Duration::from_ticks(ticks))
     }
 
@@ -86,7 +86,7 @@ impl Timer {
     /// This method is a convenience wrapper for calling `Timer::after(Duration::from_micros())`.
     /// For more details, refer to [`Timer::after()`] and [`Duration::from_micros()`].
     #[inline]
-    pub fn after_micros(micros: usize) -> Self {
+    pub fn after_micros(micros: u64) -> Self {
         Self::after(Duration::from_micros(micros))
     }
 
@@ -95,7 +95,7 @@ impl Timer {
     /// This method is a convenience wrapper for calling `Timer::after(Duration::from_millis())`.
     /// For more details, refer to [`Timer::after`] and [`Duration::from_millis()`].
     #[inline]
-    pub fn after_millis(millis: usize) -> Self {
+    pub fn after_millis(millis: u64) -> Self {
         Self::after(Duration::from_millis(millis))
     }
 
@@ -104,7 +104,7 @@ impl Timer {
     /// This method is a convenience wrapper for calling `Timer::after(Duration::from_secs())`.
     /// For more details, refer to [`Timer::after`] and [`Duration::from_secs()`].
     #[inline]
-    pub fn after_secs(secs: usize) -> Self {
+    pub fn after_secs(secs: u64) -> Self {
         Self::after(Duration::from_secs(secs))
     }
 }
