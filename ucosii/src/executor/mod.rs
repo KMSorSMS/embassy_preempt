@@ -3,6 +3,7 @@
 #[cfg_attr(feature = "cortex_m", path = "state_atomics_arm.rs")]
 pub mod state;
 pub mod waker;
+pub mod timer_queue;
 use alloc::string::String;
 use core::alloc::Layout;
 use core::future::Future;
@@ -51,8 +52,8 @@ pub struct OS_TCB {
     #[cfg(feature = "OS_TASK_CREATE_EXT_EN")]
     OSTCBExtInfo: OS_TCB_EXT,
 
-    OSTCBNext: SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to next     TCB in the TCB list                 */
-    OSTCBPrev: SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to previous TCB in the TCB list                 */
+    OSTimerNext: SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to next     TCB in the Timer list                 */
+    OSTimerPrev: SyncUnsafeCell<Option<OS_TCB_REF>>, /* Pointer to previous TCB in the Timer list                 */
 
     // the poll fn that will be called by the executor. In the func, a waker will be create.
     OS_POLL_FN: SyncUnsafeCell<Option<unsafe fn(OS_TCB_REF)>>,
@@ -89,6 +90,7 @@ pub struct OS_TCB {
 
     #[cfg(feature = "OS_TASK_NAME_EN")]
     OSTCBTaskName: String,
+    pub(crate) expires_at: SyncUnsafeCell<u64>,
     // #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
     // OS_TLS OSTCBTLSTbl[OS_TLS_TBL_SIZE];
 
@@ -205,8 +207,8 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
                     OSTCBOpt: 0,
                     OSTCBId: 0,
                 },
-                OSTCBNext: SyncUnsafeCell::new(None),
-                OSTCBPrev: SyncUnsafeCell::new(None),
+                OSTimerNext: SyncUnsafeCell::new(None),
+                OSTimerPrev: SyncUnsafeCell::new(None),
                 OS_POLL_FN: SyncUnsafeCell::new(None),
                 #[cfg(feature = "OS_EVENT_EN")]
                 OSTCBEventPtr: None,
@@ -233,6 +235,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
                 OSTCBRegTbl: [0; OS_TASK_REG_TBL_SIZE],
                 #[cfg(feature = "OS_TASK_NAME_EN")]
                 OSTCBTaskName: String::new(),
+                expires_at: SyncUnsafeCell::new(u64::MAX),
             },
             future: UninitCell::uninit(),
         }
@@ -454,6 +457,7 @@ pub(crate) struct SyncExecutor {
     OSRdyGrp: u16,
     #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
     OSRdyTbl: [u16; OS_RDY_TBL_SIZE],
+    pub(crate) timer_queue: timer_queue::TimerQueue,
 }
 impl SyncExecutor {
     /// The global executor for the uC/OS-II RTOS.
@@ -471,6 +475,7 @@ impl SyncExecutor {
 
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
+            timer_queue: timer_queue::TimerQueue::new(),
         }
     }
     /// set the current to be highrdy
