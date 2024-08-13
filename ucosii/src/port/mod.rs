@@ -67,7 +67,6 @@ const TIMER:TimGp16 = stm32_metapac::TIM23;
 #[cfg(feature="time_driver_tim24")]
 const TIMER:TimGp16 = stm32_metapac::TIM24;
 
-
 pub mod os_cpu;
 /// the time driver
 pub mod time_driver;
