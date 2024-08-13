@@ -6,13 +6,13 @@ use super::duration::Duration;
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]
 /// An Instant in time, based on the MCU's clock ticks since startup.
 pub struct Instant {
-    ticks: usize,
+    ticks: u64,
 }
 impl Instant {
     /// The smallest (earliest) value that can be represented by the `Instant` type.
-    pub const MIN: Instant = Instant { ticks: usize::MIN };
+    pub const MIN: Instant = Instant { ticks: u64::MIN };
     /// The largest (latest) value that can be represented by the `Instant` type.
-    pub const MAX: Instant = Instant { ticks: usize::MAX };
+    pub const MAX: Instant = Instant { ticks: u64::MAX };
 
     /// Returns an Instant representing the current time.
     pub fn now() -> Instant {
@@ -27,7 +27,7 @@ impl Instant {
         self.ticks.checked_add(duration.ticks).map(|ticks| Instant { ticks })
     }
     /// Tick count since system boot.
-    pub const fn as_ticks(&self) -> usize {
+    pub const fn as_ticks(&self) -> u64 {
         self.ticks
     }
 }
