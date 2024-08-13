@@ -1,10 +1,12 @@
+#![allow(non_camel_case_types)]
+use stm32_metapac::timer::TimGp16;
+
 /*
 **************************************************************************************************************************************
 *                                                               type define
 *                                           this part needs to change according to the platform
 **************************************************************************************************************************************
 */
-#![allow(non_camel_case_types)]
 
 /// Unsigned  8 bit quantity
 pub type BOOLEAN = bool;
@@ -28,40 +30,42 @@ pub type FP64 = f64;
 pub type PTR = *mut ();
 /// the usize type used in array
 pub type USIZE = usize;
-
+/// the u64 type
+pub type INT64U = u64;
 /// Each stack entry is 32-bit wide
 pub type OS_STK = usize;
 /// Define size of CPU status register (PSR = 32 bits)
 pub type OS_CPU_SR = u32;
 /// the timer used as the time Driver
 #[cfg(feature="time_driver_tim1")]
-type T = peripherals::TIM1;
+const TIMER:TimGp16 = stm32_metapac::TIM1;
 #[cfg(feature="time_driver_tim2")]
-type T = peripherals::TIM2;
-// #[cfg(feature="time_driver_tim3")]
-// type T = peripherals::TIM3;
+const TIMER:TimGp32 = stm32_metapac::TIM2;
+#[cfg(feature="time_driver_tim3")]
+// by noah: in current project, we use Timer 3 as the time driver
+pub const TIMER:TimGp16 = stm32_metapac::TIM3;
 #[cfg(feature="time_driver_tim4")]
-type T = peripherals::TIM4;
+const TIMER:TimGp16 = stm32_metapac::TIM4;
 #[cfg(feature="time_driver_tim5")]
-type T = peripherals::TIM5;
+const TIMER:TimGp32 = stm32_metapac::TIM5;
 #[cfg(feature="time_driver_tim8")]
-type T = peripherals::TIM8;
+const TIMER:TimGp16 = stm32_metapac::TIM8;
 #[cfg(feature="time_driver_tim9")]
-type T = peripherals::TIM9;
+const TIMER:TimGp16 = stm32_metapac::TIM9;
 #[cfg(feature="time_driver_tim12")]
-type T = peripherals::TIM12;
+const TIMER:TimGp16 = stm32_metapac::TIM12;
 #[cfg(feature="time_driver_tim15")]
-type T = peripherals::TIM15;
+const TIMER:TimGp16 = stm32_metapac::TIM15;
 #[cfg(feature="time_driver_tim20")]
-type T = peripherals::TIM20;
+const TIMER:TimGp16 = stm32_metapac::TIM20;
 #[cfg(feature="time_driver_tim21")]
-type T = peripherals::TIM21;
+const TIMER:TimGp16 = stm32_metapac::TIM21;
 #[cfg(feature="time_driver_tim22")]
-type T = peripherals::TIM22;
+const TIMER:TimGp16 = stm32_metapac::TIM22;
 #[cfg(feature="time_driver_tim23")]
-type T = peripherals::TIM23;
+const TIMER:TimGp16 = stm32_metapac::TIM23;
 #[cfg(feature="time_driver_tim24")]
-type T = peripherals::TIM24;
+const TIMER:TimGp16 = stm32_metapac::TIM24;
 
 
 pub mod os_cpu;

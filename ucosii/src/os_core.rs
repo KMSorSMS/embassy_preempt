@@ -37,7 +37,7 @@ use core::sync::atomic::Ordering;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::cfg::OS_LOWEST_PRIO;
+use crate::{cfg::OS_LOWEST_PRIO, os_time::OSTimerInit};
 use crate::executor::GlobalSyncExecutor;
 use crate::heap::stack_allocator::init_stack_allocator;
 use crate::os_task::OSTaskCreate;
@@ -187,6 +187,8 @@ pub fn OSInit() {
     OS_InitTaskIdle(); /* Create the Idle Task                     */
     // by liam: we need to init the stack allocator
     init_stack_allocator();
+    // by noah：we need to init the Timer as the time driver
+    OSTimerInit();
 }
 
 /*
