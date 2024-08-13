@@ -13,4 +13,4 @@ pub const OS_MAX_TASKS: USIZE = 20;
 /// You can set it refer to the number of tasks in your application(OS_MAX_TASKS) and the number of system tasks(OS_N_SYS_TASKS).
 pub const OS_ARENA_SIZE: USIZE = 1024;
 /// frequency of the Timer. frequency of the Systick(run on Timer)
-pub const TICK_HZ: USIZE = 100_000;
+pub const TICK_HZ: INT64U = 100_000;
