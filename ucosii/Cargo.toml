@@ -64,7 +64,7 @@ codegen-units = 1
 debug = 2
 debug-assertions = true # <-
 incremental = false
-opt-level = 'z'         # <-
+opt-level = 3         # <-
 overflow-checks = true  # <-
 
 # cargo test
@@ -90,7 +90,7 @@ overflow-checks = false  # <-
 [profile.release]
 codegen-units = 1
 debug = 2  # 生成完整的调试信息
-opt-level = 0
+opt-level = 3  # 优化级别
 lto = true
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
