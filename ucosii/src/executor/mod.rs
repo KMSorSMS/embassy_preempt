@@ -17,12 +17,12 @@ use core::task::{Context, Poll};
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
 use state::State;
+use time_driver::{AlarmHandle, Driver, RTC_DRIVER};
 
 pub use self::waker::task_from_waker;
 use crate::arena::ARENA;
 use crate::cfg::*;
 use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, TASK_STACK_SIZE};
-use crate::os_time::time_driver::{AlarmHandle, Driver, RTC_DRIVER};
 // use spawner::SpawnToken;
 use crate::port::*;
 use crate::ucosii::*;

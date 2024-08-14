@@ -43,6 +43,7 @@ const TIMER: TimGp16 = stm32_metapac::TIM1;
 const TIMER: TimGp32 = stm32_metapac::TIM2;
 #[cfg(feature = "time_driver_tim3")]
 // by noah: in current project, we use Timer 3 as the time driver
+/// set the time driver to be Timer3
 pub const TIMER: TimGp16 = stm32_metapac::TIM3;
 #[cfg(feature = "time_driver_tim4")]
 const TIMER: TimGp16 = stm32_metapac::TIM4;
