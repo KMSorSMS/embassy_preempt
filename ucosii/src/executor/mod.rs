@@ -21,6 +21,7 @@ pub use self::waker::task_from_waker;
 use crate::arena::ARENA;
 use crate::cfg::*;
 use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, TASK_STACK_SIZE};
+use crate::os_time::time_driver::{Driver, RTC_DRIVER};
 // use spawner::SpawnToken;
 use crate::port::*;
 use crate::ucosii::*;
@@ -542,6 +543,9 @@ impl SyncExecutor {
                 // if the task has stack, it's a thread, we need to resume it not poll it
                 task.restore_context_from_stk();
             }
+            // update timer
+            let next_expire = self.timer_queue.update(task);
+            // RTC_DRIVER.set_alarm(next_expire);
             critical_section::with(|_| {
                 self.set_task_unready(task);
                 // set the task's stack to None

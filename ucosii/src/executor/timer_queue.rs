@@ -12,11 +12,12 @@ impl TimerQueue {
         }
     }
     /// Insert a task into the timer queue.(sorted by `expires_at`,the header is the nearest task)
-    pub(crate) unsafe fn update(&self, p: OS_TCB_REF) {
+    /// return the next expiration time.
+    pub(crate) unsafe fn update(&self, p: OS_TCB_REF) -> u64 {
         let head = self.head.get_unmut();
         let p_expires_at = &p.expires_at;
         if *p_expires_at.get_unmut() == u64::MAX {
-            return;
+            return u64::MAX;
         }
         // range from head to find one larger than p_expires_at and insert p.
         let mut cur = head;
@@ -38,6 +39,7 @@ impl TimerQueue {
         } else {
             self.head.set(Some(p));
         }
+        return *head.as_ref().unwrap().expires_at.get_unmut();
     }
     pub(crate) unsafe fn next_expiration(&self) -> u64 {
         let head = self.head.get_unmut();

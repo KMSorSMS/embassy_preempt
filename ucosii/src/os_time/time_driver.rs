@@ -343,7 +343,7 @@ impl Driver for RtcDriver {
 const ALARM_STATE_NEW: AlarmState = AlarmState::new();
 
 /// the global RTC driver
-static DRIVER: RtcDriver = RtcDriver {
+pub(crate) static RTC_DRIVER: RtcDriver = RtcDriver {
     period: AtomicU32::new(0),
     alarm_count: AtomicU8::new(0),
     alarms: Mutex::new([ALARM_STATE_NEW; ALARM_COUNT]),
