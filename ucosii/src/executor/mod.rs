@@ -2,8 +2,9 @@
 
 #[cfg_attr(feature = "cortex_m", path = "state_atomics_arm.rs")]
 pub mod state;
-pub mod waker;
+/// The executor for the uC/OS-II RTOS.
 pub mod timer_queue;
+pub mod waker;
 use alloc::string::String;
 use core::alloc::Layout;
 use core::future::Future;
@@ -21,7 +22,7 @@ pub use self::waker::task_from_waker;
 use crate::arena::ARENA;
 use crate::cfg::*;
 use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, TASK_STACK_SIZE};
-use crate::os_time::time_driver::{Driver, RTC_DRIVER};
+use crate::os_time::time_driver::{AlarmHandle, Driver, RTC_DRIVER};
 // use spawner::SpawnToken;
 use crate::port::*;
 use crate::ucosii::*;
@@ -459,10 +460,22 @@ pub(crate) struct SyncExecutor {
     #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
     OSRdyTbl: [u16; OS_RDY_TBL_SIZE],
     pub(crate) timer_queue: timer_queue::TimerQueue,
+    alarm: AlarmHandle,
 }
 impl SyncExecutor {
+    fn alarm_callback(ctx: *mut ()) {
+        let this: &Self = unsafe { &*(ctx as *const Self) };
+        // first to dequeue all the expired task, note that there must 
+        // have a task in the tiemr_queue because the alarm is triggered
+        unsafe { this.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend) };
+        // then we need to set a new alarm according to the next expiration time
+        let next_expire = unsafe { this.timer_queue.next_expiration() };
+        RTC_DRIVER.set_alarm(this.alarm, next_expire);
+        unsafe { this.interrupt_poll() };
+    }
     /// The global executor for the uC/OS-II RTOS.
     pub(crate) fn new(pender: Pender) -> Self {
+        let alarm = unsafe { RTC_DRIVER.allocate_alarm().unwrap() };
         Self {
             os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); (OS_LOWEST_PRIO + 1) as usize]),
 
@@ -477,6 +490,7 @@ impl SyncExecutor {
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
             timer_queue: timer_queue::TimerQueue::new(),
+            alarm,
         }
     }
     /// set the current to be highrdy
@@ -530,8 +544,10 @@ impl SyncExecutor {
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
     pub(crate) unsafe fn poll(&'static self) -> ! {
+        RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
         // build this as a loop
         loop {
+            // self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
             // in the executor's thead poll, the highrdy task must be polled
             let mut task = self.OSTCBHighRdy.get();
             self.OSPrioCur.set(task.OSTCBPrio);
@@ -545,7 +561,16 @@ impl SyncExecutor {
             }
             // update timer
             let next_expire = self.timer_queue.update(task);
-            // RTC_DRIVER.set_alarm(next_expire);
+            if critical_section::with(|_| {
+                if next_expire < *self.timer_queue.set_time.get_unmut() {
+                    self.timer_queue.set_time.set(next_expire);
+                    true
+                } else {
+                    false
+                }
+            }) {
+                RTC_DRIVER.set_alarm(self.alarm, next_expire);
+            }
             critical_section::with(|_| {
                 self.set_task_unready(task);
                 // set the task's stack to None
@@ -604,5 +629,13 @@ impl SyncExecutor {
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
         prio_tbl[prio as USIZE].ptr = None;
+    }
+}
+/// Wake a task by `TaskRef`.
+pub fn wake_task_no_pend(task: OS_TCB_REF) {
+    // We have just marked the task as scheduled, so enqueue it.
+    unsafe {
+        let executor = GlobalSyncExecutor.as_ref().unwrap();
+        executor.enqueue(task);
     }
 }

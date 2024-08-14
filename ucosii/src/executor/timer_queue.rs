@@ -3,12 +3,14 @@ use crate::util::SyncUnsafeCell;
 
 pub(crate) struct TimerQueue {
     head: SyncUnsafeCell<Option<OS_TCB_REF>>,
+    pub(crate) set_time: SyncUnsafeCell<u64>,
 }
 
 impl TimerQueue {
     pub const fn new() -> Self {
         Self {
             head: SyncUnsafeCell::new(None),
+            set_time: SyncUnsafeCell::new(u64::MAX),
         }
     }
     /// Insert a task into the timer queue.(sorted by `expires_at`,the header is the nearest task)
