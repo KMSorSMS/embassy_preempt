@@ -1,6 +1,9 @@
-use core::{future::Future, pin::Pin, task::{Context, Poll, Waker}};
+use core::future::Future;
+use core::pin::Pin;
+use core::task::{Context, Poll, Waker};
 
-use super::{duration::Duration, instant::Instant};
+use super::duration::Duration;
+use super::instant::Instant;
 
 #[allow(unused)]
 /// A future that completes at a specified [Instant](struct.Instant.html).
@@ -25,7 +28,7 @@ impl Future for Timer {
         if self.yielded_once && self.expires_at <= Instant::now() {
             Poll::Ready(())
         } else {
-            schedule_wake(self.expires_at.as_ticks(), cx.waker());           
+            schedule_wake(self.expires_at.as_ticks(), cx.waker());
             self.yielded_once = true;
             Poll::Pending
         }

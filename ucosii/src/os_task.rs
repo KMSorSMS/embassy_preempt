@@ -37,10 +37,10 @@ impl ReturnUnitOrNeverReturn for ! {}
 impl ReturnUnitOrNeverReturn for () {}
 /// Create a task in uC/OS-II kernel. This func is used by C
 // _ptos is not used in this func, because stack allocation is done by the stack allocator when scheduling
-pub fn OSTaskCreate<F,R>(task: F, p_arg: *mut (), _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
+pub fn OSTaskCreate<F, R>(task: F, p_arg: *mut (), _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
-    F: FnOnce(*mut ())-> R + 'static,
+    F: FnOnce(*mut ()) -> R + 'static,
     R: ReturnUnitOrNeverReturn,
 {
     // check the priority

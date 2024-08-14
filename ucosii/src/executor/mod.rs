@@ -465,7 +465,7 @@ pub(crate) struct SyncExecutor {
 impl SyncExecutor {
     fn alarm_callback(ctx: *mut ()) {
         let this: &Self = unsafe { &*(ctx as *const Self) };
-        // first to dequeue all the expired task, note that there must 
+        // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
         unsafe { this.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend) };
         // then we need to set a new alarm according to the next expiration time

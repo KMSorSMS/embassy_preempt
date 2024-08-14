@@ -32,7 +32,7 @@ impl<T> UPSafeCell<T> {
         *self.inner.borrow_mut() = value;
     }
     /// get the unmutable reference of inner data
-    pub fn get(&self) -> Ref<'_,T>{
+    pub fn get(&self) -> Ref<'_, T> {
         self.inner.borrow()
     }
     /// set and return the old value
