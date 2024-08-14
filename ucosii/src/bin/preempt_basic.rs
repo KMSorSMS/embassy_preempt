@@ -7,23 +7,15 @@ use defmt::info; // <- derive attribute
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::{OSTaskCreate, RustOSTaskCreate};
 use ucosii::os_time::timer::Timer;
+use ucosii::os_time::OSTimeDly;
 use ucosii::{self as _};
 
 const LONG_TIME: usize = 10;
 const MID_TIME: usize = 5;
 const SHORT_TIME: usize = 3;
 
-// fn hello() {
-//     defmt::info!("Hello, world!");
-// }
-
 #[cortex_m_rt::entry]
-fn main_test() -> ! {
-    loop {
-        test_basic_schedule();
-    }
-}
-fn test_basic_schedule() {
+fn test_basic_schedule() -> ! {
     // os初始化
     OSInit();
     // 创建两个任务
@@ -38,14 +30,14 @@ fn test_basic_schedule() {
 fn task1(_args: *mut ()) {
     // 任务1
     info!("---task1 begin---");
-    delay(LONG_TIME);
+    OSTimeDly(50_000);
     info!("---task1 end---");
     delay(SHORT_TIME);
 }
 fn task2(_args: *mut ()) {
     // 任务2
     info!("---task2 begin---");
-    delay(MID_TIME);
+    OSTimeDly(50_000);
     info!("---task2 end---");
     delay(SHORT_TIME);
 }
@@ -56,7 +48,6 @@ async fn task3(_args: *mut ()) {
         info!("---task3 begin---");
         Timer::after_ticks(LONG_TIME as u64).await;
         // delay(LONG_TIME);
-        Timer::after_millis(3000).await;
         info!("---task3 end---");
         delay(SHORT_TIME);
     }
