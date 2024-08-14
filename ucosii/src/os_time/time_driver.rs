@@ -33,7 +33,8 @@ struct AlarmState {
     callback: Cell<*const ()>,
     ctx: Cell<*mut ()>,
 }
-
+#[derive(Clone, Copy)]
+/// Handle to an alarm. 
 pub struct AlarmHandle {
     id: INT8U,
 }
@@ -72,7 +73,7 @@ pub trait Driver: Send + Sync + 'static {
     /// Sets the callback function to be called when the alarm triggers.
     /// The callback may be called from any context (interrupt or thread mode).
     /// by noah：this func will not be used in the current project
-    // fn set_alarm_callback(&self, alarm: AlarmHandle, callback: fn(*mut ()), ctx: *mut ());
+    fn set_alarm_callback(&self, alarm: AlarmHandle, callback: fn(*mut ()), ctx: *mut ());
 
     /// Sets an alarm at the given timestamp. When the current timestamp reaches the alarm
     /// timestamp, the provided callback function will be called.
@@ -277,14 +278,14 @@ impl Driver for RtcDriver {
         })
     }
 
-    // fn set_alarm_callback(&self, alarm: AlarmHandle, callback: fn(*mut ()), ctx: *mut ()) {
-    //     critical_section::with(|cs| {
-    //         let alarm = self.get_alarm(cs, alarm);
+    fn set_alarm_callback(&self, alarm: AlarmHandle, callback: fn(*mut ()), ctx: *mut ()) {
+        critical_section::with(|cs| {
+            let alarm = self.get_alarm(cs, alarm);
 
-    //         alarm.callback.set(callback as *const ());
-    //         alarm.ctx.set(ctx);
-    //     })
-    // }
+            alarm.callback.set(callback as *const ());
+            alarm.ctx.set(ctx);
+        })
+    }
 
     fn set_alarm(&self, alarm: AlarmHandle, timestamp: u64) -> bool {
         critical_section::with(|cs| {
@@ -362,7 +363,7 @@ pub(crate) static RTC_DRIVER: RtcDriver = RtcDriver {
 //     unsafe { TimGp16::from_ptr(TIMER::regs()) }
 // }
 
-// set the rcc of the Timer
+/// set the rcc of the Timer
 pub fn rcc_init(){
     RCC.cr().modify(|v| {
         // disable PLL
