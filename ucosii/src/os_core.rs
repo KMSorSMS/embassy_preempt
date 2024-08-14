@@ -37,10 +37,11 @@ use core::sync::atomic::Ordering;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::{cfg::OS_LOWEST_PRIO, os_time::OSTimerInit};
+use crate::cfg::OS_LOWEST_PRIO;
 use crate::executor::GlobalSyncExecutor;
 use crate::heap::stack_allocator::init_stack_allocator;
 use crate::os_task::OSTaskCreate;
+use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]

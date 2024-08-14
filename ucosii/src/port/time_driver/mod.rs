@@ -1,7 +1,7 @@
 use crate::executor::waker;
-
+#[no_mangle]
 /// Schedule the given waker to be woken at `at`.
-pub fn _embassy_time_schedule_wake(at: u64, waker: &core::task::Waker){
+pub fn _embassy_time_schedule_wake(at: u64, waker: &core::task::Waker) {
     let task = waker::task_from_waker(waker);
     let task = task.header();
     unsafe {

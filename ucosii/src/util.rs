@@ -38,12 +38,12 @@ pub struct SyncUnsafeCell<T> {
 
 unsafe impl<T: Sync> Sync for SyncUnsafeCell<T> {}
 
-impl <T: PartialEq> PartialEq for SyncUnsafeCell<T> {
+impl<T: PartialEq> PartialEq for SyncUnsafeCell<T> {
     fn eq(&self, other: &Self) -> bool {
         self.get_unmut() == other.get_unmut()
     }
 }
-impl <T: PartialOrd> PartialOrd for SyncUnsafeCell<T> {
+impl<T: PartialOrd> PartialOrd for SyncUnsafeCell<T> {
     fn partial_cmp(&self, other: &Self) -> Option<core::cmp::Ordering> {
         self.get_unmut().partial_cmp(other.get_unmut())
     }

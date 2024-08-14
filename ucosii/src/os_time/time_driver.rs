@@ -4,17 +4,35 @@
 *********************************************************************************************************
 */
 
-use core::{cell::Cell, mem, ptr, sync::atomic::{compiler_fence, AtomicU32, AtomicU8, Ordering}};
+use core::cell::Cell;
+use core::sync::atomic::{compiler_fence, AtomicU32, AtomicU8, Ordering};
+use core::{mem, ptr};
 
+use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
-use embassy_hal_internal::interrupt::InterruptExt;
-use stm32_metapac::{flash::vals::Latency, rcc::vals::*, timer::{regs, vals, TimGp16}, Interrupt, FLASH, RCC};
+use stm32_metapac::flash::vals::Latency;
+use stm32_metapac::rcc::vals::*;
+use stm32_metapac::timer::{regs, vals};
+use stm32_metapac::{Interrupt, FLASH, RCC};
 
-use crate::{cfg::{APB_HZ, TICK_HZ}, port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, TIMER, USIZE}};
+use crate::cfg::{APB_HZ, TICK_HZ};
+use crate::port::{BOOLEAN, INT16U, INT32U, INT64U, INT8U, TIMER, USIZE};
 
-#[cfg(any(feature="time_driver_tim9", feature="time_driver_tim12", feature="time_driver_tim15", feature="time_driver_tim21", feature="time_driver_tim22"))]
+#[cfg(any(
+    feature = "time_driver_tim9",
+    feature = "time_driver_tim12",
+    feature = "time_driver_tim15",
+    feature = "time_driver_tim21",
+    feature = "time_driver_tim22"
+))]
 const ALARM_COUNT: USIZE = 1;
-#[cfg(not(any(feature="time_driver_tim9", feature="time_driver_tim12", feature="time_driver_tim15", feature="time_driver_tim21", feature="time_driver_tim22")))]
+#[cfg(not(any(
+    feature = "time_driver_tim9",
+    feature = "time_driver_tim12",
+    feature = "time_driver_tim15",
+    feature = "time_driver_tim21",
+    feature = "time_driver_tim22"
+)))]
 const ALARM_COUNT: USIZE = 3;
 
 /*
@@ -22,9 +40,8 @@ const ALARM_COUNT: USIZE = 3;
 *                                           type definitions
 *********************************************************************************************************
 */
-const DISABLE:bool=false;
-const ENABLE:bool=true;
-
+const DISABLE: bool = false;
+const ENABLE: bool = true;
 
 struct AlarmState {
     timestamp: Cell<INT64U>,
@@ -34,7 +51,7 @@ struct AlarmState {
     ctx: Cell<*mut ()>,
 }
 #[derive(Clone, Copy)]
-/// Handle to an alarm. 
+/// Handle to an alarm.
 pub struct AlarmHandle {
     id: INT8U,
 }
@@ -127,7 +144,7 @@ impl AlarmHandle {
 }
 
 impl RtcDriver {
-    fn init(&'static self) {
+    pub(crate) fn init(&'static self) {
         // rcc config
         rcc_init();
         // enable the Timer Driver
@@ -169,10 +186,13 @@ impl RtcDriver {
 
         // by noah：the InterruptNumber trait is implemented by the stm32_metapac crate
         // so in embassy, the InterruptExt trait will be implemented for the interrupt in pac
-        #[cfg(feature="time_driver_tim3")]
-        Interrupt::TIM3.unpend();
-        #[cfg(feature="time_driver_tim3")]
-        unsafe { Interrupt::TIM3.enable() };
+        #[cfg(feature = "time_driver_tim3")]
+        NVIC::unpend(Interrupt::TIM3);
+        #[cfg(feature = "time_driver_tim3")]
+        unsafe {
+            compiler_fence(Ordering::SeqCst);
+            NVIC::unmask(Interrupt::TIM3);
+        }
         // <T as GeneralInstance1Channel>::CaptureCompareInterrupt::unpend();
         // unsafe { <T as GeneralInstance1Channel>::CaptureCompareInterrupt::enable() };
 
@@ -253,8 +273,6 @@ impl RtcDriver {
         f(alarm.ctx.get());
     }
 }
-
-
 
 impl Driver for RtcDriver {
     fn now(&self) -> u64 {
@@ -364,14 +382,14 @@ pub(crate) static RTC_DRIVER: RtcDriver = RtcDriver {
 // }
 
 /// set the rcc of the Timer
-pub fn rcc_init(){
+pub fn rcc_init() {
     RCC.cr().modify(|v| {
         // disable PLL
         v.set_pllon(DISABLE);
         // disable PLL2S
         v.set_plli2son(DISABLE);
     });
-    RCC.pllcfgr().modify(|v|{
+    RCC.pllcfgr().modify(|v| {
         // set PLLM=4
         v.set_pllm(Pllm::DIV4);
         // set PLLN=84
@@ -383,7 +401,7 @@ pub fn rcc_init(){
         // set the HSE as the PLL source
         v.set_pllsrc(Pllsrc::HSE);
     });
-    RCC.cfgr().modify(|v|{
+    RCC.cfgr().modify(|v| {
         // set the frequency division coefficient of AHB as 1
         v.set_hpre(Hpre::DIV1);
         // set the frequency division coefficient of APB1 as 2
@@ -391,7 +409,7 @@ pub fn rcc_init(){
         // set the frequency division coefficient of APB2 as 1
         v.set_ppre2(Ppre::DIV1);
     });
-    RCC.cr().modify(|v|{
+    RCC.cr().modify(|v| {
         // enable the HSE
         v.set_hseon(ENABLE);
         // enable the PLL
@@ -400,7 +418,7 @@ pub fn rcc_init(){
         v.set_plli2son(ENABLE);
     });
     // check the state of HSE, PLL, PLL2S
-    while !RCC.cr().read().hserdy() || !RCC.cr().read().pllrdy() || !RCC.cr().read().plli2srdy(){}
+    while !RCC.cr().read().hserdy() || !RCC.cr().read().pllrdy() || !RCC.cr().read().plli2srdy() {}
     // enable FLASH prefetch buffer
     FLASH.acr().modify(|v| v.set_prften(ENABLE));
     // set the wait state of FLASH as 2
@@ -411,11 +429,11 @@ pub fn rcc_init(){
     RCC.cr().modify(|v| v.set_hsion(DISABLE));
 }
 
-fn enable_Timer(){
-    #[cfg(feature="time_driver_tim3")]
+fn enable_Timer() {
+    #[cfg(feature = "time_driver_tim3")]
     // by noah: in current project, we use Timer 3 as the time driver
     RCC.apb1enr().modify(|v| v.set_tim3en(ENABLE));
-    #[cfg(not(feature="time_driver_tim3"))]
+    #[cfg(not(feature = "time_driver_tim3"))]
     panic!("the Timer is not surpport. You can add it in Func enable_Timer()");
 }
 
