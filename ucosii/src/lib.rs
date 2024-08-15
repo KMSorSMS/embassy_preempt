@@ -64,6 +64,8 @@ mod heap;
 
 mod sync;
 
+mod app;
+
 /// the mod of lang_items
 pub mod lang_items;
 mod util;
