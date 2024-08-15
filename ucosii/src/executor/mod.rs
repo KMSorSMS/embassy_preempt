@@ -14,11 +14,9 @@ use core::pin::Pin;
 use core::ptr::NonNull;
 use core::task::{Context, Poll};
 
-use defmt::info;
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
 use state::State;
-use stm32_metapac::flash;
 use time_driver::{AlarmHandle, Driver, RTC_DRIVER};
 
 pub use self::waker::task_from_waker;
