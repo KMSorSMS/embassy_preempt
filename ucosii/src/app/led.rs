@@ -4,7 +4,9 @@ use stm32_metapac::{self, gpio::vals, GPIOA, RCC};
 #[allow(dead_code)]
 pub fn LED_Init(){
     // enable the RCC
-    RCC.ahb1enr().modify(|w| w.gpioaen());
+    RCC.ahb1enr().modify(|v|{
+        v.set_gpioaen(true);
+    });
     // set GPIO 
     GPIOA.moder().modify(|v|{
         // set mode as output
@@ -27,7 +29,6 @@ pub fn LED_Init(){
         v.set_odr(5, vals::Odr::HIGH);
     });
 }
-
 
 /// turn on the LED
 #[allow(dead_code)]
