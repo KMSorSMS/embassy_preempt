@@ -95,7 +95,7 @@ Jdebug: build bin Jdownload JGDBServer
 JGDBServer:
 	@if ! pgrep JLinkGDBServer > /dev/null; then \
         echo "启动 JLinkGDBServer..."; \
-        JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > JLinkGDBLog.yml & \
+        JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > /dev/null & \
     else \
         echo "JLinkGDBServer 已经在运行。"; \
     fi
