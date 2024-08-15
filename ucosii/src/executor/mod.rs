@@ -444,11 +444,11 @@ pub(crate) struct SyncExecutor {
     // the prio tbl stores a relation between the prio and the task_ref
     os_prio_tbl: SyncUnsafeCell<[OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize]>,
     // indicate the current running task
-    pub OSPrioCur: SyncUnsafeCell<OS_PRIO>,
-    pub OSTCBCur: SyncUnsafeCell<OS_TCB_REF>,
+    pub(crate) OSPrioCur: SyncUnsafeCell<OS_PRIO>,
+    pub(crate) OSTCBCur: SyncUnsafeCell<OS_TCB_REF>,
     // highest priority task in the ready queue
-    pub OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
-    pub OSTCBHighRdy: SyncUnsafeCell<OS_TCB_REF>,
+    pub(crate) OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
+    pub(crate) OSTCBHighRdy: SyncUnsafeCell<OS_TCB_REF>,
     _pender: Pender,
     // by liam: add a bitmap to record the status of the task
     #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
@@ -597,7 +597,7 @@ impl SyncExecutor {
         self.OSPrioHighRdy.set(prio as OS_PRIO);
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio]);
     }
-    unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
+    pub(crate) unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
         // added by liam: we have to make this process in critical section
         // because the bitmap is shared by all the tasks
         critical_section::with(|_| {
