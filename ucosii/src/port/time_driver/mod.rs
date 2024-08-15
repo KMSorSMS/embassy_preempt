@@ -36,6 +36,7 @@ const ALARM_COUNT: USIZE = 1;
 const ALARM_COUNT: USIZE = 3;
 // define the Alarm Interrupt
 #[cfg(feature = "time_driver_tim3")]
+#[no_mangle]
 /// TIM3 interrupt handler
 pub extern "C" fn TIM3() {
     RTC_DRIVER.on_interrupt();
