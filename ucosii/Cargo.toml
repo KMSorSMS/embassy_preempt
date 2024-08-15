@@ -34,7 +34,7 @@ members = []
 
 [dependencies]
 cortex-m = { version = "0.7"}
-cortex-m-rt = "0.7"
+cortex-m-rt = {version = "0.7"} 
 critical-section = { version = "1.1",features=["restore-state-bool"]}
 defmt = {version = "0.3", optional = true}
 defmt-rtt = "0.4"
@@ -44,7 +44,8 @@ linked_list_allocator = "0.9.0"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
 panic-probe = { version = "0.3", features = ["print-defmt"] }
 cortex-m-semihosting = "0.5.0"
-stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645" }
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645",  features = ["metadata", "rt"] }
+
 
 
 [build-dependencies]
@@ -52,7 +53,7 @@ proc-macro2 = "1.0.36"
 quote = "1.0.15"
 
 #stm32-metapac = { version = "15", default-features = false, features = ["metadata"]}
-stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", default-features = false, features = ["metadata"] }
+# stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645",  features = ["metadata", "stm32f401re"] }
 
 
 [dev-dependencies]
@@ -64,7 +65,7 @@ codegen-units = 1
 debug = 2
 debug-assertions = true # <-
 incremental = false
-opt-level = 3         # <-
+opt-level = 0         # <-
 overflow-checks = true  # <-
 
 # cargo test
@@ -90,7 +91,7 @@ overflow-checks = false  # <-
 [profile.release]
 codegen-units = 1
 debug = 2  # 生成完整的调试信息
-opt-level = 1  # 优化级别
+opt-level = 0  # 优化级别
 lto = true
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
