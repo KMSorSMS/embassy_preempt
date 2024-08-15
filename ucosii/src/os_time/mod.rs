@@ -1,6 +1,7 @@
 use crate::executor::GlobalSyncExecutor;
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 use crate::port::INT32U;
+use crate::ucosii::{OSPrioHighRdy, OS_TASK_IDLE_PRIO};
 /// the mod of duration of uC/OS-II kernel
 pub mod duration;
 /// the mod of instant of uC/OS-II kernel
@@ -30,6 +31,7 @@ pub fn OSTimeDly(_ticks: INT32U) {
         }
     });
     // call the interrupt poll
+    critical_section::with(|_| unsafe { GlobalSyncExecutor.as_ref().unwrap().set_highrdy() });
     unsafe {
         GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
     }

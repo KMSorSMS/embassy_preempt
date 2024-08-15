@@ -131,3 +131,5 @@ liam_defmt:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(liam_FILE_ELF) "
 lib-run:
 	cargo test --lib
+liam_run:
+	cargo rb $(liam_TARGET)
