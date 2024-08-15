@@ -28,7 +28,10 @@ pub fn LED_Init(){
     });
 }
 
+<<<<<<< HEAD
 /// turn on the LED
+=======
+>>>>>>> 0753e266fef94b0b835c3c226c5df06655a03aa7
 #[allow(dead_code)]
 #[inline]
 pub fn LED_ON(){
@@ -37,7 +40,10 @@ pub fn LED_ON(){
     });
 }
 
+<<<<<<< HEAD
 /// turn off the LED
+=======
+>>>>>>> 0753e266fef94b0b835c3c226c5df06655a03aa7
 #[allow(dead_code)]
 #[inline]
 pub fn LED_OFF(){
