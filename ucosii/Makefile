@@ -90,12 +90,13 @@ Jdebug: build bin Jdownload JGDBServer
 	tmux new-session -d \
 	"nc localhost 19021 | defmt-print -e $(FILE_ELF) " && \
 	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
+	-ex 'dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables' \
 	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'source ./bp.gdb'" && \
 	tmux -2 attach-session -d
 JGDBServer:
 	@if ! pgrep JLinkGDBServer > /dev/null; then \
         echo "启动 JLinkGDBServer..."; \
-        JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > JLinkGDBLog.yml & \
+        JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > /dev/null & \
     else \
         echo "JLinkGDBServer 已经在运行。"; \
     fi

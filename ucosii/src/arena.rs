@@ -74,7 +74,7 @@ impl<const N: usize> Arena<N> {
         if align_offset + layout.size() > bytes_left {
             panic!("embassy-executor: task arena is full. You must increase the arena size, see the documentation for details: https://docs.embassy.dev/embassy-executor/");
         }
-        info!("size of the task storage is {}", layout.size());
+        // info!("size of the task storage is {}", layout.size());
         let res = unsafe { ptr.add(align_offset) };
         let ptr = unsafe { ptr.add(align_offset + layout.size()) };
 

@@ -572,6 +572,7 @@ impl SyncExecutor {
                 RTC_DRIVER.set_alarm(self.alarm, next_expire);
             }
             critical_section::with(|_| {
+                // by noah：maybe here?
                 self.set_task_unready(task);
                 // set the task's stack to None
                 // check: this seems no need to set it to None as it will always be None
