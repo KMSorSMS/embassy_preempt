@@ -1,5 +1,7 @@
 use core::ops::Add;
 
+use crate::port::time_driver::{Driver, RTC_DRIVER};
+
 use super::duration::Duration;
 #[allow(unused)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -18,7 +20,7 @@ impl Instant {
     pub fn now() -> Instant {
         Instant {
             // by noah: in stage one, we set the tick as zero
-            ticks: 0,
+            ticks: RTC_DRIVER.now(),
             // ticks: embassy_time_driver::now(),
         }
     }

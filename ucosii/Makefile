@@ -127,5 +127,7 @@ debug-lib: bin-lib
 	tmux -2 attach-session -d
 defmt-lib:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW_LIB) "
+liam_defmt:
+	zsh -c "nc localhost $(PORT) | defmt-print -e $(liam_FILE_ELF) "
 lib-run:
 	cargo test --lib
