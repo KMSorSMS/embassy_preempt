@@ -77,11 +77,7 @@ liam_debug: liam_build liam_bin
 	tmux new-session -d \
 	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(liam_FILE_BIN) 0x8000000' " && \
 	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(liam_FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
-<<<<<<< HEAD
-	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(liam_RTT_ADDR) 0x$(liam_RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
-=======
 	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(liam_RTT_ADDR) 0x$(liam_RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
->>>>>>> 5f783b493951c916a106e5a00d977e6c18fe8b4a
 	tmux -2 attach-session -d
 liam_download: liam_build liam_bin
 	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(liam_FILE_BIN) 0x8000000" -c "reset" -c "shutdown"

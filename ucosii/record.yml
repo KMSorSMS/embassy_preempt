@@ -1,9 +1,3 @@
 =============Start testing=============
-=============prio_test=============
-Cargo PID: 72737
-Cargo command terminated due to inactivity.
-
-
-
-=============prio_test done=============
-
+=============hardware_test=============
+Cargo PID: 47951
