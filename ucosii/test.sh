@@ -130,8 +130,9 @@ echo "=============Start testing=============" > record.yml
 
 # 定义一个数组，包含所有测试
 tests=(
-"prio_test"
+# "prio_test"
 # "ucosii_main"
+hardware_test
 )
 
 # 循环遍历数组，执行测试

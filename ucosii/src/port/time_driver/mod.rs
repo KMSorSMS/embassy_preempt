@@ -299,7 +299,7 @@ impl Driver for RtcDriver {
                 None
             }
         })
-    }
+    } 
 
     fn set_alarm_callback(&self, alarm: AlarmHandle, callback: fn(*mut ()), ctx: *mut ()) {
         critical_section::with(|cs| {
@@ -312,47 +312,51 @@ impl Driver for RtcDriver {
 
     fn set_alarm(&self, alarm: AlarmHandle, timestamp: u64) -> bool {
         critical_section::with(|cs| {
-            // let r = regs_gp16();
 
             let n = alarm.id() as usize;
             let alarm = self.get_alarm(cs, alarm);
-            alarm.timestamp.set(timestamp);
-
-            let t = self.now();
-            if timestamp <= t {
-                // If alarm timestamp has passed the alarm will not fire.
-                // Disarm the alarm and return `false` to indicate that.
-                TIMER.dier().modify(|w| w.set_ccie(n + 1, false));
-
-                alarm.timestamp.set(u64::MAX);
-
-                return false;
+            // by noah：for timestamp is INT64U, so I just copy it here
+            // when the timestamp is less than the alarm's timestamp, the alarm will be set.
+            // if the timestamp is large than the allarm's timestamp, the alarm will not be set.
+            // because the allarm's timestamp has been set in the last call of set_alarm
+            if timestamp<alarm.timestamp.get(){
+                alarm.timestamp.set(timestamp);
+                let t = self.now();
+                if timestamp <= t {
+                    // If alarm timestamp has passed the alarm will not fire.
+                    // Disarm the alarm and return `false` to indicate that.
+                    TIMER.dier().modify(|w| w.set_ccie(n + 1, false));
+    
+                    alarm.timestamp.set(u64::MAX);
+    
+                    return false;
+                }
+    
+                // Write the CCR value regardless of whether we're going to enable it now or not.
+                // This way, when we enable it later, the right value is already set.
+                TIMER.ccr(n + 1).write(|w| w.set_ccr(timestamp as u16));
+    
+                // Enable it if it'll happen soon. Otherwise, `next_period` will enable it.
+                let diff = timestamp - t;
+                TIMER.dier().modify(|w| w.set_ccie(n + 1, diff < 0xc000));
+    
+                // Reevaluate if the alarm timestamp is still in the future
+                let t = self.now();
+                if timestamp <= t {
+                    // If alarm timestamp has passed since we set it, we have a race condition and
+                    // the alarm may or may not have fired.
+                    // Disarm the alarm and return `false` to indicate that.
+                    // It is the caller's responsibility to handle this ambiguity.
+                    TIMER.dier().modify(|w| w.set_ccie(n + 1, false));
+    
+                    alarm.timestamp.set(u64::MAX);
+    
+                    return false;
+                }
             }
-
-            // Write the CCR value regardless of whether we're going to enable it now or not.
-            // This way, when we enable it later, the right value is already set.
-            TIMER.ccr(n + 1).write(|w| w.set_ccr(timestamp as u16));
-
-            // Enable it if it'll happen soon. Otherwise, `next_period` will enable it.
-            let diff = timestamp - t;
-            TIMER.dier().modify(|w| w.set_ccie(n + 1, diff < 0xc000));
-
-            // Reevaluate if the alarm timestamp is still in the future
-            let t = self.now();
-            if timestamp <= t {
-                // If alarm timestamp has passed since we set it, we have a race condition and
-                // the alarm may or may not have fired.
-                // Disarm the alarm and return `false` to indicate that.
-                // It is the caller's responsibility to handle this ambiguity.
-                TIMER.dier().modify(|w| w.set_ccie(n + 1, false));
-
-                alarm.timestamp.set(u64::MAX);
-
-                return false;
-            }
-
             // We're confident the alarm will ring in the future.
-            true
+            // if timestamp > alarm.timestamp, this func will not set the alarm and will return directly
+            return true;
         })
     }
 }
