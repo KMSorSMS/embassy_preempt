@@ -4,6 +4,7 @@ use core::arch::asm;
 use core::ptr::NonNull;
 
 use cortex_m_rt::exception;
+use defmt::info;
 
 use super::OS_STK;
 use crate::executor::GlobalSyncExecutor;
@@ -23,12 +24,12 @@ pub fn OSInitHookBegin() {
 const NVIC_INT_CTRL: u32 = 0xE000ED04;
 const NVIC_PENDSVSET: u32 = 0x10000000;
 #[no_mangle]
+#[inline]
 /// the function to start the first task
 pub extern "Rust" fn restore_thread_task() {
     unsafe {
         asm!(
             "STR     R1, [R0]",
-            "BX      LR",
             in("r0") NVIC_INT_CTRL,
             in("r1") NVIC_PENDSVSET,
         )
@@ -38,6 +39,7 @@ pub extern "Rust" fn restore_thread_task() {
 // the pendsv handler used to switch the task
 #[exception]
 fn PendSV() {
+    info!("entering pendsv");
     // first close the interrupt
     unsafe {
         asm!(

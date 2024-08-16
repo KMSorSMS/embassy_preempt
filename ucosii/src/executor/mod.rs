@@ -471,7 +471,8 @@ impl SyncExecutor {
         // then we need to set a new alarm according to the next expiration time
         let next_expire = unsafe { this.timer_queue.next_expiration() };
         RTC_DRIVER.set_alarm(this.alarm, next_expire);
-        unsafe { this.interrupt_poll() };
+        // call Interrupt Context Switch
+        unsafe { this.IntCtxSW() };
     }
     /// The global executor for the uC/OS-II RTOS.
     pub(crate) fn new(pender: Pender) -> Self {
@@ -498,6 +499,11 @@ impl SyncExecutor {
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
         self.OSTCBCur.set(self.OSTCBHighRdy.get());
     }
+    // /// set the current task to be idle task
+    // pub(crate) unsafe fn set_cur_idle(&self) {
+    //     self.OSPrioCur.set(OS_TASK_IDLE_PRIO);
+    //     self.OSTCBCur.set(self.os_prio_tbl.get_unmut()[OS_TASK_IDLE_PRIO as usize]);
+    // }
     /// Enqueue a task in the task queue
     #[inline(always)]
     unsafe fn enqueue(&self, task: OS_TCB_REF) {
@@ -513,6 +519,19 @@ impl SyncExecutor {
         tmp[prio] = task;
     }
 
+    pub(crate) unsafe fn IntCtxSW(&'static self) {
+        if critical_section::with(|_| unsafe {
+            self.set_highrdy();
+            if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
+                false
+            } else {
+                true
+            }
+        }) {
+            unsafe { self.interrupt_poll() }
+        }
+    }
+
     /// this function must be called in the interrupt context, and it will trigger pendsv to switch the task
     /// when this function return, the caller interrupt will also return and the pendsv will run.
     pub(crate) unsafe fn interrupt_poll(&'static self) {
@@ -521,12 +540,19 @@ impl SyncExecutor {
             fn restore_thread_task();
         }
         // find the highest priority task in the ready queue
-        critical_section::with(|_| self.set_highrdy());
+        /*
+        fix: the find of highest prio should be done outer of the interrupt_poll
+        */
+        // critical_section::with(|_| self.set_highrdy());
         // judge if the highest priority task is the current running task(which has been preemped by the interrupt)
         // prio's number is small indicates the priority is high
-        if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
-            return;
-        }
+        /*
+        fix: the need of switching task should judged outer of interrupt_poll
+        */
+        // if self.OSPrioHighRdy.get() >= self.OSPrioCur.get(){
+        //     info!("interrupt poll no need to switch task");
+        //     return;
+        // }
         let mut task = self.OSTCBHighRdy.get();
         // then we need to restore the highest priority task
         if task.OSTCBStkPtr.is_none() {

@@ -44,7 +44,7 @@ where
     R: ReturnUnitOrNeverReturn,
 {
     // check the priority
-    if prio >= OS_LOWEST_PRIO as u8 {
+    if prio > OS_LOWEST_PRIO as u8 {
         return OS_ERR_STATE::OS_ERR_PRIO_INVALID;
     }
 
@@ -104,9 +104,9 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
         // check whether the task is created after the OS has started
         if OSRunning.load(Acquire) {
             // schedule the task, not using poll, we have to make a preemptive schedule
-            // unsafe{
-            //     GlobalSyncExecutor.get_unmut().as_ref().unwrap().poll();
-            // }
+            unsafe{
+                GlobalSyncExecutor.as_ref().unwrap().IntCtxSW();
+            }
         }
     } else {
         critical_section::with(|_cs| {

@@ -30,6 +30,7 @@ pub fn OSTimeDly(_ticks: INT32U) {
         }
     });
     // call the interrupt poll
+    critical_section::with(|_| unsafe { GlobalSyncExecutor.as_ref().unwrap().set_highrdy() });
     unsafe {
         GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
     }
