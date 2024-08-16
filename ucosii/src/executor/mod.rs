@@ -470,6 +470,8 @@ impl SyncExecutor {
         unsafe { this.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend) };
         // then we need to set a new alarm according to the next expiration time
         let next_expire = unsafe { this.timer_queue.next_expiration() };
+        // by noah：we also need to updater the set_time of the timer_queue
+        unsafe{this.timer_queue.set_time.set(next_expire);}
         RTC_DRIVER.set_alarm(this.alarm, next_expire);
         // call Interrupt Context Switch
         unsafe { this.IntCtxSW() };
@@ -517,6 +519,7 @@ impl SyncExecutor {
         // set the task in the right place of os_prio_tbl
         let tmp = self.os_prio_tbl.get_mut();
         tmp[prio] = task;
+        
     }
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
@@ -585,26 +588,43 @@ impl SyncExecutor {
                 // if the task has stack, it's a thread, we need to resume it not poll it
                 task.restore_context_from_stk();
             }
+            // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
+            critical_section::with(|_| {
+                self.set_task_unready(task);
+                // set the task's stack to None 
+                // check: this seems no need to set it to None as it will always be None
+                task.OSTCBStkPtr = None;
+            });
             // update timer
-            let next_expire = self.timer_queue.update(task);
+            let mut next_expire = self.timer_queue.update(task);
             if critical_section::with(|_| {
                 if next_expire < *self.timer_queue.set_time.get_unmut() {
                     self.timer_queue.set_time.set(next_expire);
                     true
                 } else {
+                    // if the next_expire is not less than the set_time, it means the expire dose not arrive, or the task
+                    // dose not expire a timestamp so we should set the task unready
                     false
                 }
             }) {
-                RTC_DRIVER.set_alarm(self.alarm, next_expire);
+                // by noah：if the set alarm return false, it means the expire arrived.
+                // So we can not set the **task which is waiting for the next_expire** as unready
+                // The **task which is waiting for the next_expire** must be current task
+                // we must do this until we set the alarm successfully or there is no alarm required
+                while !RTC_DRIVER.set_alarm(self.alarm, next_expire){
+                    // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
+                    // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
+                    // (just like the operation in alarm_callback)
+                    self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
+                    // then we need to set a new alarm according to the next expiration time
+                    next_expire = unsafe { self.timer_queue.next_expiration() };
+                    // by noah：we also need to updater the set_time of the timer_queue
+                    unsafe{self.timer_queue.set_time.set(next_expire);}
+                }
             }
-            critical_section::with(|_| {
-                // by noah：maybe here?
-                self.set_task_unready(task);
-                // set the task's stack to None
-                // check: this seems no need to set it to None as it will always be None
-                task.OSTCBStkPtr = None;
-            });
+            // by noah：maybe we can set the task unready, and call dequeue when set_alarm return false
             // find the highest priority task in the ready queue
+            // adapt the method above
             critical_section::with(|_| self.set_highrdy());
         }
     }
