@@ -23,11 +23,11 @@ async fn task1(_args: *mut ()) {
         LED_ON();
         info!("led on");
         // delay 5s
-        Timer::after_millis(100).await;
+        Timer::after_micros(1).await;
         // led off
         LED_OFF();
         info!("led off");
         // delay 5s
-        Timer::after_millis(100).await;
+        Timer::after_micros(1).await;
     }
 }

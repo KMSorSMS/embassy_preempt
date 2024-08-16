@@ -61,6 +61,9 @@ impl TimerQueue {
             if *cur_expires_at.get_unmut() > now {
                 break;
             }
+            on_task(*cur_ref);
+            // by noah: clear the expire time
+            cur_ref.expires_at.set(u64::MAX);
             let next = cur_ref.OSTimerNext.get_unmut();
             if let Some(next_ref) = next {
                 next_ref.OSTimerPrev.set(*cur_ref.OSTimerPrev.get_unmut());
@@ -70,9 +73,6 @@ impl TimerQueue {
             } else {
                 self.head.set(*next);
             }
-            on_task(*cur_ref);
-            // by noah: clear the expire time
-            cur_ref.expires_at.set(u64::MAX);
             cur = next;
         }
     }

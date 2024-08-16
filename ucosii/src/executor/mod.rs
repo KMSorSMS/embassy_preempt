@@ -6,6 +6,7 @@ pub mod state;
 pub mod timer_queue;
 pub mod waker;
 use alloc::string::String;
+use defmt::info;
 use core::alloc::Layout;
 use core::future::Future;
 use core::mem;
@@ -612,6 +613,7 @@ impl SyncExecutor {
                 // The **task which is waiting for the next_expire** must be current task
                 // we must do this until we set the alarm successfully or there is no alarm required
                 while !RTC_DRIVER.set_alarm(self.alarm, next_expire){
+                    info!("set_alarm return false");
                     // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
                     // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
                     // (just like the operation in alarm_callback)
