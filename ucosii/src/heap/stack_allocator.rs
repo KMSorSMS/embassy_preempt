@@ -36,7 +36,7 @@ pub fn init_stack_allocator() {
     // then we init the program stack
     let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 8).unwrap();
     let stk = alloc_stack(layout);
-    let stk_prt = stk.STK_REF.as_ptr() as *mut u8;
+    let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
     PROGRAM_STACK.set(stk);
     // then we change the sp to the top of the program stack
     // this depending on the arch so we need extern and implement in the port
@@ -44,7 +44,7 @@ pub fn init_stack_allocator() {
         fn set_program_sp(sp: *mut u8);
     }
     unsafe {
-        set_program_sp(stk_prt);
+        set_program_sp(stk_ptr);
     }
     // we also need to allocate a stack for interrupt
     let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 8).unwrap();

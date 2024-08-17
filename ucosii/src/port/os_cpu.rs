@@ -39,17 +39,19 @@ pub extern "Rust" fn restore_thread_task() {
 // the pendsv handler used to switch the task
 #[exception]
 fn PendSV() {
-    info!("entering pendsv");
     // first close the interrupt
     unsafe {
         asm!(
             "CPSID I",
             "MRS     R0, PSP",
             "STMFD   R0!, {{R4-R11, R14}}",
+            // fix: we need to write back to the PSP
+            "MSR     PSP, R0",
             // "CPSIE   I",
             options(nostack, preserves_flags)
         );
     }
+    info!("entering pendsv");
     // then switch the task
     let stk_ptr: crate::heap::stack_allocator::OS_STK_REF = GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
