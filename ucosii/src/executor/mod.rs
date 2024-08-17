@@ -524,11 +524,14 @@ impl SyncExecutor {
     }
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
+        info!("call the IntCtxSW");
         if critical_section::with(|_| unsafe {
             self.set_highrdy();
             if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
+                info!("no need to switch task");
                 false
             } else {
+                info!("need to switch task");
                 true
             }
         }) {
@@ -543,20 +546,8 @@ impl SyncExecutor {
             fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
             fn restore_thread_task();
         }
-        // find the highest priority task in the ready queue
-        /*
-        fix: the find of highest prio should be done outer of the interrupt_poll
-        */
-        // critical_section::with(|_| self.set_highrdy());
-        // judge if the highest priority task is the current running task(which has been preemped by the interrupt)
-        // prio's number is small indicates the priority is high
-        /*
-        fix: the need of switching task should judged outer of interrupt_poll
-        */
-        // if self.OSPrioHighRdy.get() >= self.OSPrioCur.get(){
-        //     info!("interrupt poll no need to switch task");
-        //     return;
-        // }
+        
+        info!("interrupt_poll");
         let mut task = self.OSTCBHighRdy.get();
         // then we need to restore the highest priority task
         if task.OSTCBStkPtr.is_none() {

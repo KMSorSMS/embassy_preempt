@@ -55,10 +55,7 @@ fn PendSV() {
     // the set will drop PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
     let mut old_stk = PROGRAM_STACK.swap(stk_ptr.clone());
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
-        // set the current task to be the highrdy
-        unsafe {
-            GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
-        }
+        info!("need to save the context");
         // we need to give the current task the old_stk to store the context
         // first we will store the remaining context to the old_stk
         let old_stk_ptr: *mut usize;
@@ -72,11 +69,16 @@ fn PendSV() {
         // then as we have stored the context, we need to update the old_stk's top
         old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OS_STK).unwrap();
         GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk);
+        // set the current task to be the highrdy
+        unsafe {
+            GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
+        }
     } else {
         // just realloc the stack, we use drop
         drop(old_stk);
     }
     let stk_ptr = stk_ptr.STK_REF.as_ptr();
+    info!("trying to restore, the new stack pointer is {:?}", stk_ptr);
     unsafe {
         asm!(
             // "CPSID I",
