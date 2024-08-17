@@ -312,13 +312,15 @@ impl Driver for RtcDriver {
     }
 
     fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> bool {
+        let n = alarm.id() as usize;
         // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm
         if timestamp == INT64U::MAX {
-            // return true to indicate that there is no need to set the alarm, poll can execute directly
+            // return true to indicate that there is no need to set the alarm, poll can execute directly\
+            // by noah: we can disable the interrupt now
+            TIMER.dier().modify(|w| w.set_ccie(n + 1, false));
             return true;
         }
         critical_section::with(|cs| {
-            let n = alarm.id() as usize;
             let alarm = self.get_alarm(cs, alarm);
             // by noah：for timestamp is INT64U, so I just copy it here
             // when the timestamp is less than the alarm's timestamp, the alarm will be set.
