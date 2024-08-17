@@ -53,6 +53,9 @@ end
 define ash
   dashboard assembly -style height $arg0
 end
+define ssh
+  dashboard source -style height $arg0
+end
 
 define sbp
   save breakpoints bp.gdb

@@ -461,7 +461,7 @@ pub(crate) struct SyncExecutor {
     #[cfg(feature = "OS_PRIO_LESS_THAN_256")]
     OSRdyTbl: [u16; OS_RDY_TBL_SIZE],
     pub(crate) timer_queue: timer_queue::TimerQueue,
-    alarm: AlarmHandle,
+    pub(crate) alarm: AlarmHandle,
 }
 impl SyncExecutor {
     fn alarm_callback(ctx: *mut ()) {

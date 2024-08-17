@@ -5,6 +5,7 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
+use defmt::info;
 use core::ptr::NonNull;
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
@@ -35,7 +36,7 @@ pub fn init_stack_allocator() {
     // then we init the program stack
     let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 8).unwrap();
     let stk = alloc_stack(layout);
-    let stk_prt = stk.STK_REF.as_ptr() as *mut u8;
+    let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
     PROGRAM_STACK.set(stk);
     // then we change the sp to the top of the program stack
     // this depending on the arch so we need extern and implement in the port
@@ -43,7 +44,7 @@ pub fn init_stack_allocator() {
         fn set_program_sp(sp: *mut u8);
     }
     unsafe {
-        set_program_sp(stk_prt);
+        set_program_sp(stk_ptr);
     }
     // we also need to allocate a stack for interrupt
     let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 8).unwrap();
@@ -104,6 +105,7 @@ impl Default for OS_STK_REF {
 /// we impl drop for OS_STK_REF to dealloc the stack(try to be RAII)
 impl Drop for OS_STK_REF {
     fn drop(&mut self) {
+        info!("drop stk has been called,the ptr is :{}", self.HEAP_REF.as_ptr() as usize);
         if self.STK_REF == NonNull::dangling() || self.HEAP_REF == NonNull::dangling() {
             return;
         }
