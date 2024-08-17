@@ -315,6 +315,13 @@ impl Driver for RtcDriver {
         // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm
         if timestamp == INT64U::MAX {
             // return true to indicate that there is no need to set the alarm, poll can execute directly
+            // before return, unset the ccie bit
+            critical_section::with(|cs| {
+                let n = alarm.id() as usize;
+                let alarm = self.get_alarm(cs, alarm);
+                alarm.timestamp.set(u64::MAX);
+                TIMER.dier().modify(|w| w.set_ccie(n + 1, false));
+            });
             return true;
         }
         critical_section::with(|cs| {
