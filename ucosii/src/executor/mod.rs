@@ -172,9 +172,9 @@ impl OS_TCB {
         // revoke the stk
         unsafe { restore_thread_task() };
     }
-    /// get the stk ptr of tcb, make sure it exists
-    pub fn get_stk(&self) -> &OS_STK_REF {
-        self.OSTCBStkPtr.as_ref().unwrap()
+    /// get the stk ptr of tcb, and set the tcb's stk ptr to None
+    pub fn take_stk(&mut self) -> OS_STK_REF {
+        self.OSTCBStkPtr.take().unwrap()
     }
     /// set the stk ptr of tcb
     pub fn set_stk(&mut self, stk: OS_STK_REF) {
@@ -574,10 +574,13 @@ impl SyncExecutor {
             self.OSPrioCur.set(task.OSTCBPrio);
             self.OSTCBCur.set(task);
             // execute the task depending on if it has stack
+            info!("in the poll task loop");
             if task.OSTCBStkPtr.is_none() {
+                info!("poll the task");
                 task.OS_POLL_FN.get().unwrap_unchecked()(task);
             } else {
                 // if the task has stack, it's a thread, we need to resume it not poll it
+                info!("resume the task");
                 task.restore_context_from_stk();
             }
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations

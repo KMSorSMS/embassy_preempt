@@ -51,9 +51,10 @@ fn PendSV() {
         );
     }
     // then switch the task
-    let stk_ptr = GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_unmut().get_stk();
-    // the set will drop PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
-    let mut old_stk = PROGRAM_STACK.swap(stk_ptr.clone());
+    let stk_ptr: crate::heap::stack_allocator::OS_STK_REF = GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
+    let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
+    // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
+    let mut old_stk = PROGRAM_STACK.swap(stk_ptr);
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
         info!("need to save the context");
         // we need to give the current task the old_stk to store the context
@@ -77,8 +78,7 @@ fn PendSV() {
         // just realloc the stack, we use drop
         drop(old_stk);
     }
-    let stk_ptr = stk_ptr.STK_REF.as_ptr();
-    info!("trying to restore, the new stack pointer is {:?}", stk_ptr);
+    info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
     unsafe {
         asm!(
             // "CPSID I",
@@ -86,7 +86,7 @@ fn PendSV() {
             "MSR     PSP, R0",
             "CPSIE   I",
             "BX      LR",
-            in("r0") stk_ptr,
+            in("r0") program_stk_ptr,
             options(nostack, preserves_flags),
         )
     }
@@ -143,7 +143,10 @@ const CONTEXT_STACK_SIZE: usize = 16;
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
 pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> {
-    let executor_function_ptr: fn() = || unsafe { GlobalSyncExecutor.as_ref().unwrap().poll() };
+    let executor_function_ptr: fn() = || unsafe {
+        info!("entering the executor function");
+        GlobalSyncExecutor.as_ref().unwrap().poll();
+    };
     let executor_function_ptr = executor_function_ptr as *const () as usize;
     let ptos = stk_ref.as_ptr() as *mut usize;
     let ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
