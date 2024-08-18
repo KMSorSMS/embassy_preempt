@@ -32,7 +32,7 @@ fn task1(_args: *mut ()) {
     // loop {
         // 任务1
         info!("---task1 begin---");
-        // OSTimeDly(500_000);
+        OSTimeDly(500_000);
         info!("---task1 end---");
         delay(SHORT_TIME);
     // }
