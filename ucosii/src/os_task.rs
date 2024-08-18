@@ -55,6 +55,7 @@ where
     if !_ptos.is_null() {
         let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 8).unwrap();
         let heap_ptr = unsafe { (_ptos as *mut u8).offset(-(DEFAULT_REVOKE_STACK_SIZE as isize)) };
+        info!("Task Create");
         let mut stk = stk_from_ptr(heap_ptr as *mut u8, layout);
         dealloc_stack(&mut stk);
     }
@@ -73,6 +74,7 @@ where
     if !_ptos.is_null() {
         let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 8).unwrap();
         let heap_ptr = unsafe { (_ptos as *mut u8).offset(-(DEFAULT_REVOKE_STACK_SIZE as isize)) };
+        info!("Rust Create");
         let mut stk = stk_from_ptr(heap_ptr as *mut u8, layout);
         dealloc_stack(&mut stk);
     }

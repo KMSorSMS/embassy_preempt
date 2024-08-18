@@ -50,10 +50,14 @@ pub fn init_stack_allocator() {
     let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 8).unwrap();
     let stk = alloc_stack(layout);
     INTERRUPT_STACK.set(stk);
+    info!("the end of the init_stack_allocator");
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
-    unsafe { stk_from_ptr(STACK_ALLOCATOR.alloc(layout), layout) }
+    info!("alloc_stack");
+    let heap_ptr: *mut u8 ;
+    unsafe{heap_ptr = STACK_ALLOCATOR.alloc(layout);}
+    stk_from_ptr(heap_ptr, layout)
 }
 /// dealloc a stack
 pub fn dealloc_stack(stk: &mut OS_STK_REF) {

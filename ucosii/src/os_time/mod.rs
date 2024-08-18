@@ -15,11 +15,12 @@ pub fn OSTimerInit() {
     RTC_DRIVER.init();
 }
 
-/// we have to make this delay acting like preemptive delay
+/// we have to make this delay acting like preemptive delay（like soft interrupt）
 pub fn OSTimeDly(_ticks: INT32U) {
     if critical_section::with(|_| {
         let cur_task = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
         let ticks = RTC_DRIVER.now() + _ticks as u64;
+        
         if RTC_DRIVER.set_alarm(GlobalSyncExecutor.as_ref().unwrap().alarm, ticks) {
             unsafe {
                 // first we set the task's expire time

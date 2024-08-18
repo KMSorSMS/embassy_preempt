@@ -46,8 +46,6 @@ panic-probe = { version = "0.3", features = ["print-defmt"] }
 cortex-m-semihosting = "0.5.0"
 stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645",  features = ["metadata", "rt"] }
 
-
-
 [build-dependencies]
 proc-macro2 = "1.0.36"
 quote = "1.0.15"
@@ -65,7 +63,7 @@ codegen-units = 1
 debug = 2
 debug-assertions = true # <-
 incremental = false
-opt-level = 3         # <-
+opt-level = 0         # <-
 overflow-checks = true  # <-
 
 # cargo test
@@ -91,7 +89,7 @@ overflow-checks = false  # <-
 [profile.release]
 codegen-units = 1
 debug = 2  # 生成完整的调试信息
-opt-level = 3  # 优化级别
+opt-level = 0  # 优化级别
 lto = true
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }

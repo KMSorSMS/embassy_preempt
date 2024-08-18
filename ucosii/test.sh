@@ -132,7 +132,8 @@ echo "=============Start testing=============" > record.yml
 tests=(
 # "prio_test"
 # "ucosii_main"
-hardware_test
+# hardware_test
+preempt_basic
 )
 
 # 循环遍历数组，执行测试

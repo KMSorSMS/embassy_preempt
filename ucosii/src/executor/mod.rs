@@ -180,6 +180,10 @@ impl OS_TCB {
     pub fn set_stk(&mut self, stk: OS_STK_REF) {
         self.OSTCBStkPtr = Some(stk);
     }
+    /// by noah: *TEST*, judge whether the task stk is none
+    pub fn is_stk_none(&self) -> bool {
+        self.OSTCBStkPtr.is_none()
+    }
 }
 
 impl OS_TCB_EXT {
@@ -499,8 +503,16 @@ impl SyncExecutor {
     }
     /// set the current to be highrdy
     pub(crate) unsafe fn set_cur_highrdy(&self) {
+        // by noah: get the old task to test
+        let old_task = self.OSTCBCur.get();
+        if old_task.is_stk_none(){
+            info!("the old task stk is none");
+        }
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
         self.OSTCBCur.set(self.OSTCBHighRdy.get());
+        // if old_task.is_stk_none(){
+        //     info!("the old task stk is replaced!!!");
+        // }
     }
     // /// set the current task to be idle task
     // pub(crate) unsafe fn set_cur_idle(&self) {
@@ -551,16 +563,21 @@ impl SyncExecutor {
         let mut task = self.OSTCBHighRdy.get();
         // then we need to restore the highest priority task
         if task.OSTCBStkPtr.is_none() {
+            info!("the OSTCBStkPtr is null");
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 8).unwrap();
             let mut stk = alloc_stack(layout);
+            info!("exit the alloc_stack");
             // then we need to mock the stack for the task(the stk will change during the mock)
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
             task.OSTCBStkPtr = Some(stk);
         }
         // restore the task from stk
-        unsafe { restore_thread_task() };
+        unsafe {
+            info!("restore the task/thread");
+            restore_thread_task()
+        };
     }
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap

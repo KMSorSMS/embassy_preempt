@@ -7,7 +7,7 @@ use cortex_m_rt::exception;
 use defmt::info;
 
 use super::OS_STK;
-use crate::executor::GlobalSyncExecutor;
+use crate::executor::{GlobalSyncExecutor, OS_TCB};
 use crate::heap::stack_allocator::PROGRAM_STACK;
 
 // use crate::ucosii::OSIdleCtr;
@@ -44,6 +44,7 @@ fn PendSV() {
         asm!(
             "CPSID I",
             "MRS     R0, PSP",
+            // save the context
             "STMFD   R0!, {{R4-R11, R14}}",
             // fix: we need to write back to the PSP
             "MSR     PSP, R0",
@@ -57,6 +58,8 @@ fn PendSV() {
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
     // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
     let mut old_stk = PROGRAM_STACK.swap(stk_ptr);
+    // by noah: *TEST*
+    let TCB: &OS_TCB;
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
         info!("need to save the context");
         // we need to give the current task the old_stk to store the context
@@ -71,7 +74,16 @@ fn PendSV() {
         }
         // then as we have stored the context, we need to update the old_stk's top
         old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OS_STK).unwrap();
-        GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk);
+        info!("in pendsv, we set the stack pointer to {:?}", old_stk_ptr);
+        // GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk)
+        let task_cur = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
+        task_cur.set_stk(old_stk);
+        // get the TCB
+        unsafe{TCB = task_cur.ptr.unwrap().as_ref();}
+        // by noah: judge whether the task stk is none
+        if task_cur.is_stk_none() {
+            info!("the task stk is none");
+        }
         // set the current task to be the highrdy
         unsafe {
             GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
@@ -92,6 +104,7 @@ fn PendSV() {
             options(nostack, preserves_flags),
         )
     }
+    info!("exit PedndSV");
 }
 
 #[no_mangle]
