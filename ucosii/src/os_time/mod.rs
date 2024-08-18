@@ -20,29 +20,28 @@ pub fn OSTimeDly(_ticks: INT32U) {
     if critical_section::with(|_| {
         let cur_task = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
         let ticks = RTC_DRIVER.now() + _ticks as u64;
-        
-        if RTC_DRIVER.set_alarm(GlobalSyncExecutor.as_ref().unwrap().alarm, ticks) {
-            unsafe {
-                // first we set the task's expire time
-                info!("set the task expire time is {}", ticks);
-                cur_task.expires_at.set(ticks);
-                // add the task to the timer queue
-                let next_expire = GlobalSyncExecutor.as_ref().unwrap().timer_queue.update(*cur_task);
-                if next_expire < *GlobalSyncExecutor.as_ref().unwrap().timer_queue.set_time.get_unmut() {
-                    GlobalSyncExecutor
-                        .as_ref()
-                        .unwrap()
-                        .timer_queue
-                        .set_time
-                        .set(next_expire);
+        // first we set the task's expire time
+        info!("set the task expire time is {}", ticks);
+        // set the task unready
+        // add the task to the timer queue
+        if ticks < *GlobalSyncExecutor.as_ref().unwrap().timer_queue.set_time.get_unmut() {
+            if RTC_DRIVER.set_alarm(GlobalSyncExecutor.as_ref().unwrap().alarm, ticks) {
+                unsafe {
+                    GlobalSyncExecutor.as_ref().unwrap().timer_queue.set_time.set(ticks);
+                    GlobalSyncExecutor.as_ref().unwrap().set_task_unready(*cur_task);
+                    cur_task.expires_at.set(ticks);
                 }
-                // set the task unready
-                GlobalSyncExecutor.as_ref().unwrap().set_task_unready(*cur_task);
+                return true;
+            } else {
+                return false;
             }
-            true
-        } else {
-            false
         }
+        unsafe {
+            cur_task.expires_at.set(ticks);
+            GlobalSyncExecutor.as_ref().unwrap().set_task_unready(*cur_task);
+            GlobalSyncExecutor.as_ref().unwrap().timer_queue.update(*cur_task);
+        };
+        true
     }) {
         // call the interrupt poll
         critical_section::with(|_| unsafe { GlobalSyncExecutor.as_ref().unwrap().set_highrdy() });

@@ -6,7 +6,6 @@ pub mod state;
 pub mod timer_queue;
 pub mod waker;
 use alloc::string::String;
-use defmt::info;
 use core::alloc::Layout;
 use core::future::Future;
 use core::mem;
@@ -15,6 +14,7 @@ use core::pin::Pin;
 use core::ptr::NonNull;
 use core::task::{Context, Poll};
 
+use defmt::info;
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
 use state::State;
@@ -476,7 +476,9 @@ impl SyncExecutor {
         // then we need to set a new alarm according to the next expiration time
         let next_expire = unsafe { this.timer_queue.next_expiration() };
         // by noah：we also need to updater the set_time of the timer_queue
-        unsafe{this.timer_queue.set_time.set(next_expire);}
+        unsafe {
+            this.timer_queue.set_time.set(next_expire);
+        }
         RTC_DRIVER.set_alarm(this.alarm, next_expire);
         // call Interrupt Context Switch
         unsafe { this.IntCtxSW() };
@@ -532,7 +534,6 @@ impl SyncExecutor {
         // set the task in the right place of os_prio_tbl
         let tmp = self.os_prio_tbl.get_mut();
         tmp[prio] = task;
-        
     }
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
@@ -558,7 +559,7 @@ impl SyncExecutor {
             fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
             fn restore_thread_task();
         }
-        
+
         info!("interrupt_poll");
         let mut task = self.OSTCBHighRdy.get();
         // then we need to restore the highest priority task
@@ -567,6 +568,7 @@ impl SyncExecutor {
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 8).unwrap();
+            info!("layout is {:?}", layout);
             let mut stk = alloc_stack(layout);
             info!("exit the alloc_stack");
             // then we need to mock the stack for the task(the stk will change during the mock)
@@ -603,7 +605,7 @@ impl SyncExecutor {
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
             critical_section::with(|_| {
                 self.set_task_unready(task);
-                // set the task's stack to None 
+                // set the task's stack to None
                 // check: this seems no need to set it to None as it will always be None
                 task.OSTCBStkPtr = None;
             });
@@ -623,7 +625,7 @@ impl SyncExecutor {
                 // So we can not set the **task which is waiting for the next_expire** as unready
                 // The **task which is waiting for the next_expire** must be current task
                 // we must do this until we set the alarm successfully or there is no alarm required
-                while !RTC_DRIVER.set_alarm(self.alarm, next_expire){
+                while !RTC_DRIVER.set_alarm(self.alarm, next_expire) {
                     info!("set_alarm return false");
                     // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
                     // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
@@ -632,7 +634,9 @@ impl SyncExecutor {
                     // then we need to set a new alarm according to the next expiration time
                     next_expire = unsafe { self.timer_queue.next_expiration() };
                     // by noah：we also need to updater the set_time of the timer_queue
-                    unsafe{self.timer_queue.set_time.set(next_expire);}
+                    unsafe {
+                        self.timer_queue.set_time.set(next_expire);
+                    }
                 }
             }
             // by noah：maybe we can set the task unready, and call dequeue when set_alarm return false

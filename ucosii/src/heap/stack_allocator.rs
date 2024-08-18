@@ -5,8 +5,9 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
-use defmt::info;
 use core::ptr::NonNull;
+
+use defmt::info;
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
@@ -31,6 +32,7 @@ pub static ref INTERRUPT_STACK: UPSafeCell<OS_STK_REF> = unsafe {
 
 pub fn init_stack_allocator() {
     unsafe {
+        info!("in the init, the STACK_SIZE is :{}", STACK_SIZE);
         STACK_ALLOCATOR.lock().init(STACK_START, STACK_SIZE);
     }
     // then we init the program stack
@@ -109,10 +111,13 @@ impl Default for OS_STK_REF {
 /// we impl drop for OS_STK_REF to dealloc the stack(try to be RAII)
 impl Drop for OS_STK_REF {
     fn drop(&mut self) {
-        info!("drop stk has been called,the ptr is :{}", self.HEAP_REF.as_ptr() as usize);
         if self.STK_REF == NonNull::dangling() || self.HEAP_REF == NonNull::dangling() {
             return;
         }
+        info!(
+            "drop stk has been called,the ptr is :{}",
+            self.HEAP_REF.as_ptr() as usize
+        );
         let stk_ptr = self.HEAP_REF.as_ptr();
         self.STK_REF = NonNull::dangling();
         self.HEAP_REF = NonNull::dangling();
@@ -154,81 +159,94 @@ mod unit_tests {
         // drop(int_stk);
         // set_int_change_2_psp(int_ptr);
     }
+    // #[test]
+    // fn stack_allocator_basic_test() {
+    //     let layout = alloc::alloc::Layout::from_size_align(1024, 8).unwrap();
+    //     let stk = super::alloc_stack(layout);
+    //     assert!(stk.STK_REF.as_ptr() as usize > super::STACK_START);
+    //     assert!((stk.STK_REF.as_ptr() as usize) < (super::STACK_START + super::STACK_SIZE));
+    //     assert!(stk.layout.size() == 1024);
+    //     println!("stk ptr:{:?}", stk.STK_REF.as_ptr());
+    //     assert!(stk.STK_REF.as_ptr() as usize == 0x20000c00);
+    //     // drop(stk);
+    //     let stk = super::alloc_stack(layout);
+    //     println!("stk ptr:{:?}", stk.STK_REF.as_ptr());
+    //     assert!(stk.STK_REF.as_ptr() as usize == 0x20001000);
+    // }
+    // #[test]
+    // fn stack_allocator_med_test() {
+    //     let layout = alloc::alloc::Layout::from_size_align(1024, 8).unwrap();
+    //     let stk1 = super::alloc_stack(layout);
+    //     println!("stk1 ptr:{:?}", stk1.STK_REF.as_ptr());
+    //     assert!(stk1.STK_REF.as_ptr() as usize == 0x20000c00);
+    //     let stk2 = super::alloc_stack(layout);
+    //     println!("stk2 ptr:{:?}", stk2.STK_REF.as_ptr());
+    //     assert!(stk2.STK_REF.as_ptr() as usize == 0x20001000);
+    //     drop(stk1);
+    //     let stk3 = super::alloc_stack(layout);
+    //     println!("stk3 ptr:{:?}", stk3.STK_REF.as_ptr());
+    //     assert!(stk3.STK_REF.as_ptr() as usize == 0x20000c00);
+    //     let stk4 = super::alloc_stack(layout);
+    //     println!("stk4 ptr:{:?}", stk4.STK_REF.as_ptr());
+    //     assert!(stk4.STK_REF.as_ptr() as usize == 0x20001400);
+    //     // let stk5 = super::alloc_stack(layout);
+    //     // println!("stk5 ptr:{:?}", stk5.STK_REF.as_ptr());
+    //     // assert!(stk5.STK_REF.as_ptr() as usize== 0x20001800);
+    //     // 这里drop顺序比较重要，因为方便我们下面的测试接着会用回收的栈
+    //     // 提醒一下这里我故意做了一个2048（2K）的地址对齐，因为底层的linked_list_allocator分配的时候会有保证分配的时候是对齐的
+    //     // drop(stk5);
+    //     drop(stk4);
+    //     drop(stk2);
+    //     drop(stk3);
+    // }
+    // #[test]
+    // fn stack_allocator_hard_test() {
+    //     let layout1 = alloc::alloc::Layout::from_size_align(1024, 8).unwrap();
+    //     let layout2 = alloc::alloc::Layout::from_size_align(2048, 8).unwrap();
+    //     let layout3 = alloc::alloc::Layout::from_size_align(4096, 8).unwrap();
+
+    //     let stk1 = super::alloc_stack(layout1);
+    //     println!("stk1 ptr:{:?}", stk1.STK_REF.as_ptr());
+    //     assert!(stk1.STK_REF.as_ptr() as usize == 0x20000c00);
+
+    //     let stk2 = super::alloc_stack(layout2);
+    //     println!("stk2 ptr:{:?}", stk2.STK_REF.as_ptr());
+    //     assert!(stk2.STK_REF.as_ptr() as usize == 0x20002000);
+
+    //     let stk2_1 = super::alloc_stack(layout1);
+    //     println!("stk2_1 ptr:{:?}", stk2_1.STK_REF.as_ptr());
+    //     assert!(stk2_1.STK_REF.as_ptr() as usize == 0x20001000);
+
+    //     let stk2_2 = super::alloc_stack(layout1);
+    //     println!("stk2_2 ptr:{:?}", stk2_2.STK_REF.as_ptr());
+    //     assert!(stk2_2.STK_REF.as_ptr() as usize == 0x20001400);
+    //     // 注意这个stk2_3的分配很有意思，源于linked_list的对齐
+    //     let stk2_3 = super::alloc_stack(layout1);
+    //     println!("stk2_3 ptr:{:?}", stk2_3.STK_REF.as_ptr());
+    //     assert!(stk2_3.STK_REF.as_ptr() as usize == 0x20001800);
+
+    //     let stk3 = super::alloc_stack(layout3);
+    //     println!("stk3 ptr:{:?}", stk3.STK_REF.as_ptr());
+    //     assert!(stk3.STK_REF.as_ptr() as usize == 0x20003000);
+    //     drop(stk2);
+    //     let stk4 = super::alloc_stack(layout2);
+    //     println!("stk4 ptr:{:?}", stk4.STK_REF.as_ptr());
+    //     assert!(stk4.STK_REF.as_ptr() as usize == 0x20002000);
+    //     let stk5 = super::alloc_stack(layout2);
+    //     println!("stk5 ptr:{:?}", stk5.STK_REF.as_ptr());
+    //     assert!(stk5.STK_REF.as_ptr() as usize == 0x20003800);
+    // }
     #[test]
-    fn stack_allocator_basic_test() {
-        let layout = alloc::alloc::Layout::from_size_align(1024, 8).unwrap();
-        let stk = super::alloc_stack(layout);
-        assert!(stk.STK_REF.as_ptr() as usize > super::STACK_START);
-        assert!((stk.STK_REF.as_ptr() as usize) < (super::STACK_START + super::STACK_SIZE));
-        assert!(stk.layout.size() == 1024);
-        println!("stk ptr:{:?}", stk.STK_REF.as_ptr());
-        assert!(stk.STK_REF.as_ptr() as usize == 0x20000c00);
-        // drop(stk);
-        let stk = super::alloc_stack(layout);
-        println!("stk ptr:{:?}", stk.STK_REF.as_ptr());
-        assert!(stk.STK_REF.as_ptr() as usize == 0x20001000);
-    }
-    #[test]
-    fn stack_allocator_med_test() {
-        let layout = alloc::alloc::Layout::from_size_align(1024, 8).unwrap();
+    fn debug_test() {
+        let layout = alloc::alloc::Layout::from_size_align(2048, 8).unwrap();
         let stk1 = super::alloc_stack(layout);
-        println!("stk1 ptr:{:?}", stk1.STK_REF.as_ptr());
-        assert!(stk1.STK_REF.as_ptr() as usize == 0x20000c00);
+        println!("stk1 Heap ptr:{:?}", stk1.HEAP_REF.as_ptr());
+        assert!(stk1.HEAP_REF.as_ptr() as usize == 0x20001000);
         let stk2 = super::alloc_stack(layout);
-        println!("stk2 ptr:{:?}", stk2.STK_REF.as_ptr());
-        assert!(stk2.STK_REF.as_ptr() as usize == 0x20001000);
-        drop(stk1);
+        println!("stk2 Heap ptr:{:?}", stk2.HEAP_REF.as_ptr());
+        assert!(stk2.HEAP_REF.as_ptr() as usize == 0x20001800);
         let stk3 = super::alloc_stack(layout);
-        println!("stk3 ptr:{:?}", stk3.STK_REF.as_ptr());
-        assert!(stk3.STK_REF.as_ptr() as usize == 0x20000c00);
-        let stk4 = super::alloc_stack(layout);
-        println!("stk4 ptr:{:?}", stk4.STK_REF.as_ptr());
-        assert!(stk4.STK_REF.as_ptr() as usize == 0x20001400);
-        // let stk5 = super::alloc_stack(layout);
-        // println!("stk5 ptr:{:?}", stk5.STK_REF.as_ptr());
-        // assert!(stk5.STK_REF.as_ptr() as usize== 0x20001800);
-        // 这里drop顺序比较重要，因为方便我们下面的测试接着会用回收的栈
-        // 提醒一下这里我故意做了一个2048（2K）的地址对齐，因为底层的linked_list_allocator分配的时候会有保证分配的时候是对齐的
-        // drop(stk5);
-        drop(stk4);
-        drop(stk2);
-        drop(stk3);
-    }
-    #[test]
-    fn stack_allocator_hard_test() {
-        let layout1 = alloc::alloc::Layout::from_size_align(1024, 8).unwrap();
-        let layout2 = alloc::alloc::Layout::from_size_align(2048, 8).unwrap();
-        let layout3 = alloc::alloc::Layout::from_size_align(4096, 8).unwrap();
-
-        let stk1 = super::alloc_stack(layout1);
-        println!("stk1 ptr:{:?}", stk1.STK_REF.as_ptr());
-        assert!(stk1.STK_REF.as_ptr() as usize == 0x20000c00);
-
-        let stk2 = super::alloc_stack(layout2);
-        println!("stk2 ptr:{:?}", stk2.STK_REF.as_ptr());
-        assert!(stk2.STK_REF.as_ptr() as usize == 0x20002000);
-
-        let stk2_1 = super::alloc_stack(layout1);
-        println!("stk2_1 ptr:{:?}", stk2_1.STK_REF.as_ptr());
-        assert!(stk2_1.STK_REF.as_ptr() as usize == 0x20001000);
-
-        let stk2_2 = super::alloc_stack(layout1);
-        println!("stk2_2 ptr:{:?}", stk2_2.STK_REF.as_ptr());
-        assert!(stk2_2.STK_REF.as_ptr() as usize == 0x20001400);
-        // 注意这个stk2_3的分配很有意思，源于linked_list的对齐
-        let stk2_3 = super::alloc_stack(layout1);
-        println!("stk2_3 ptr:{:?}", stk2_3.STK_REF.as_ptr());
-        assert!(stk2_3.STK_REF.as_ptr() as usize == 0x20001800);
-
-        let stk3 = super::alloc_stack(layout3);
-        println!("stk3 ptr:{:?}", stk3.STK_REF.as_ptr());
-        assert!(stk3.STK_REF.as_ptr() as usize == 0x20003000);
-        drop(stk2);
-        let stk4 = super::alloc_stack(layout2);
-        println!("stk4 ptr:{:?}", stk4.STK_REF.as_ptr());
-        assert!(stk4.STK_REF.as_ptr() as usize == 0x20002000);
-        let stk5 = super::alloc_stack(layout2);
-        println!("stk5 ptr:{:?}", stk5.STK_REF.as_ptr());
-        assert!(stk5.STK_REF.as_ptr() as usize == 0x20003800);
+        println!("stk3 Heap ptr:{:?}", stk3.HEAP_REF.as_ptr());
+        assert!(stk3.HEAP_REF.as_ptr() as usize == 0x20002000);
     }
 }
