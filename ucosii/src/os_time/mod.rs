@@ -1,6 +1,6 @@
 use defmt::info;
 
-use crate::executor::GlobalSyncExecutor;
+use crate::executor::{self, wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 use crate::port::INT32U;
 /// the mod of duration of uC/OS-II kernel
@@ -14,44 +14,58 @@ pub mod timer;
 pub fn OSTimerInit() {
     RTC_DRIVER.init();
 }
-
-/// we have to make this delay acting like preemptive delay（like soft interrupt）
+/// we have to make this delay acting like preemptive delay
 pub fn OSTimeDly(_ticks: INT32U) {
+    unsafe {
+        delay_tick(_ticks);
+    }
+}
+
+pub(crate) unsafe fn delay_tick(_ticks: INT32U) {
+    // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
+    let executor = GlobalSyncExecutor.as_ref().unwrap();
+    let task = executor.OSTCBCur.get_mut();
+    task.expires_at.set(RTC_DRIVER.now() + _ticks as u64);
+    critical_section::with(|_| {
+        executor.set_task_unready(*task);
+    });
+    // update timer
+    let mut next_expire = executor.timer_queue.update(*task);
     if critical_section::with(|_| {
-        let cur_task = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
-        let ticks = RTC_DRIVER.now() + _ticks as u64;
-        info!("set the task expire time is {}", ticks);
-        // by noah：just like the POLL
-        unsafe{
-            // first we set the task's expire time
-            cur_task.expires_at.set(ticks);
-            // update the timer queue
-            GlobalSyncExecutor.as_ref().unwrap().timer_queue.update(*cur_task);
+        if next_expire < *executor.timer_queue.set_time.get_unmut() {
+            executor.timer_queue.set_time.set(next_expire);
+            true
+        } else {
+            // if the next_expire is not less than the set_time, it means the expire dose not arrive, or the task
+            // dose not expire a timestamp so we should set the task unready
+            false
         }
-        // this situation means we should set the alarm
-        if ticks < *GlobalSyncExecutor.as_ref().unwrap().timer_queue.set_time.get_unmut() {
-            if RTC_DRIVER.set_alarm(GlobalSyncExecutor.as_ref().unwrap().alarm, ticks) {
-                unsafe {
-                    GlobalSyncExecutor.as_ref().unwrap().timer_queue.set_time.set(ticks);
-                    GlobalSyncExecutor.as_ref().unwrap().set_task_unready(*cur_task);
-                    cur_task.expires_at.set(ticks);
-                }
-                return true;
-            } else {
-                return false;
-            }
-        }
-        unsafe {
-            // if the tick will not be set into the alarm, we should set the task unready
-            GlobalSyncExecutor.as_ref().unwrap().set_task_unready(*cur_task);
-        };
-        true
     }) {
-        info!("the interrupt_poll in OSTimeDly");
-        // call the interrupt poll
-        critical_section::with(|_| unsafe { GlobalSyncExecutor.as_ref().unwrap().set_highrdy() });
-        unsafe {
-            GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
+        // by noah：if the set alarm return false, it means the expire arrived.
+        // So we can not set the **task which is waiting for the next_expire** as unready
+        // The **task which is waiting for the next_expire** must be current task
+        // we must do this until we set the alarm successfully or there is no alarm required
+        while !RTC_DRIVER.set_alarm(executor.alarm, next_expire) {
+            info!("set_alarm return false");
+            // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
+            // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
+            // (just like the operation in alarm_callback)
+            executor
+                .timer_queue
+                .dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
+            // then we need to set a new alarm according to the next expiration time
+            next_expire = unsafe { executor.timer_queue.next_expiration() };
+            // by noah：we also need to updater the set_time of the timer_queue
+            executor.timer_queue.set_time.set(next_expire);
         }
+    }
+    // find the highrdy
+    if critical_section::with(|_| {
+        executor.set_highrdy();
+        executor.OSPrioHighRdy != executor.OSPrioCur
+    }) {
+        // call the interrupt poll
+        critical_section::with(|_| GlobalSyncExecutor.as_ref().unwrap().set_highrdy());
+        GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
     }
 }

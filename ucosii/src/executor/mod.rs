@@ -473,14 +473,18 @@ impl SyncExecutor {
         let this: &Self = unsafe { &*(ctx as *const Self) };
         // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
-        unsafe { this.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend) };
-        // then we need to set a new alarm according to the next expiration time
-        let next_expire = unsafe { this.timer_queue.next_expiration() };
-        // by noah：we also need to updater the set_time of the timer_queue
-        unsafe {
-            this.timer_queue.set_time.set(next_expire);
+        loop{
+            unsafe { this.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend) };
+            // then we need to set a new alarm according to the next expiration time
+            let next_expire = unsafe { this.timer_queue.next_expiration() };
+            // by noah：we also need to updater the set_time of the timer_queue
+            unsafe {
+                this.timer_queue.set_time.set(next_expire);
+            }
+            if RTC_DRIVER.set_alarm(this.alarm, next_expire){
+                break;
+            }
         }
-        RTC_DRIVER.set_alarm(this.alarm, next_expire);
         // call Interrupt Context Switch
         unsafe { this.IntCtxSW() };
     }
