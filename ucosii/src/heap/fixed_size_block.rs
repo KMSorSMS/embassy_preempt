@@ -1,4 +1,5 @@
 use alloc::alloc::{GlobalAlloc, Layout};
+use defmt::info;
 use core::mem;
 use core::ptr::{self, NonNull};
 
@@ -50,7 +51,11 @@ impl FixedSizeBlockAllocator {
     fn fallback_alloc(&mut self, layout: Layout) -> *mut u8 {
         match self.fallback_allocator.allocate_first_fit(layout) {
             Ok(ptr) => ptr.as_ptr(),
-            Err(_) => ptr::null_mut(),
+
+            Err(err) => {
+                info!("fallback allocator failed: {:?}", err);
+                ptr::null_mut()
+            },
         }
     }
 }
@@ -71,7 +76,10 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
                         // only works if all block sizes are a power of 2
                         let block_align = block_size;
                         let layout = Layout::from_size_align(block_size, block_align).unwrap();
-                        allocator.fallback_alloc(layout)
+                        // TODO: added to debug, remove later when release
+                        let ptr = allocator.fallback_alloc(layout);
+                        info!("allocating block of size {} at {}", block_size, ptr);
+                        ptr
                     }
                 }
             }
