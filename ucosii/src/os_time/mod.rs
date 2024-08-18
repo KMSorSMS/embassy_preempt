@@ -20,10 +20,15 @@ pub fn OSTimeDly(_ticks: INT32U) {
     if critical_section::with(|_| {
         let cur_task = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
         let ticks = RTC_DRIVER.now() + _ticks as u64;
-        // first we set the task's expire time
         info!("set the task expire time is {}", ticks);
-        // set the task unready
-        // add the task to the timer queue
+        // by noah：just like the POLL
+        unsafe{
+            // first we set the task's expire time
+            cur_task.expires_at.set(ticks);
+            // update the timer queue
+            GlobalSyncExecutor.as_ref().unwrap().timer_queue.update(*cur_task);
+        }
+        // this situation means we should set the alarm
         if ticks < *GlobalSyncExecutor.as_ref().unwrap().timer_queue.set_time.get_unmut() {
             if RTC_DRIVER.set_alarm(GlobalSyncExecutor.as_ref().unwrap().alarm, ticks) {
                 unsafe {
@@ -37,12 +42,12 @@ pub fn OSTimeDly(_ticks: INT32U) {
             }
         }
         unsafe {
-            cur_task.expires_at.set(ticks);
+            // if the tick will not be set into the alarm, we should set the task unready
             GlobalSyncExecutor.as_ref().unwrap().set_task_unready(*cur_task);
-            GlobalSyncExecutor.as_ref().unwrap().timer_queue.update(*cur_task);
         };
         true
     }) {
+        info!("the interrupt_poll in OSTimeDly");
         // call the interrupt poll
         critical_section::with(|_| unsafe { GlobalSyncExecutor.as_ref().unwrap().set_highrdy() });
         unsafe {

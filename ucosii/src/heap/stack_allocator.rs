@@ -38,6 +38,7 @@ pub fn init_stack_allocator() {
     // then we init the program stack
     let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 8).unwrap();
     let stk = alloc_stack(layout);
+    info!("alloc the psp");
     let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
     PROGRAM_STACK.set(stk);
     // then we change the sp to the top of the program stack
@@ -51,6 +52,7 @@ pub fn init_stack_allocator() {
     // we also need to allocate a stack for interrupt
     let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 8).unwrap();
     let stk = alloc_stack(layout);
+    info!("alloc the msp");
     INTERRUPT_STACK.set(stk);
     info!("the end of the init_stack_allocator");
 }

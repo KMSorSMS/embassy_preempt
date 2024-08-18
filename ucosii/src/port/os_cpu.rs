@@ -61,6 +61,7 @@ fn PendSV() {
     // by noah: *TEST*
     let TCB: &OS_TCB;
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
+        // this situation is in interrupt poll
         info!("need to save the context");
         // we need to give the current task the old_stk to store the context
         // first we will store the remaining context to the old_stk
@@ -89,7 +90,7 @@ fn PendSV() {
             GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
         }
     } else {
-        // just realloc the stack, we use drop
+        // the situation is in poll
         drop(old_stk);
     }
     info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);

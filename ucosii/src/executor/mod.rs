@@ -469,6 +469,7 @@ pub(crate) struct SyncExecutor {
 }
 impl SyncExecutor {
     fn alarm_callback(ctx: *mut ()) {
+        info!("alarm_callback");
         let this: &Self = unsafe { &*(ctx as *const Self) };
         // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
@@ -534,6 +535,7 @@ impl SyncExecutor {
         // set the task in the right place of os_prio_tbl
         let tmp = self.os_prio_tbl.get_mut();
         tmp[prio] = task;
+        info!("the task with prio {} is enqueued", prio);
     }
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
@@ -541,6 +543,8 @@ impl SyncExecutor {
         if critical_section::with(|_| unsafe {
             self.set_highrdy();
             if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
+                info!("the PrioHighRdy is {}", self.OSPrioHighRdy.get());
+                info!("the PrioCur is {}", self.OSPrioCur.get());
                 info!("no need to switch task");
                 false
             } else {
@@ -565,6 +569,7 @@ impl SyncExecutor {
         // then we need to restore the highest priority task
         if task.OSTCBStkPtr.is_none() {
             info!("the OSTCBStkPtr is null");
+            info!("the prio of the task is {}", task.OSTCBPrio);
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 8).unwrap();
@@ -657,6 +662,7 @@ impl SyncExecutor {
         let prio = tmp.trailing_zeros() as usize;
         let tmp = self.OSRdyTbl.get_unmut();
         let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
+        info!("the highrdy task's prio is {}", prio);
         // set the current running task
         self.OSPrioHighRdy.set(prio as OS_PRIO);
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio]);
@@ -697,6 +703,7 @@ impl SyncExecutor {
 }
 /// Wake a task by `TaskRef`.
 pub fn wake_task_no_pend(task: OS_TCB_REF) {
+    info!("wake_task_no_pend");
     // We have just marked the task as scheduled, so enqueue it.
     unsafe {
         let executor = GlobalSyncExecutor.as_ref().unwrap();

@@ -110,7 +110,7 @@ kill:
     fi
 Jclien:
 	nc localhost 19021 | defmt-print -e $(FILE_ELF) 
-clean:
+clean:kill
 	cargo clean
 run:
 	clear
