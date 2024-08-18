@@ -26,20 +26,22 @@ impl TimerQueue {
         let head = self.head.get_unmut();
         // range from head to find one larger than p_expires_at and insert p.
         let mut cur = head;
+        let mut prev:&Option<OS_TCB_REF> = &None;
         while let Some(cur_ref) = cur {
             let cur_expires_at = &cur_ref.expires_at;
             if cur_expires_at > p_expires_at {
                 break;
             }
+            prev = cur;
             cur = cur_ref.OSTimerNext.get_unmut();
         }
         // insert p
         p.OSTimerNext.set(*cur);
+        p.OSTimerPrev.set(*prev);
         if let Some(cur_ref) = cur {
-            p.OSTimerPrev.set(*cur_ref.OSTimerPrev.get_unmut());
             cur_ref.OSTimerPrev.set(Some(p));
         }
-        if let Some(prev_ref) = p.OSTimerPrev.get_unmut() {
+        if let Some(prev_ref) = prev {
             prev_ref.OSTimerNext.set(Some(p));
         } else {
             self.head.set(Some(p));

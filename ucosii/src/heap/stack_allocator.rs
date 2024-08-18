@@ -12,7 +12,7 @@ use defmt::info;
 use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
 
-pub const STACK_START: usize = 0x20000000;
+pub const STACK_START: *mut u8 = 0x20000000 as *mut u8;
 pub const STACK_SIZE: usize = 40 * 1024; // 40 KiB
 pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 256 B also ok
 pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
