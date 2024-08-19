@@ -68,15 +68,7 @@ impl Cursor {
         // Here we create a scope, JUST to make sure that any created references do not
         // live to the point where we start doing pointer surgery below.
         {
-            // by noah: *TEST*
-            // get the hole 
-            let hole = self.current();
-            let hole_prev=self.previous();
-            info!("when the split_current begin, the prev size is {:?}", hole_prev.size);
-            info!("when the split_current begin, the addr of prev hole is {:?}", hole_prev.next);
-            let hole_size = hole.size;
-            info!("when the split_current begin, the size of the hole is {:?}", hole_size);
-            info!("when the split_current begin, the addr of current hole is {:?}", hole.next);
+            let hole_size = self.current().size;
             let hole_addr_u8 = self.hole.as_ptr().cast::<u8>();
             let required_size = required_layout.size();
             let required_align = required_layout.align();
@@ -163,15 +155,7 @@ impl Cursor {
                 }
             };
         }
-        // by noah: *TEST*
-        // get the hole 
-        let hole = self.current();
-        let hole_prev=self.previous();
-        info!("in the mid of split_current, the prev size is {:?}", hole_prev.size);
-        info!("in the mid of split_current, the addr of prev hole is {:?}", hole_prev.next);
-        let hole_size = hole.size;
-        info!("in the mid of split_current, the size of the hole is {:?}", hole_size);
-        info!("in the mid of split_current, the addr of current hole is {:?}", hole.next);
+
         ////////////////////////////////////////////////////////////////////////////
         // This is where we actually perform surgery on the linked list.
         ////////////////////////////////////////////////////////////////////////////
@@ -210,7 +194,6 @@ impl Cursor {
                 });
 
                 // Then connect the OLD previous to the NEW single padding
-                info!("None/Some situation");
                 prev.as_mut().next = Some(NonNull::new_unchecked(singlepad_ptr));
             },
             (Some(frontpad), Some(backpad)) => unsafe {
@@ -239,16 +222,6 @@ impl Cursor {
                 prev.as_mut().next = Some(NonNull::new_unchecked(frontpad_ptr));
             },
         }
-
-        // by noah: *TEST*
-        // get the hole 
-        let hole = self.current();
-        let hole_prev=self.previous();
-        info!("at the end of split_current, the prev size is {:?}", hole_prev.size);
-        info!("at the end of split_current, the addr of prev hole is {:?}", hole_prev.next);
-        let hole_size = hole.size;
-        info!("at the end of split_current, the size of the hole is {:?}", hole_size);
-        info!("at the end of split_current, the addr of current hole is {:?}", hole.next);
 
         // Well that went swimmingly! Hand off the allocation, with surgery performed successfully!
         Ok((alloc_ptr, alloc_size))
@@ -404,15 +377,6 @@ impl HoleList {
     pub fn allocate_first_fit(&mut self, layout: Layout) -> Result<(NonNull<u8>, Layout), ()> {
         info!("in the allocate_first_fit of HoleList");
         let mut cursor = self.cursor().ok_or(())?;
-        // by noah: *TEST*
-        // get the hole 
-        let hole = cursor.current();
-        let hole_prev=cursor.previous();
-        info!("in the allocate_first_fit of HoleList, the prev size is {:?}", hole_prev.size);
-        info!("in the allocate_first_fit of HoleList, the addr of prev hole is {:?}", hole_prev.next);
-        let hole_size = hole.size;
-        info!("in the allocate_first_fit of HoleList, the size of the hole is {:?}", hole_size);
-        info!("in the allocate_first_fit of HoleList, the addr of current hole is {:?}", hole.next);
         let aligned_layout = Self::align_layout(layout).map_err(|_| ())?;
         loop {
             match cursor.split_current(aligned_layout) {
