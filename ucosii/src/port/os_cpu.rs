@@ -75,7 +75,7 @@ fn PendSV() {
         }
         // then as we have stored the context, we need to update the old_stk's top
         old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OS_STK).unwrap();
-        info!("in pendsv, we set the stack pointer to {:?}", old_stk_ptr);
+        info!("in pendsv, the old stk ptr is {:?}", old_stk_ptr);
         // GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk)
         let task_cur = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
         task_cur.set_stk(old_stk);

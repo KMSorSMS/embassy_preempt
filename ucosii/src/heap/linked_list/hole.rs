@@ -4,6 +4,8 @@ use core::mem::{align_of, size_of};
 use core::ptr::null_mut;
 use core::ptr::NonNull;
 
+use defmt::info;
+
 use super::{align_down_size, align_up_size};
 
 use super::align_up;
@@ -62,11 +64,19 @@ impl Cursor {
         let alloc_ptr;
         let alloc_size;
         let back_padding;
-
+        //
         // Here we create a scope, JUST to make sure that any created references do not
         // live to the point where we start doing pointer surgery below.
         {
-            let hole_size = self.current().size;
+            // by noah: *TEST*
+            // get the hole 
+            let hole = self.current();
+            let hole_prev=self.previous();
+            info!("when the split_current begin, the prev size is {:?}", hole_prev.size);
+            info!("when the split_current begin, the addr of prev hole is {:?}", hole_prev.next);
+            let hole_size = hole.size;
+            info!("when the split_current begin, the size of the hole is {:?}", hole_size);
+            info!("when the split_current begin, the addr of current hole is {:?}", hole.next);
             let hole_addr_u8 = self.hole.as_ptr().cast::<u8>();
             let required_size = required_layout.size();
             let required_align = required_layout.align();
@@ -122,9 +132,11 @@ impl Cursor {
 
             // Okay, time to move onto the back padding.
             let back_padding_size = hole_end as usize - allocation_end as usize;
+            info!("the back_padding_size is {:?}", back_padding_size);
             back_padding = if back_padding_size == 0 {
                 None
             } else {
+                info!("in the else branch");
                 // NOTE: Because we always use `HoleList::align_layout`, the size of
                 // the new allocation is always "rounded up" to cover any partial gaps that
                 // would have occurred. For this reason, we DON'T need to "round up"
@@ -135,19 +147,31 @@ impl Cursor {
 
                 // Will the proposed new back padding actually fit in the old hole slot?
                 if back_padding_end <= hole_end {
+                    info!("here is in split_current, in some");
+                    info!("the back_padding_start is {:?}", back_padding_start);
+                    // info!("back_padding_size");
                     // Yes, it does! Place a back padding node
                     Some(HoleInfo {
                         addr: back_padding_start,
                         size: back_padding_size,
                     })
                 } else {
+                    info!("here is in split_current, in err");
                     // No, it does not. We don't want to leak any heap bytes, so we
                     // consider this hole unsuitable for the requested allocation.
                     return Err(self);
                 }
             };
         }
-
+        // by noah: *TEST*
+        // get the hole 
+        let hole = self.current();
+        let hole_prev=self.previous();
+        info!("in the mid of split_current, the prev size is {:?}", hole_prev.size);
+        info!("in the mid of split_current, the addr of prev hole is {:?}", hole_prev.next);
+        let hole_size = hole.size;
+        info!("in the mid of split_current, the size of the hole is {:?}", hole_size);
+        info!("in the mid of split_current, the addr of current hole is {:?}", hole.next);
         ////////////////////////////////////////////////////////////////////////////
         // This is where we actually perform surgery on the linked list.
         ////////////////////////////////////////////////////////////////////////////
@@ -186,6 +210,7 @@ impl Cursor {
                 });
 
                 // Then connect the OLD previous to the NEW single padding
+                info!("None/Some situation");
                 prev.as_mut().next = Some(NonNull::new_unchecked(singlepad_ptr));
             },
             (Some(frontpad), Some(backpad)) => unsafe {
@@ -214,6 +239,16 @@ impl Cursor {
                 prev.as_mut().next = Some(NonNull::new_unchecked(frontpad_ptr));
             },
         }
+
+        // by noah: *TEST*
+        // get the hole 
+        let hole = self.current();
+        let hole_prev=self.previous();
+        info!("at the end of split_current, the prev size is {:?}", hole_prev.size);
+        info!("at the end of split_current, the addr of prev hole is {:?}", hole_prev.next);
+        let hole_size = hole.size;
+        info!("at the end of split_current, the size of the hole is {:?}", hole_size);
+        info!("at the end of split_current, the addr of current hole is {:?}", hole.next);
 
         // Well that went swimmingly! Hand off the allocation, with surgery performed successfully!
         Ok((alloc_ptr, alloc_size))
@@ -343,10 +378,12 @@ impl HoleList {
     /// themselves, so calling this function manually is not necessary.
     pub fn align_layout(layout: Layout) -> Result<Layout, LayoutError> {
         let mut size = layout.size();
+        info!("the min_size is {:?}", Self::min_size());
         if size < Self::min_size() {
             size = Self::min_size();
         }
         let size = align_up_size(size, mem::align_of::<Hole>());
+        info!("in align_layout");
         Layout::from_size_align(size, layout.align())
     }
 
@@ -365,15 +402,26 @@ impl HoleList {
     // release to remove this clippy warning
     #[allow(clippy::result_unit_err)]
     pub fn allocate_first_fit(&mut self, layout: Layout) -> Result<(NonNull<u8>, Layout), ()> {
-        let aligned_layout = Self::align_layout(layout).map_err(|_| ())?;
+        info!("in the allocate_first_fit of HoleList");
         let mut cursor = self.cursor().ok_or(())?;
-
+        // by noah: *TEST*
+        // get the hole 
+        let hole = cursor.current();
+        let hole_prev=cursor.previous();
+        info!("in the allocate_first_fit of HoleList, the prev size is {:?}", hole_prev.size);
+        info!("in the allocate_first_fit of HoleList, the addr of prev hole is {:?}", hole_prev.next);
+        let hole_size = hole.size;
+        info!("in the allocate_first_fit of HoleList, the size of the hole is {:?}", hole_size);
+        info!("in the allocate_first_fit of HoleList, the addr of current hole is {:?}", hole.next);
+        let aligned_layout = Self::align_layout(layout).map_err(|_| ())?;
         loop {
             match cursor.split_current(aligned_layout) {
                 Ok((ptr, _len)) => {
+                    info!("in the allocate_first_fit of HoleList, split_current success");
                     return Ok((NonNull::new(ptr).ok_or(())?, aligned_layout));
                 }
                 Err(curs) => {
+                    info!("in the allocate_first_fit of HoleList, split_current failed");
                     cursor = curs.next().ok_or(())?;
                 }
             }

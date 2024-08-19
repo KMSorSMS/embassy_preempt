@@ -68,6 +68,15 @@ impl TimerQueue {
         info!("dequeue expired");
         let head = self.head.get_unmut();
         let mut cur = head;
+        info!("now is {}", now);
+        info!("before dequeue");
+        // by noah:*TEST* to konw whether the update is successful
+        while let Some(cur_ref) = cur{
+            let cur_expires_at = &cur_ref.expires_at;
+            info!("---the cur_expires_at is {}---", cur_expires_at.get_unmut());
+            cur = cur_ref.OSTimerNext.get_unmut();
+        }
+        let mut cur = head;
         while let Some(cur_ref) = cur {
             let cur_expires_at = &cur_ref.expires_at;
             info!("the cur_expires_at is {}", cur_expires_at.get_unmut());
@@ -87,6 +96,14 @@ impl TimerQueue {
                 self.head.set(*next);
             }
             cur = next;
+        }
+        let mut cur = head;
+        info!("after dequeue");
+        // by noah:*TEST* to konw whether the update is successful
+        while let Some(cur_ref) = cur{
+            let cur_expires_at = &cur_ref.expires_at;
+            info!("---the cur_expires_at is {}---", cur_expires_at.get_unmut());
+            cur = cur_ref.OSTimerNext.get_unmut();
         }
     }
 }
