@@ -54,7 +54,8 @@ fn PendSV() {
     }
     info!("entering pendsv");
     // then switch the task
-    let stk_ptr: crate::heap::stack_allocator::OS_STK_REF = GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
+    let stk_ptr: crate::heap::stack_allocator::OS_STK_REF =
+        GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
     // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
     let mut old_stk = PROGRAM_STACK.swap(stk_ptr);
@@ -80,7 +81,9 @@ fn PendSV() {
         let task_cur = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
         task_cur.set_stk(old_stk);
         // get the TCB
-        unsafe{TCB = task_cur.ptr.unwrap().as_ref();}
+        unsafe {
+            TCB = task_cur.ptr.unwrap().as_ref();
+        }
         // by noah: judge whether the task stk is none
         if task_cur.is_stk_none() {
             info!("the task stk is none");
@@ -130,7 +133,7 @@ pub extern "Rust" fn run_idle() {
 // }
 
 /// the context structure store in stack
-#[repr(C, align(8))]
+#[repr(C, align(4))]
 struct UcStk {
     // below are the remaining part of the task's context
     r4: u32,
@@ -165,8 +168,9 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
     };
     let executor_function_ptr = executor_function_ptr as *const () as usize;
     let ptos = stk_ref.as_ptr() as *mut usize;
-    let ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
-    let ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
+    // do align with 8 and move the stack pointer down an align size
+    let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
+    ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize + 1) as isize) };
     let psp = ptos as *mut UcStk;
     // initialize the stack
     unsafe {

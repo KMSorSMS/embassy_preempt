@@ -89,6 +89,7 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        info!("deallocating block of size {} at {}", layout.size(), ptr);
         let mut allocator = self.lock();
         match list_index(&layout) {
             Some(index) => {

@@ -14,7 +14,7 @@ use super::Locked;
 
 pub const STACK_START: *mut u8 = 0x20000000 as *mut u8;
 pub const STACK_SIZE: usize = 40 * 1024; // 40 KiB
-pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 256 B also ok
+pub const PROGRAM_STACK_SIZE: usize = 4096; // 1KiB 256 B also ok
 pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
@@ -36,7 +36,7 @@ pub fn init_stack_allocator() {
         STACK_ALLOCATOR.lock().init(STACK_START, STACK_SIZE);
     }
     // then we init the program stack
-    let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 8).unwrap();
+    let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
     info!("alloc the psp");
     let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
@@ -50,7 +50,7 @@ pub fn init_stack_allocator() {
         set_program_sp(stk_ptr);
     }
     // we also need to allocate a stack for interrupt
-    let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 8).unwrap();
+    let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
     info!("alloc the msp");
     INTERRUPT_STACK.set(stk);
@@ -240,7 +240,7 @@ mod unit_tests {
     // }
     #[test]
     fn debug_test() {
-        let layout = alloc::alloc::Layout::from_size_align(2048, 8).unwrap();
+        let layout = alloc::alloc::Layout::from_size_align(2048, 4).unwrap();
         let stk1 = super::alloc_stack(layout);
         println!("stk1 Heap ptr:{:?}", stk1.HEAP_REF.as_ptr());
         assert!(stk1.HEAP_REF.as_ptr() as usize == 0x20001000);
