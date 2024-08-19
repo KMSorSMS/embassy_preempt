@@ -40,7 +40,7 @@ defmt = {version = "0.3", optional = true}
 defmt-rtt = "0.4"
 log = { version = "0.4.14", optional = true }
 spin = "0.5.2"
-linked_list_allocator = "0.9.0"
+# linked_list_allocator = "0.9.0"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
 panic-probe = { version = "0.3", features = ["print-defmt"] }
 cortex-m-semihosting = "0.5.0"
@@ -99,7 +99,7 @@ lto = true
 # this part only define features, don't decide whether the feature is active
 [features]
 # when a feature is set in default, it is active
-default = ["unstable-pac","stm32f401re","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+default = ["use_spin","unstable-pac","stm32f401re","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
 defmt = ["dep:defmt"]
 nightly = []
 # this feature will be set in build.rs
@@ -163,6 +163,12 @@ low-power=[]
 ## If this is an issue for you, you're encouraged to directly depend on a fixed version of the PAC.
 ## There are no plans to make this stable.
 unstable-pac = []
+use_spin = ["spinning_top"]
+
+
+[dependencies.spinning_top]
+version = "0.2.5"
+optional = true
 # unstable-pac=[]
 [target.'cfg(loom)'.dependencies]
 loom = { version = "0.7", features = ["checkpoint"] }

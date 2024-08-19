@@ -3,6 +3,7 @@ use defmt::info;
 use core::mem;
 use core::ptr::{self, NonNull};
 
+use super::linked_list::Heap;
 use super::Locked;
 
 /// The block sizes to use.
@@ -25,7 +26,7 @@ struct ListNode {
 
 pub struct FixedSizeBlockAllocator {
     list_heads: [Option<&'static mut ListNode>; BLOCK_SIZES.len()],
-    fallback_allocator: linked_list_allocator::Heap,
+    fallback_allocator: Heap,
 }
 
 impl FixedSizeBlockAllocator {
@@ -34,7 +35,7 @@ impl FixedSizeBlockAllocator {
         const EMPTY: Option<&'static mut ListNode> = None;
         FixedSizeBlockAllocator {
             list_heads: [EMPTY; BLOCK_SIZES.len()],
-            fallback_allocator: linked_list_allocator::Heap::empty(),
+            fallback_allocator: Heap::empty(),
         }
     }
 
@@ -43,7 +44,7 @@ impl FixedSizeBlockAllocator {
     /// This function is unsafe because the caller must guarantee that the given
     /// heap bounds are valid and that the heap is unused. This method must be
     /// called only once.
-    pub unsafe fn init(&mut self, heap_start: usize, heap_size: usize) {
+    pub unsafe fn init(&mut self, heap_start: *mut u8, heap_size: usize) {
         self.fallback_allocator.init(heap_start, heap_size);
     }
 

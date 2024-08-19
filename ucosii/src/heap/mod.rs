@@ -4,7 +4,7 @@ pub mod stack_allocator;
 
 use fixed_size_block::FixedSizeBlockAllocator;
 
-pub const HEAP_START: usize = 0x08000200;
+pub const HEAP_START: *mut u8 = 0x08000200 as *mut u8;
 pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
 
 #[global_allocator]
@@ -16,12 +16,6 @@ pub fn init_heap() {
     }
 }
 
-/// Align the given address `addr` upwards to alignment `align`.
-///
-/// Requires that `align` is a power of two.
-fn align_up(addr: usize, align: usize) -> usize {
-    (addr + align - 1) & !(align - 1)
-}
 
 /// A wrapper around spin::Mutex to permit trait implementations.
 pub struct Locked<A> {
