@@ -7,8 +7,8 @@ use cortex_m_rt::exception;
 use defmt::info;
 
 use super::OS_STK;
-use crate::executor::{GlobalSyncExecutor, OS_TCB};
-use crate::heap::stack_allocator::PROGRAM_STACK;
+use crate::executor::GlobalSyncExecutor;
+use crate::heap::stack_allocator::{INTERRUPT_STACK, PROGRAM_STACK};
 
 // use crate::ucosii::OSIdleCtr;
 // use core::sync::atomic::Ordering::Relaxed;
@@ -60,7 +60,7 @@ fn PendSV() {
     // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
     let mut old_stk = PROGRAM_STACK.swap(stk_ptr);
     // by noah: *TEST*
-    let TCB: &OS_TCB;
+    // let TCB: &OS_TCB;
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
         // this situation is in interrupt poll
         info!("need to save the context");
@@ -81,9 +81,9 @@ fn PendSV() {
         let task_cur = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
         task_cur.set_stk(old_stk);
         // get the TCB
-        unsafe {
-            TCB = task_cur.ptr.unwrap().as_ref();
-        }
+        // unsafe {
+        //     TCB = task_cur.ptr.unwrap().as_ref();
+        // }
         // by noah: judge whether the task stk is none
         if task_cur.is_stk_none() {
             info!("the task stk is none");
@@ -97,14 +97,19 @@ fn PendSV() {
         drop(old_stk);
     }
     info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
+    // we will reset the msp to the original
+    let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
     unsafe {
         asm!(
             // "CPSID I",
             "LDMFD   R0!, {{R4-R11, R14}}",
             "MSR     PSP, R0",
+            // reset the msp
+            "MSR     MSP, R1",
             "CPSIE   I",
             "BX      LR",
             in("r0") program_stk_ptr,
+            in("r1") msp_stk,
             options(nostack, preserves_flags),
         )
     }

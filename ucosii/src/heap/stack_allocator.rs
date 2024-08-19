@@ -14,7 +14,7 @@ use super::Locked;
 
 pub const STACK_START: *mut u8 = 0x20000000 as *mut u8;
 pub const STACK_SIZE: usize = 40 * 1024; // 40 KiB
-pub const PROGRAM_STACK_SIZE: usize = 4096; // 1KiB 256 B also ok
+pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 256 B also ok
 pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
