@@ -105,7 +105,7 @@ fn PendSV() {
             options(nostack, preserves_flags),
         )
     }
-    info!("exit PedndSV");
+    // info!("exit PedndSV");
 }
 
 #[no_mangle]

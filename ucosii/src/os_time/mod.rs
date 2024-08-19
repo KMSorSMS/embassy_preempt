@@ -26,11 +26,13 @@ pub(crate) unsafe fn delay_tick(_ticks: INT32U) {
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
     task.expires_at.set(RTC_DRIVER.now() + _ticks as u64);
+    info!("the expire time is {}", task.expires_at.get_unmut());
     critical_section::with(|_| {
         executor.set_task_unready(*task);
     });
     // update timer
     let mut next_expire = executor.timer_queue.update(*task);
+    info!("the next_expire is {}", next_expire);
     if critical_section::with(|_| {
         if next_expire < *executor.timer_queue.set_time.get_unmut() {
             executor.timer_queue.set_time.set(next_expire);
