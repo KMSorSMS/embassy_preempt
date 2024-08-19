@@ -53,7 +53,7 @@ where
     // info!("the size of future is {}",core::mem::size_of_val(&future_func));
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
-        let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 8).unwrap();
+        let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 4).unwrap();
         let heap_ptr = unsafe { (_ptos as *mut u8).offset(-(DEFAULT_REVOKE_STACK_SIZE as isize)) };
         info!("Task Create");
         let mut stk = stk_from_ptr(heap_ptr as *mut u8, layout);
@@ -72,7 +72,7 @@ where
     let future_func = || task(p_arg);
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
-        let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 8).unwrap();
+        let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 4).unwrap();
         let heap_ptr = unsafe { (_ptos as *mut u8).offset(-(DEFAULT_REVOKE_STACK_SIZE as isize)) };
         info!("Rust Create");
         let mut stk = stk_from_ptr(heap_ptr as *mut u8, layout);

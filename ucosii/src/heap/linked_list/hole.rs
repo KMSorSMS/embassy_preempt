@@ -4,6 +4,8 @@ use core::mem::{align_of, size_of};
 use core::ptr::null_mut;
 use core::ptr::NonNull;
 
+use defmt::info;
+
 use super::{align_down_size, align_up_size};
 
 use super::align_up;
@@ -37,7 +39,9 @@ struct HoleInfo {
 
 impl Cursor {
     fn next(mut self) -> Option<Self> {
+        info!("call cursor next");
         unsafe {
+            info!("the next is:{}", self.hole.as_ref().next);
             self.hole.as_mut().next.map(|nhole| Cursor {
                 prev: self.hole,
                 hole: nhole,
@@ -70,10 +74,12 @@ impl Cursor {
             let hole_addr_u8 = self.hole.as_ptr().cast::<u8>();
             let required_size = required_layout.size();
             let required_align = required_layout.align();
-
+            info!("the cur hole_size is:{} and the cur hole_addr_u8 is:{}", hole_size, hole_addr_u8);
             // Quick check: If the new item is larger than the current hole, it's never gunna
             // work. Go ahead and bail early to save ourselves some math.
             if hole_size < required_size {
+                info!("hole_size is: {}, required_size is: {}", hole_size, required_size);
+                info!("hole_size < required_size");
                 return Err(self);
             }
 
@@ -112,6 +118,7 @@ impl Cursor {
             let hole_end = hole_addr_u8.wrapping_add(hole_size);
 
             if allocation_end > hole_end {
+                info!("allocation_end > hole_end");
                 // hole is too small
                 return Err(self);
             }
@@ -143,6 +150,7 @@ impl Cursor {
                 } else {
                     // No, it does not. We don't want to leak any heap bytes, so we
                     // consider this hole unsuitable for the requested allocation.
+                    info!("back_padding_end > hole_end");
                     return Err(self);
                 }
             };
@@ -371,9 +379,11 @@ impl HoleList {
         loop {
             match cursor.split_current(aligned_layout) {
                 Ok((ptr, _len)) => {
+                    info!("in allocate_first_fit ok");
                     return Ok((NonNull::new(ptr).ok_or(())?, aligned_layout));
                 }
                 Err(curs) => {
+                    info!("in allocate_first_fit error");
                     cursor = curs.next().ok_or(())?;
                 }
             }

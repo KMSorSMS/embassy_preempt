@@ -576,11 +576,12 @@ impl SyncExecutor {
             info!("the prio of the task is {}", task.OSTCBPrio);
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
-            let layout = Layout::from_size_align(TASK_STACK_SIZE, 8).unwrap();
+            let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
             info!("layout is {:?}", layout);
             let mut stk = alloc_stack(layout);
             info!("exit the alloc_stack");
             // then we need to mock the stack for the task(the stk will change during the mock)
+            info!("the stk_ref is {:?}", stk.STK_REF);
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
             task.OSTCBStkPtr = Some(stk);
         }

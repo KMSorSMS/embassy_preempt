@@ -60,12 +60,12 @@ liam_build:
 
 bin: $(TARGET)
 	@echo "Build done"
-liam_bin: $(liam_TARGET)
+liam_bin: liam_TARGET
 	@echo "liam bin build done"
 
 $(TARGET): build $(FILE_ELF)
 	$(OBJCOPY) -O binary $(FILE_ELF) $(FILE_BIN)
-$(liam_TARGET): liam_build $(liam_FILE_ELF)
+liam_TARGET: liam_build $(liam_FILE_ELF)
 	$(OBJCOPY) -O binary $(liam_FILE_ELF) $(liam_FILE_BIN)
 debug: build bin
 	tmux new-session -d \
@@ -134,3 +134,5 @@ lib-run:
 	cargo test --lib
 liam_run:
 	cargo rb $(liam_TARGET)
+liam_run_release:
+	cargo rrb $(liam_TARGET)

@@ -29,11 +29,13 @@ fn test_basic_schedule() -> ! {
 }
 
 fn task1(_args: *mut ()) {
-    // 任务1
-    info!("---task1 begin---");
-    OSTimeDly(500_000);
-    info!("---task1 end---");
-    delay(SHORT_TIME);
+    loop {
+        // 任务1
+        info!("---task1 begin---");
+        OSTimeDly(500_000);
+        info!("---task1 end---");
+        delay(SHORT_TIME);
+    }
 }
 fn task2(_args: *mut ()) {
     loop {
