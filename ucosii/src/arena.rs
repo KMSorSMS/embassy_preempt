@@ -19,7 +19,6 @@ use core::mem::MaybeUninit;
 use core::ptr::null_mut;
 
 use critical_section::{CriticalSection, Mutex};
-use defmt::info;
 
 use crate::cfg::OS_ARENA_SIZE;
 

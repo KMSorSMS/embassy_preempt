@@ -1,6 +1,6 @@
 use defmt::info;
 
-use crate::executor::{self, wake_task_no_pend, GlobalSyncExecutor};
+use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 use crate::port::INT32U;
 /// the mod of duration of uC/OS-II kernel
