@@ -24,6 +24,7 @@ fn main_test() -> ! {
     }
 }
 fn test_basic_schedule() {
+    info!("==========test begin==========");
     // os初始化
     OSInit();
     // 创建6个任务，测试优先级调度的顺序是否正确

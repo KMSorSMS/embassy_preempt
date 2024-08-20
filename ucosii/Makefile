@@ -5,8 +5,11 @@ TEST_BINARY_LIB := target/thumbv7em-none-eabi/debug/ucosii_lib.bin
 ENTRY_PA := 0x08000000
 PORT := 8765
 TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
-
-TARGET := hardware_test
+# hardware_test
+# prio_test
+# preempt_basic
+# ucosii_main
+TARGET := ucosii_main
 liam_TARGET := preempt_basic
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE
@@ -85,21 +88,20 @@ liam_download: liam_build liam_bin
 download: build bin
 	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(FILE_BIN) 0x8000000" -c "reset" -c "shutdown"
 Jdownload: build bin
+# 生成脚本
+	@echo "h\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
 	JLinkExe -device $(DEVICE) -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkDownload.jlink
-Jdebug: build bin Jdownload JGDBServer
+Jdebug: Jdownload JGDBServer
 	tmux new-session -d \
 	"nc localhost 19021 | defmt-print -e $(FILE_ELF) " && \
 	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
 	-ex 'dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables' \
 	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'source ./bp.gdb'" && \
 	tmux -2 attach-session -d
-JGDBServer:
-	@if ! pgrep JLinkGDBServer > /dev/null; then \
-        echo "启动 JLinkGDBServer..."; \
-        JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > /dev/null & \
-    else \
-        echo "JLinkGDBServer 已经在运行。"; \
-    fi
+JGDBServer:kill
+	@echo "启动 JLinkGDBServer...";
+	@JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > /dev/null & 
+	@sleep 1;
 kill:
 	@PID=$$(lsof -t -i:2331); \
     if [ -n "$$PID" ]; then \
@@ -108,7 +110,7 @@ kill:
     else \
         echo "No process found on port 2331"; \
     fi
-Jclien:
+Jrun:Jdownload JGDBServer
 	nc localhost 19021 | defmt-print -e $(FILE_ELF) 
 clean:kill
 	cargo clean

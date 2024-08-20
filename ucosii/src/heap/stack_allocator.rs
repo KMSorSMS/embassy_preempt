@@ -32,13 +32,12 @@ pub static ref INTERRUPT_STACK: UPSafeCell<OS_STK_REF> = unsafe {
 
 pub fn init_stack_allocator() {
     unsafe {
-        info!("in the init, the STACK_SIZE is :{}", STACK_SIZE);
+        info!("init the stack_allocator");
         STACK_ALLOCATOR.lock().init(STACK_START, STACK_SIZE);
     }
     // then we init the program stack
     let layout = Layout::from_size_align(PROGRAM_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
-    info!("alloc the psp");
     let stk_ptr = stk.STK_REF.as_ptr() as *mut u8;
     PROGRAM_STACK.set(stk);
     // then we change the sp to the top of the program stack
@@ -52,9 +51,7 @@ pub fn init_stack_allocator() {
     // we also need to allocate a stack for interrupt
     let layout = Layout::from_size_align(INTERRUPT_STACK_SIZE, 4).unwrap();
     let stk = alloc_stack(layout);
-    info!("alloc the msp");
     INTERRUPT_STACK.set(stk);
-    info!("the end of the init_stack_allocator");
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
@@ -117,7 +114,7 @@ impl Drop for OS_STK_REF {
             return;
         }
         info!(
-            "drop stk has been called,the ptr is :{}",
+            "drop stk has been called,the ptr is :0x{:x}",
             self.HEAP_REF.as_ptr() as usize
         );
         let stk_ptr = self.HEAP_REF.as_ptr();

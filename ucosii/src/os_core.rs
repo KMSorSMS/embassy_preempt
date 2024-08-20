@@ -603,11 +603,13 @@ fn OS_InitTaskIdle() {
     let idle_fn = |_args: *mut ()| -> ! {
         info!("idle task");
         loop {
+            // info!("idle loop");
             unsafe {
                 run_idle();
             }
         }
     };
+    // info!("create idle task");
     OSTaskCreate(idle_fn, 0 as *mut (), 0 as *mut usize, OS_TASK_IDLE_PRIO);
 }
 

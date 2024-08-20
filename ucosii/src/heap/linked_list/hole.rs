@@ -39,9 +39,7 @@ struct HoleInfo {
 
 impl Cursor {
     fn next(mut self) -> Option<Self> {
-        info!("call cursor next");
         unsafe {
-            info!("the next is:{}", self.hole.as_ref().next);
             self.hole.as_mut().next.map(|nhole| Cursor {
                 prev: self.hole,
                 hole: nhole,
@@ -74,12 +72,9 @@ impl Cursor {
             let hole_addr_u8 = self.hole.as_ptr().cast::<u8>();
             let required_size = required_layout.size();
             let required_align = required_layout.align();
-            info!("the cur hole_size is:{} and the cur hole_addr_u8 is:{}", hole_size, hole_addr_u8);
             // Quick check: If the new item is larger than the current hole, it's never gunna
             // work. Go ahead and bail early to save ourselves some math.
             if hole_size < required_size {
-                info!("hole_size is: {}, required_size is: {}", hole_size, required_size);
-                info!("hole_size < required_size");
                 return Err(self);
             }
 
@@ -118,7 +113,6 @@ impl Cursor {
             let hole_end = hole_addr_u8.wrapping_add(hole_size);
 
             if allocation_end > hole_end {
-                info!("allocation_end > hole_end");
                 // hole is too small
                 return Err(self);
             }
@@ -142,7 +136,6 @@ impl Cursor {
 
                 // Will the proposed new back padding actually fit in the old hole slot?
                 if back_padding_end <= hole_end {
-                    // info!("back_padding_size");
                     // Yes, it does! Place a back padding node
                     Some(HoleInfo {
                         addr: back_padding_start,
@@ -351,12 +344,10 @@ impl HoleList {
     /// themselves, so calling this function manually is not necessary.
     pub fn align_layout(layout: Layout) -> Result<Layout, LayoutError> {
         let mut size = layout.size();
-        info!("the min_size is {:?}", Self::min_size());
         if size < Self::min_size() {
             size = Self::min_size();
         }
         let size = align_up_size(size, mem::align_of::<Hole>());
-        info!("in align_layout");
         Layout::from_size_align(size, layout.align())
     }
 
@@ -375,17 +366,14 @@ impl HoleList {
     // release to remove this clippy warning
     #[allow(clippy::result_unit_err)]
     pub fn allocate_first_fit(&mut self, layout: Layout) -> Result<(NonNull<u8>, Layout), ()> {
-        // info!("in the allocate_first_fit of HoleList");
         let mut cursor = self.cursor().ok_or(())?;
         let aligned_layout = Self::align_layout(layout).map_err(|_| ())?;
         loop {
             match cursor.split_current(aligned_layout) {
                 Ok((ptr, _len)) => {
-                    // info!("in allocate_first_fit ok");
                     return Ok((NonNull::new(ptr).ok_or(())?, aligned_layout));
                 }
                 Err(curs) => {
-                    // info!("in allocate_first_fit error");
                     cursor = curs.next().ok_or(())?;
                 }
             }

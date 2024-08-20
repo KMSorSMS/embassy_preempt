@@ -333,10 +333,13 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         let mut cx = Context::from_waker(&waker);
         match future.poll(&mut cx) {
             Poll::Ready(_) => {
+                // info!("the task {} is ready", this.task_tcb.OSTCBPrio);
                 this.future.drop_in_place();
                 this.task_tcb.OSTCBStat.despawn();
             }
-            Poll::Pending => {}
+            Poll::Pending => {
+                // info!("the task {} is pending", this.task_tcb.OSTCBPrio);
+            }
         }
 
         // the compiler is emitting a virtual call for waker drop, but we know
@@ -350,6 +353,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // by noah: for we can create task after OSTaskCreate, so we need a cs
         critical_section::with(|cs| {
             let task_storage = ARENA.alloc::<OS_TASK_STORAGE<F>>(cs);
+            info!("size of the task storage is {}", mem::size_of::<OS_TASK_STORAGE<F>>());
             // create a new task which is not init
             task_storage.write(OS_TASK_STORAGE::new());
             // by noah：no panic will occurred here because if the Arena is not enough, the program will panic when alloc
@@ -510,16 +514,8 @@ impl SyncExecutor {
     }
     /// set the current to be highrdy
     pub(crate) unsafe fn set_cur_highrdy(&self) {
-        // by noah: get the old task to test
-        let old_task = self.OSTCBCur.get();
-        if old_task.is_stk_none(){
-            info!("the old task stk is none");
-        }
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
         self.OSTCBCur.set(self.OSTCBHighRdy.get());
-        // if old_task.is_stk_none(){
-        //     info!("the old task stk is replaced!!!");
-        // }
     }
     // /// set the current task to be idle task
     // pub(crate) unsafe fn set_cur_idle(&self) {
@@ -539,7 +535,6 @@ impl SyncExecutor {
         // set the task in the right place of os_prio_tbl
         let tmp = self.os_prio_tbl.get_mut();
         tmp[prio] = task;
-        info!("the task with prio {} is enqueued", prio);
     }
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
@@ -547,8 +542,6 @@ impl SyncExecutor {
         if critical_section::with(|_| unsafe {
             self.set_highrdy();
             if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
-                info!("the PrioHighRdy is {}", self.OSPrioHighRdy.get());
-                info!("the PrioCur is {}", self.OSPrioCur.get());
                 info!("no need to switch task");
                 false
             } else {
@@ -572,19 +565,14 @@ impl SyncExecutor {
         let mut task = self.OSTCBHighRdy.get();
         // then we need to restore the highest priority task
         if task.OSTCBStkPtr.is_none() {
-            info!("the OSTCBStkPtr is null");
-            info!("the prio of the task is {}", task.OSTCBPrio);
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
-            // info!("layout is {:?}", layout);
             // by noah: *TEST*. Maybe when alloc_stack is called, we need the cs
             let mut stk = critical_section::with(|_cs|{
                 alloc_stack(layout)
             });
-            info!("exit the alloc_stack");
             // then we need to mock the stack for the task(the stk will change during the mock)
-            info!("the stk_ref is {:?}", stk.STK_REF);
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
             task.OSTCBStkPtr = Some(stk);
         }
@@ -639,7 +627,6 @@ impl SyncExecutor {
                 // The **task which is waiting for the next_expire** must be current task
                 // we must do this until we set the alarm successfully or there is no alarm required
                 while !RTC_DRIVER.set_alarm(self.alarm, next_expire) {
-                    info!("set_alarm return false");
                     // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
                     // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
                     // (just like the operation in alarm_callback)
@@ -670,7 +657,6 @@ impl SyncExecutor {
         let prio = tmp.trailing_zeros() as usize;
         let tmp = self.OSRdyTbl.get_unmut();
         let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
-        info!("the highrdy task's prio is {}", prio);
         // set the current running task
         self.OSPrioHighRdy.set(prio as OS_PRIO);
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio]);

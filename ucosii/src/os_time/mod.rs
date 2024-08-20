@@ -26,13 +26,11 @@ pub(crate) unsafe fn delay_tick(_ticks: INT32U) {
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
     task.expires_at.set(RTC_DRIVER.now() + _ticks as u64);
-    // info!("the expire time is {}", task.expires_at.get_unmut());
     critical_section::with(|_| {
         executor.set_task_unready(*task);
     });
     // update timer
     let mut next_expire = executor.timer_queue.update(*task);
-    // info!("the next_expire is {}", next_expire);
     if critical_section::with(|_| {
         if next_expire < *executor.timer_queue.set_time.get_unmut() {
             executor.timer_queue.set_time.set(next_expire);
@@ -48,7 +46,6 @@ pub(crate) unsafe fn delay_tick(_ticks: INT32U) {
         // The **task which is waiting for the next_expire** must be current task
         // we must do this until we set the alarm successfully or there is no alarm required
         while !RTC_DRIVER.set_alarm(executor.alarm, next_expire) {
-            info!("set_alarm return false");
             // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
             // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
             // (just like the operation in alarm_callback)

@@ -53,8 +53,7 @@ impl FixedSizeBlockAllocator {
         match self.fallback_allocator.allocate_first_fit(layout) {
             Ok(ptr) => ptr.as_ptr(),
 
-            Err(err) => {
-                info!("fallback allocator failed: {:?}", err);
+            Err(_) => {
                 ptr::null_mut()
             },
         }
@@ -79,7 +78,6 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
                         let layout = Layout::from_size_align(block_size, block_align).unwrap();
                         // TODO: added to debug, remove later when release
                         let ptr = allocator.fallback_alloc(layout);
-                        info!("allocating block of size {} at {}", block_size, ptr);
                         ptr
                     }
                 }
@@ -89,7 +87,6 @@ unsafe impl GlobalAlloc for Locked<FixedSizeBlockAllocator> {
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        info!("deallocating block of size {} at {}", layout.size(), ptr);
         let mut allocator = self.lock();
         match list_index(&layout) {
             Some(index) => {

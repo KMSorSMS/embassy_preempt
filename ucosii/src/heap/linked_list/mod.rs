@@ -158,7 +158,6 @@ impl Heap {
     // release to remove this clippy warning
     #[allow(clippy::result_unit_err)]
     pub fn allocate_first_fit(&mut self, layout: Layout) -> Result<NonNull<u8>, ()> {
-        info!("the used is {}", self.used);
         match self.holes.allocate_first_fit(layout) {
             Ok((ptr, aligned_layout)) => {
                 self.used += aligned_layout.size();
@@ -307,7 +306,6 @@ unsafe impl GlobalAlloc for LockedHeap {
 /// Align downwards. Returns the greatest x with alignment `align`
 /// so that x <= addr. The alignment must be a power of 2.
 pub fn align_down_size(size: usize, align: usize) -> usize {
-    // info!("---align_down_size---");
     if align.is_power_of_two() {
         size & !(align - 1)
     } else if align == 0 {
@@ -318,7 +316,6 @@ pub fn align_down_size(size: usize, align: usize) -> usize {
 }
 
 pub fn align_up_size(size: usize, align: usize) -> usize {
-    // info!("---align_up_size---");
     align_down_size(size + align - 1, align)
 }
 
