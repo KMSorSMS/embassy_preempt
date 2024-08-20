@@ -577,7 +577,7 @@ impl SyncExecutor {
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
-            info!("layout is {:?}", layout);
+            // info!("layout is {:?}", layout);
             // by noah: *TEST*. Maybe when alloc_stack is called, we need the cs
             let mut stk = critical_section::with(|_cs|{
                 alloc_stack(layout)

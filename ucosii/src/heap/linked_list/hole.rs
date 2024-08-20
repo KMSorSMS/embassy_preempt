@@ -129,11 +129,9 @@ impl Cursor {
 
             // Okay, time to move onto the back padding.
             let back_padding_size = hole_end as usize - allocation_end as usize;
-            info!("the back_padding_size is {:?}", back_padding_size);
             back_padding = if back_padding_size == 0 {
                 None
             } else {
-                info!("in the else branch");
                 // NOTE: Because we always use `HoleList::align_layout`, the size of
                 // the new allocation is always "rounded up" to cover any partial gaps that
                 // would have occurred. For this reason, we DON'T need to "round up"
@@ -144,8 +142,6 @@ impl Cursor {
 
                 // Will the proposed new back padding actually fit in the old hole slot?
                 if back_padding_end <= hole_end {
-                    info!("here is in split_current, in some");
-                    info!("the back_padding_start is {:?}", back_padding_start);
                     // info!("back_padding_size");
                     // Yes, it does! Place a back padding node
                     Some(HoleInfo {
@@ -153,10 +149,8 @@ impl Cursor {
                         size: back_padding_size,
                     })
                 } else {
-                    info!("here is in split_current, in err");
                     // No, it does not. We don't want to leak any heap bytes, so we
                     // consider this hole unsuitable for the requested allocation.
-                    info!("back_padding_end > hole_end");
                     return Err(self);
                 }
             };
@@ -381,17 +375,17 @@ impl HoleList {
     // release to remove this clippy warning
     #[allow(clippy::result_unit_err)]
     pub fn allocate_first_fit(&mut self, layout: Layout) -> Result<(NonNull<u8>, Layout), ()> {
-        info!("in the allocate_first_fit of HoleList");
+        // info!("in the allocate_first_fit of HoleList");
         let mut cursor = self.cursor().ok_or(())?;
         let aligned_layout = Self::align_layout(layout).map_err(|_| ())?;
         loop {
             match cursor.split_current(aligned_layout) {
                 Ok((ptr, _len)) => {
-                    info!("in allocate_first_fit ok");
+                    // info!("in allocate_first_fit ok");
                     return Ok((NonNull::new(ptr).ok_or(())?, aligned_layout));
                 }
                 Err(curs) => {
-                    info!("in allocate_first_fit error");
+                    // info!("in allocate_first_fit error");
                     cursor = curs.next().ok_or(())?;
                 }
             }

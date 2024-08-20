@@ -6,7 +6,7 @@ ENTRY_PA := 0x08000000
 PORT := 8765
 TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 
-TARGET := preempt_basic
+TARGET := hardware_test
 liam_TARGET := preempt_basic
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE

@@ -46,13 +46,13 @@ impl TimerQueue {
         } else {
             self.head.set(Some(p));
         }
-        let mut cur = head;
+        // let mut cur = head;
         // by noah:*TEST* to konw whether the update is successful
-        while let Some(cur_ref) = cur{
-            let cur_expires_at = &cur_ref.expires_at;
-            info!("---the cur_expires_at is {}---", cur_expires_at.get_unmut());
-            cur = cur_ref.OSTimerNext.get_unmut();
-        }
+        // while let Some(cur_ref) = cur{
+        //     let cur_expires_at = &cur_ref.expires_at;
+        //     info!("---the cur_expires_at is {}---", cur_expires_at.get_unmut());
+        //     cur = cur_ref.OSTimerNext.get_unmut();
+        // }
         return *head.as_ref().unwrap().expires_at.get_unmut();
     }
 
@@ -71,12 +71,12 @@ impl TimerQueue {
         info!("now is {}", now);
         info!("before dequeue");
         // by noah:*TEST* to konw whether the update is successful
-        while let Some(cur_ref) = cur{
-            let cur_expires_at = &cur_ref.expires_at;
-            info!("---the cur_expires_at is {}---", cur_expires_at.get_unmut());
-            cur = cur_ref.OSTimerNext.get_unmut();
-        }
-        let mut cur = head;
+        // while let Some(cur_ref) = cur{
+        //     let cur_expires_at = &cur_ref.expires_at;
+        //     info!("---the cur_expires_at is {}---", cur_expires_at.get_unmut());
+        //     cur = cur_ref.OSTimerNext.get_unmut();
+        // }
+        // let mut cur = head;
         while let Some(cur_ref) = cur {
             let cur_expires_at = &cur_ref.expires_at;
             info!("the cur_expires_at is {}", cur_expires_at.get_unmut());
@@ -97,13 +97,13 @@ impl TimerQueue {
             }
             cur = next;
         }
-        let mut cur = head;
-        info!("after dequeue");
-        // by noah:*TEST* to konw whether the update is successful
-        while let Some(cur_ref) = cur{
-            let cur_expires_at = &cur_ref.expires_at;
-            info!("---the cur_expires_at is {}---", cur_expires_at.get_unmut());
-            cur = cur_ref.OSTimerNext.get_unmut();
-        }
+        // let mut cur = head;
+        // info!("after dequeue");
+        // // by noah:*TEST* to konw whether the update is successful
+        // while let Some(cur_ref) = cur{
+        //     let cur_expires_at = &cur_ref.expires_at;
+        //     info!("---the cur_expires_at is {}---", cur_expires_at.get_unmut());
+        //     cur = cur_ref.OSTimerNext.get_unmut();
+        // }
     }
 }
