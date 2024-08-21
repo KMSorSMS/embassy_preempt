@@ -5,7 +5,7 @@
 use defmt::info; use ucosii::app::blockdelay::delay;
 // <- derive attribute
 use ucosii::os_core::{OSInit, OSStart};
-use ucosii::os_task::{OSTaskCreate, RustOSTaskCreate};
+use ucosii::os_task::{AsyncOSTaskCreate, SyncOSTaskCreate};
 use ucosii::os_time::timer::Timer;
 use ucosii::{self as _};
 
@@ -29,12 +29,12 @@ fn test_basic_schedule() {
     OSInit();
     // 创建6个任务，测试优先级调度的顺序是否正确
     // 调度顺序应该为：task5->task1(task5中创建)->task4->task3->task2->task1->task1(在task4中创建)->task6(由于优先级相同输出相关信息)
-    OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 30);
-    OSTaskCreate(task2, 0 as *mut (), 0 as *mut usize, 25);
-    RustOSTaskCreate(task3, 0 as *mut (), 0 as *mut usize, 20);
-    OSTaskCreate(task4, 0 as *mut (), 0 as *mut usize, 15);
-    OSTaskCreate(task5, 0 as *mut (), 0 as *mut usize, 10);
-    OSTaskCreate(task6, 0 as *mut (), 0 as *mut usize, 35);
+    SyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 30);
+    SyncOSTaskCreate(task2, 0 as *mut (), 0 as *mut usize, 25);
+    AsyncOSTaskCreate(task3, 0 as *mut (), 0 as *mut usize, 20);
+    SyncOSTaskCreate(task4, 0 as *mut (), 0 as *mut usize, 15);
+    SyncOSTaskCreate(task5, 0 as *mut (), 0 as *mut usize, 10);
+    SyncOSTaskCreate(task6, 0 as *mut (), 0 as *mut usize, 35);
     // 启动os
     OSStart();
 }
@@ -66,7 +66,7 @@ fn task4(_args: *mut ()) {
     // 任务4
     info!("---task4 begin---");
     // 任务4中涉及任务创建
-    OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 34);
+    SyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 34);
     delay(SHORT_TIME);
     info!("---task4 end---");
     delay(SHORT_TIME);
@@ -76,7 +76,7 @@ fn task5(_args: *mut ()) {
     // 任务5
     info!("---task5 begin---");
     // 任务5中涉及任务创建
-    OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 11);
+    SyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 11);
     delay(SHORT_TIME);
     info!("---task5 end---");
     delay(SHORT_TIME);
@@ -87,7 +87,7 @@ fn task6(_args: *mut ()) {
     // 任务6
     info!("---task6 begin---");
     // 任务6中涉及任务创建，新创建的优先级与当前任务相同
-    OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 35);
+    SyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 35);
     delay(SHORT_TIME);
     info!("---task6 end---");
     delay(SHORT_TIME);

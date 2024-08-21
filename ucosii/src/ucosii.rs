@@ -291,6 +291,7 @@ const OS_TMR_STATE_RUNNING: INT32U = 3;
 
 #[derive(PartialEq)]
 #[repr(align(8))]
+#[repr(C)]
 /// uC/OS-II error codes
 pub enum OS_ERR_STATE {
     /// No error

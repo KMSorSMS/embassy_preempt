@@ -5,7 +5,7 @@
 use defmt::info; use ucosii::app::blockdelay::delay;
 // <- derive attribute
 use ucosii::os_core::{OSInit, OSStart};
-use ucosii::os_task::{OSTaskCreate, RustOSTaskCreate};
+use ucosii::os_task::{AsyncOSTaskCreate, SyncOSTaskCreate};
 use ucosii::os_time::timer::Timer;
 use ucosii::{self as _};
 
@@ -27,10 +27,10 @@ fn test_basic_schedule() {
     // os初始化
     OSInit();
     // 创建两个任务
-    OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 10);
-    OSTaskCreate(task2, 0 as *mut (), 0 as *mut usize, 11);
-    RustOSTaskCreate(task3, 0 as *mut (), 0 as *mut usize, 12);
-    OSTaskCreate(task4, 0 as *mut (), 0 as *mut usize, 13);
+    SyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 10);
+    SyncOSTaskCreate(task2, 0 as *mut (), 0 as *mut usize, 11);
+    AsyncOSTaskCreate(task3, 0 as *mut (), 0 as *mut usize, 12);
+    SyncOSTaskCreate(task4, 0 as *mut (), 0 as *mut usize, 13);
     // 启动os
     OSStart();
 }
@@ -65,7 +65,7 @@ fn task4(_args: *mut ()) {
     // 任务4
     info!("---task4 begin---");
     // 任务3中涉及任务创建
-    OSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 14);
+    SyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 14);
     delay(SHORT_TIME);
     info!("---task4 end---");
     delay(MID_TIME);

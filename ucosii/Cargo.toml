@@ -16,7 +16,11 @@ readme = "README.md"
 
 
 [lib]
+# the name of ucosii library
+# name = "ucosiitest"
 harness = false
+# generate a static library and a rlib
+crate-type = ["rlib", "staticlib"]
 
 # needed for each integration test
 [[test]]
@@ -33,8 +37,9 @@ members = []
 [workspace.dependencies]
 
 [dependencies]
+# import the uc/os-ii library
 cortex-m = { version = "0.7"}
-cortex-m-rt = {version = "0.7"} 
+cortex-m-rt = {version = "0.7"}
 critical-section = { version = "1.1",features=["restore-state-bool"]}
 defmt = {version = "0.3", optional = true}
 defmt-rtt = "0.4"
@@ -46,9 +51,6 @@ panic-probe = { version = "0.3", features = ["print-defmt"] }
 cortex-m-semihosting = "0.5.0"
 stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645",  features = ["metadata", "rt"] }
 
-[build-dependencies]
-proc-macro2 = "1.0.36"
-quote = "1.0.15"
 
 #stm32-metapac = { version = "15", default-features = false, features = ["metadata"]}
 # stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645",  features = ["metadata", "stm32f401re"] }

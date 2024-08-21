@@ -38,10 +38,9 @@ use defmt::info;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::ucosii::OS_TASK_IDLE_PRIO;
+use crate::{os_task::SyncOSTaskCreate, ucosii::OS_TASK_IDLE_PRIO};
 use crate::executor::GlobalSyncExecutor;
 use crate::heap::stack_allocator::init_stack_allocator;
-use crate::os_task::OSTaskCreate;
 use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
@@ -152,7 +151,8 @@ pub fn OSEventNameSet() {}
 */
 /// This function is used to initialize the internals of uC/OS-II and MUST be called
 /// prior to creating any uC/OS-II object and, prior to calling OSStart().
-pub fn OSInit() {
+#[no_mangle]
+pub extern "C" fn OSInit() {
     OSInitHookBegin(); /* Call port specific initialization code   */
 
     // by noah: this func is no need to be called because we give the static var init val
@@ -610,7 +610,7 @@ fn OS_InitTaskIdle() {
         }
     };
     // info!("create idle task");
-    OSTaskCreate(idle_fn, 0 as *mut (), 0 as *mut usize, OS_TASK_IDLE_PRIO);
+    SyncOSTaskCreate(idle_fn, 0 as *mut (), 0 as *mut usize, OS_TASK_IDLE_PRIO);
 }
 
 /*

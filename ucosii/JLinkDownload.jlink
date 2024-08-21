@@ -1,5 +1,5 @@
 h
-loadfile target/thumbv7em-none-eabi/release/ucosii_main.bin 0x08000000
+loadfile target/thumbv7em-none-eabi/release/preempt_test.bin 0x08000000
 r
 g
 exit

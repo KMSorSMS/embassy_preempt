@@ -11,6 +11,8 @@
 #![feature(const_mut_refs)]
 #![feature(never_type)]
 #![warn(missing_docs)]
+// by noah：generate the ucosii static lib
+#![crate_type = "staticlib"]
 //! the mod of uC/OS-II kernel and the interface that uC/OS-II kernel provides
 /// This mod MUST go first, so that the others see its macros.
 /*

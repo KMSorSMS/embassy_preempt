@@ -7,9 +7,10 @@ PORT := 8765
 TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # hardware_test
 # prio_test
-# preempt_basic
-# ucosii_main
-TARGET := ucosii_main
+# preempt_test
+# scheduling_test
+# ffi_test
+TARGET := preempt_test
 liam_TARGET := preempt_basic
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE
@@ -19,6 +20,17 @@ FILE_BIN := target/$(PLATFORM)/$(MODE)/$(TARGET).bin
 
 liam_FILE_ELF := target/$(PLATFORM)/$(MODE)/$(liam_TARGET)
 liam_FILE_BIN := target/$(PLATFORM)/$(MODE)/$(liam_TARGET).bin
+
+# # 定义源文件目录和目标文件目录
+# SRC_DIR := src/bin
+# OBJ_DIR := target/thumbv7em-none-eabi/release
+# # 查找所有的 .c 文件
+# C_FILES := $(wildcard $(SRC_DIR)/*.c)
+# # 将 .c 文件转换为 elf 文件
+# OBJ_FILES := $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%, $(C_FILES))
+# # 编译器和编译选项
+# CC := gcc
+# CFLAGS := -Wall -g -O0
 
 ifeq ($(MODE), release)
 	MODE_ARG := --release
@@ -56,8 +68,14 @@ defmt-test:
 test-run:
 	cargo test --package ucosii --test integration
 
-build:
-	cargo build $(MODE_ARG) 
+# 先编译Rust文件，再编译C文件
+build:$(OBJ_FILES)
+	cargo build $(MODE_ARG)
+	
+# $(OBJ_DIR)/%: $(SRC_DIR)/%.c Rust_build
+# 	$(CC) $(CFLAGS) -c -o $@ $<
+# Rust_build:
+
 liam_build:
 	cargo build $(MODE_ARG)
 
@@ -111,7 +129,9 @@ kill:
         echo "No process found on port 2331"; \
     fi
 Jrun:Jdownload JGDBServer
-	nc localhost 19021 | defmt-print -e $(FILE_ELF) 
+	nc localhost 19021 | defmt-print -e $(FILE_ELF)
+# lib:
+# 	cargo build --lib $(MODE_ARG)
 clean:kill
 	cargo clean
 run:

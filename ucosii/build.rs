@@ -44,4 +44,7 @@ fn main() {
     if os_event_name_en == 1 {
         println!("cargo:rustc-cfg=feature=\"OS_EVENT_NAME_EN\"");
     }
+    // link to the lib
+    // println!("cargo:rustc-link-search=native=./target/thumbv7em-none-eabi/release");
+    // println!("cargo:rustc-link-lib=static=libucosii");
 }
