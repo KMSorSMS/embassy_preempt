@@ -9,6 +9,7 @@ use core::{mem, ptr};
 
 use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
+#[cfg(feature = "defmt")]
 use defmt::info;
 use stm32_metapac::flash::vals::Latency;
 use stm32_metapac::rcc::vals::*;
@@ -232,7 +233,7 @@ impl RtcDriver {
 
             for n in 0..ALARM_COUNT {
                 if sr.ccif(n + 1) && dier.ccie(n + 1) {
-                    info!("the alarm is triggered!!!");
+                    // #info!("the alarm is triggered!!!");
                     self.trigger_alarm(n, cs);
                 }
             }
@@ -314,7 +315,7 @@ impl Driver for RtcDriver {
     }
 
     fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> bool {
-        info!("set the alarm");
+        // #info!("set the alarm");
         let n = alarm.id() as usize;
         // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm
         if timestamp == INT64U::MAX {

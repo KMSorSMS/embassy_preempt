@@ -7,6 +7,7 @@
 use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
+#[cfg(feature = "defmt")]
 use defmt::info;
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
@@ -32,7 +33,7 @@ pub static ref INTERRUPT_STACK: UPSafeCell<OS_STK_REF> = unsafe {
 
 pub fn init_stack_allocator() {
     unsafe {
-        info!("init the stack_allocator");
+        // #info!("init the stack_allocator");
         STACK_ALLOCATOR.lock().init(STACK_START, STACK_SIZE);
     }
     // then we init the program stack
@@ -55,7 +56,7 @@ pub fn init_stack_allocator() {
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
-    info!("alloc_stack");
+    // #info!("alloc_stack");
     let heap_ptr: *mut u8;
     unsafe {
         heap_ptr = STACK_ALLOCATOR.alloc(layout);
@@ -115,10 +116,6 @@ impl Drop for OS_STK_REF {
         if self.STK_REF == NonNull::dangling() || self.HEAP_REF == NonNull::dangling() {
             return;
         }
-        info!(
-            "drop stk has been called,the ptr is :0x{:x}",
-            self.HEAP_REF.as_ptr() as usize
-        );
         let stk_ptr = self.HEAP_REF.as_ptr();
         self.STK_REF = NonNull::dangling();
         self.HEAP_REF = NonNull::dangling();
@@ -141,7 +138,7 @@ pub fn stk_from_ptr(heap_ptr: *mut u8, layout: Layout) -> OS_STK_REF {
         layout,
     }
 }
-#[cfg(test)]
+#[cfg(all(test, feature = "defmt"))]
 #[defmt_test::tests]
 mod unit_tests {
     use defmt::{assert, println};

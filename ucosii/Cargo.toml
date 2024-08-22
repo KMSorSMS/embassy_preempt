@@ -23,9 +23,9 @@ harness = false
 crate-type = ["rlib", "staticlib"]
 
 # needed for each integration test
-[[test]]
-name = "integration"
-harness = false
+# [[test]]
+# name = "integration"
+# harness = false
 
 [workspace]
 members = []
@@ -42,12 +42,12 @@ cortex-m = { version = "0.7"}
 cortex-m-rt = {version = "0.7"}
 critical-section = { version = "1.1",features=["restore-state-bool"]}
 defmt = {version = "0.3", optional = true}
-defmt-rtt = "0.4"
+# defmt-rtt = "0.4"
 log = { version = "0.4.14", optional = true }
 spin = "0.5.2"
 # linked_list_allocator = "0.9.0"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
-panic-probe = { version = "0.3", features = ["print-defmt"] }
+panic-probe = { version = "0.3", features = ["print-defmt"], optional = true}
 cortex-m-semihosting = "0.5.0"
 stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645",  features = ["metadata", "rt"] }
 
@@ -90,9 +90,9 @@ overflow-checks = false  # <-
 # cargo build --release
 [profile.release]
 codegen-units = 1
-debug = 2  # 生成完整的调试信息
+# debug = 2  # 生成完整的调试信息
 opt-level = 1  # 优化级别
-lto = true
+# lto = true
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
 # use lazy static to define global variables
@@ -101,7 +101,7 @@ lto = true
 # this part only define features, don't decide whether the feature is active
 [features]
 # when a feature is set in default, it is active
-default = ["use_spin","unstable-pac","stm32f401re","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","defmt","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+default = ["use_spin","unstable-pac","stm32f401re","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
 defmt = ["dep:defmt"]
 nightly = []
 # this feature will be set in build.rs

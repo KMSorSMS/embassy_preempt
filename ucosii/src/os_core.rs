@@ -32,7 +32,7 @@
 */
 
 use core::sync::atomic::Ordering;
-
+#[cfg(feature = "defmt")]
 use defmt::info;
 // use critical_section::Mutex;
 // use core::cell::RefCell;
@@ -315,7 +315,8 @@ pub fn OSSchedUnlock() {}
 /// OSStart(), you MUST have called OSInit() and you MUST have created at
 /// least one task.
 // #[cfg(not(feature = "test"))]
-pub fn OSStart() -> ! {
+#[no_mangle]
+pub extern "C" fn OSStart() -> ! {
     use crate::heap::stack_allocator::INTERRUPT_STACK;
 
     extern "Rust" {
@@ -603,15 +604,15 @@ fn OS_InitTaskIdle() {
         fn run_idle();
     }
     let idle_fn = |_args: *mut ()| -> ! {
-        info!("idle task");
+        // #info!("idle task");
         loop {
-            // info!("idle loop");
+            // // #info!("idle loop");
             unsafe {
                 run_idle();
             }
         }
     };
-    // info!("create idle task");
+    // // #info!("create idle task");
     SyncOSTaskCreate(idle_fn, 0 as *mut (), 0 as *mut usize, OS_TASK_IDLE_PRIO);
 }
 

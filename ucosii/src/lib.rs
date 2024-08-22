@@ -20,9 +20,7 @@
 *                                                               pub mod
 ********************************************************************************************************************************************
 */
-use cortex_m::{interrupt, register::primask};
-use critical_section::{set_impl, Impl, RawRestoreState};
-use defmt_rtt as _; // global logger
+// use defmt_rtt as _; // global logger
 
 extern crate alloc;
 /// the mod of uC/OS-II kernel
@@ -68,8 +66,6 @@ mod heap;
 pub mod app;
 mod sync;
 
-/// the mod of lang_items
-pub mod lang_items;
 mod util;
 
 // This must go last, so that it sees all the impl_foo! macros defined earlier.
@@ -88,29 +84,6 @@ pub use stm32_metapac as pac;
 #[cfg(not(feature = "unstable-pac"))]
 pub(crate) use stm32_metapac as pac;
 
-/*
-********************************************************************************************************************************************
-*                                                               critical section
-********************************************************************************************************************************************
-*/
-
-struct SingleCoreCriticalSection;
-set_impl!(SingleCoreCriticalSection);
-
-unsafe impl Impl for SingleCoreCriticalSection {
-    unsafe fn acquire() -> RawRestoreState {
-        let was_active = primask::read().is_active();
-        interrupt::disable();
-        was_active
-    }
-
-    unsafe fn release(was_active: RawRestoreState) {
-        // Only re-enable interrupts if they were enabled before the critical section.
-        if was_active {
-            interrupt::enable()
-        }
-    }
-}
 
 /*
 ********************************************************************************************************************************************

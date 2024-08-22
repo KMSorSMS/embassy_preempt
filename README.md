@@ -81,9 +81,9 @@ async fn main(spawner: Spawner) {
         // Asynchronously wait for GPIO events, allowing other tasks
         // to run, or the core to sleep.
         button.wait_for_low().await;
-        info!("Button pressed!");
+        // #info!("Button pressed!");
         button.wait_for_high().await;
-        info!("Button released!");
+        // #info!("Button released!");
     }
 }
 ```

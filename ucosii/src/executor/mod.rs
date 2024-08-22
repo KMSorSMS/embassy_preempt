@@ -14,6 +14,7 @@ use core::pin::Pin;
 use core::ptr::NonNull;
 use core::task::{Context, Poll};
 
+#[cfg(feature = "defmt")]
 use defmt::info;
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
@@ -334,12 +335,12 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         let mut cx = Context::from_waker(&waker);
         match future.poll(&mut cx) {
             Poll::Ready(_) => {
-                // info!("the task {} is ready", this.task_tcb.OSTCBPrio);
+                // // #info!("the task {} is ready", this.task_tcb.OSTCBPrio);
                 this.future.drop_in_place();
                 this.task_tcb.OSTCBStat.despawn();
             }
             Poll::Pending => {
-                // info!("the task {} is pending", this.task_tcb.OSTCBPrio);
+                // // #info!("the task {} is pending", this.task_tcb.OSTCBPrio);
             }
         }
 
@@ -354,7 +355,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // by noah: for we can create task after OSTaskCreate, so we need a cs
         critical_section::with(|cs| {
             let task_storage = ARENA.alloc::<OS_TASK_STORAGE<F>>(cs);
-            info!("size of the task storage is {}", mem::size_of::<OS_TASK_STORAGE<F>>());
+            // #info!("size of the task storage is {}", mem::size_of::<OS_TASK_STORAGE<F>>());
             // create a new task which is not init
             task_storage.write(OS_TASK_STORAGE::new());
             // by noah：no panic will occurred here because if the Arena is not enough, the program will panic when alloc
@@ -456,7 +457,7 @@ pub(crate) struct SyncExecutor {
 }
 impl SyncExecutor {
     fn alarm_callback(ctx: *mut ()) {
-        info!("alarm_callback");
+        // #info!("alarm_callback");
         let this: &Self = unsafe { &*(ctx as *const Self) };
         // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
@@ -519,14 +520,14 @@ impl SyncExecutor {
     }
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
-        info!("call the IntCtxSW");
+        // #info!("call the IntCtxSW");
         if critical_section::with(|_| unsafe {
             self.set_highrdy();
             if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
-                info!("no need to switch task");
+                // #info!("no need to switch task");
                 false
             } else {
-                info!("need to switch task");
+                // #info!("need to switch task");
                 true
             }
         }) {
@@ -542,7 +543,7 @@ impl SyncExecutor {
             fn restore_thread_task();
         }
 
-        info!("interrupt_poll");
+        // #info!("interrupt_poll");
         let mut task = self.OSTCBHighRdy.get();
         // then we need to restore the highest priority task
         if task.OSTCBStkPtr.is_none() {
@@ -557,7 +558,7 @@ impl SyncExecutor {
         }
         // restore the task from stk
         unsafe {
-            info!("restore the task/thread");
+            // #info!("restore the task/thread");
             restore_thread_task()
         };
     }
@@ -576,18 +577,18 @@ impl SyncExecutor {
             });
             // if the highrdy task is the idle task, we need to delay some time
             if critical_section::with(|_| *self.OSPrioHighRdy.get_unmut() == OS_TASK_IDLE_PRIO) {
-                info!("begin delay the idle task");
+                // #info!("begin delay the idle task");
                 delay(block_delay_poll);
-                info!("end delay the idle task");
+                // #info!("end delay the idle task");
             }
             // execute the task depending on if it has stack
-            info!("in the poll task loop");
+            // #info!("in the poll task loop");
             if task.OSTCBStkPtr.is_none() {
-                info!("poll the task");
+                // #info!("poll the task");
                 task.OS_POLL_FN.get().unwrap_unchecked()(task);
             } else {
                 // if the task has stack, it's a thread, we need to resume it not poll it
-                info!("resume the task");
+                // #info!("resume the task");
                 task.restore_context_from_stk();
             }
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
@@ -684,7 +685,7 @@ impl SyncExecutor {
 }
 /// Wake a task by `TaskRef`.
 pub fn wake_task_no_pend(task: OS_TCB_REF) {
-    info!("wake_task_no_pend");
+    // #info!("wake_task_no_pend");
     // We have just marked the task as scheduled, so enqueue it.
     unsafe {
         let executor = GlobalSyncExecutor.as_ref().unwrap();

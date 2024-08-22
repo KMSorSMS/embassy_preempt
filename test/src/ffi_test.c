@@ -1,3 +1,4 @@
+#include "stm32f401xe.h"
 // 声明OS_ERR_STATE
 typedef enum {
     /// No error
@@ -203,10 +204,11 @@ extern void OSStart();
 
 // 定义任务函数
 void task(void* p_arg){
-    LED2_ON();
+    LED2_OFF();
 }
 
 int main(){
+    LED2_ON();
     OSInit();
     // 调用Rust函数
     OSTaskCreate(task, 0, 0, 0);

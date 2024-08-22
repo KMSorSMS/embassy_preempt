@@ -9,3 +9,4 @@ bp.gdb
 tmp.*
 .gdb_history
 build/
+compile_commands.json

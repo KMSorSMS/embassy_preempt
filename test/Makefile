@@ -7,9 +7,11 @@ DEBUG = 1
 OPT = -O0
 # Build path
 BUILD_DIR = build
-C_SOURCES = $(wildcard ./*.c)
+C_SOURCES = $(wildcard src/*.c)
 
-ASM_SOURCES = 
+ASM_SOURCES = \
+# startup_stm32f401xe.s
+
 # 从openocd里获取interface路径，interface在openocd的安装的父目录的父目录的tcl目录下
 # OPENOCD_PATH = $(shell which openocd)
 # OPENOCD_TCL_PATH = $(shell dirname $(shell dirname $(OPENOCD_PATH)))/tcl
@@ -46,7 +48,7 @@ AS_INCLUDES = \
 
 # C includes
 C_INCLUDES =  \
-
+-Iinc \
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -113,11 +115,9 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir $@		
 
-#######################################
-# clean up
-#######################################
-clean:
-	-rm -fR $(BUILD_DIR)
+bear: clean
+	rm ./compile_commands.json || true 
+	bear make -j4
 
 Jdownload: build bin
 # 生成脚本

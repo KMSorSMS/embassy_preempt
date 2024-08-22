@@ -4,6 +4,7 @@ use core::arch::asm;
 use core::ptr::NonNull;
 
 use cortex_m_rt::exception;
+#[cfg(feature = "defmt")]
 use defmt::info;
 
 use super::OS_STK;
@@ -52,7 +53,7 @@ fn PendSV() {
             options(nostack, preserves_flags)
         );
     }
-    info!("entering pendsv");
+    // #info!("entering pendsv");
     // then switch the task
     let stk_ptr: crate::heap::stack_allocator::OS_STK_REF =
         GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
@@ -63,7 +64,7 @@ fn PendSV() {
     // let TCB: &OS_TCB;
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
         // this situation is in interrupt poll
-        info!("need to save the context");
+        // #info!("need to save the context");
         // we need to give the current task the old_stk to store the context
         // first we will store the remaining context to the old_stk
         let old_stk_ptr: *mut usize;
@@ -76,7 +77,7 @@ fn PendSV() {
         }
         // then as we have stored the context, we need to update the old_stk's top
         old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OS_STK).unwrap();
-        info!("in pendsv, the old stk ptr is {:?}", old_stk_ptr);
+        // #info!("in pendsv, the old stk ptr is {:?}", old_stk_ptr);
         // GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk)
         let task_cur = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
         task_cur.set_stk(old_stk);
@@ -86,7 +87,7 @@ fn PendSV() {
         // }
         // by noah: judge whether the task stk is none
         if task_cur.is_stk_none() {
-            info!("the task stk is none");
+            // #info!("the task stk is none");
         }
         // set the current task to be the highrdy
         unsafe {
@@ -96,7 +97,7 @@ fn PendSV() {
         // the situation is in poll
         drop(old_stk);
     }
-    info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
+    // #info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
     // we will reset the msp to the original
     let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
     unsafe {
@@ -167,7 +168,7 @@ const CONTEXT_STACK_SIZE: usize = 16;
 /// set the pc to the executor's poll function
 pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> {
     let executor_function_ptr: fn() = || unsafe {
-        info!("entering the executor function");
+        // #info!("entering the executor function");
         GlobalSyncExecutor.as_ref().unwrap().poll();
     };
     let executor_function_ptr = executor_function_ptr as *const () as usize;

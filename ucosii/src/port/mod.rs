@@ -71,3 +71,31 @@ const TIMER: TimGp16 = stm32_metapac::TIM24;
 pub mod os_cpu;
 /// the time driver
 pub mod time_driver;
+///the language items
+pub mod lang_items;
+
+/*
+********************************************************************************************************************************************
+*                                                               critical section
+********************************************************************************************************************************************
+*/
+use critical_section::{set_impl, Impl, RawRestoreState};
+use cortex_m::{interrupt, register::primask};
+
+struct SingleCoreCriticalSection;
+set_impl!(SingleCoreCriticalSection);
+
+unsafe impl Impl for SingleCoreCriticalSection {
+    unsafe fn acquire() -> RawRestoreState {
+        let was_active = primask::read().is_active();
+        interrupt::disable();
+        was_active
+    }
+
+    unsafe fn release(was_active: RawRestoreState) {
+        // Only re-enable interrupts if they were enabled before the critical section.
+        if was_active {
+            interrupt::enable()
+        }
+    }
+}
