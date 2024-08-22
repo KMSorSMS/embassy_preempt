@@ -302,7 +302,7 @@ impl Driver for RtcDriver {
                 None
             }
         })
-    } 
+    }
 
     fn set_alarm_callback(&self, alarm: AlarmHandle, callback: fn(*mut ()), ctx: *mut ()) {
         critical_section::with(|cs| {

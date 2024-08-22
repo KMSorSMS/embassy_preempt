@@ -24,6 +24,7 @@ pub use self::waker::task_from_waker;
 use crate::arena::ARENA;
 use crate::cfg::*;
 use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, TASK_STACK_SIZE};
+use crate::os_time::blockdelay::delay;
 // use spawner::SpawnToken;
 use crate::port::*;
 use crate::ucosii::*;
@@ -37,7 +38,7 @@ use crate::util::{SyncUnsafeCell, UninitCell};
 // create a global executor
 lazy_static! {
 /// the global executor will be initialized at os init
-    pub(crate) static ref GlobalSyncExecutor: Option<SyncExecutor> = Some(SyncExecutor::new(Pender(0 as *mut ())));
+    pub(crate) static ref GlobalSyncExecutor: Option<SyncExecutor> = Some(SyncExecutor::new());
 }
 /*
 ****************************************************************************************************************************************
@@ -430,23 +431,6 @@ pub fn wake_task(task: OS_TCB_REF) {
     }
 }
 
-#[derive(Clone, Copy)]
-#[allow(unused)]
-pub(crate) struct Pender(*mut ());
-
-unsafe impl Send for Pender {}
-unsafe impl Sync for Pender {}
-
-impl Pender {
-    #[allow(unused)]
-    pub(crate) fn pend(self) {
-        extern "Rust" {
-            fn __pender(context: *mut ());
-        }
-        unsafe { __pender(self.0) };
-    }
-}
-
 /// The executor for the uC/OS-II RTOS.
 pub(crate) struct SyncExecutor {
     // run_queue: RunQueue,
@@ -458,7 +442,6 @@ pub(crate) struct SyncExecutor {
     // highest priority task in the ready queue
     pub(crate) OSPrioHighRdy: SyncUnsafeCell<OS_PRIO>,
     pub(crate) OSTCBHighRdy: SyncUnsafeCell<OS_TCB_REF>,
-    _pender: Pender,
     // by liam: add a bitmap to record the status of the task
     #[cfg(feature = "OS_PRIO_LESS_THAN_64")]
     OSRdyGrp: SyncUnsafeCell<u8>,
@@ -477,7 +460,7 @@ impl SyncExecutor {
         let this: &Self = unsafe { &*(ctx as *const Self) };
         // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
-        loop{
+        loop {
             unsafe { this.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend) };
             // then we need to set a new alarm according to the next expiration time
             let next_expire = unsafe { this.timer_queue.next_expiration() };
@@ -485,7 +468,7 @@ impl SyncExecutor {
             unsafe {
                 this.timer_queue.set_time.set(next_expire);
             }
-            if RTC_DRIVER.set_alarm(this.alarm, next_expire){
+            if RTC_DRIVER.set_alarm(this.alarm, next_expire) {
                 break;
             }
         }
@@ -493,7 +476,7 @@ impl SyncExecutor {
         unsafe { this.IntCtxSW() };
     }
     /// The global executor for the uC/OS-II RTOS.
-    pub(crate) fn new(pender: Pender) -> Self {
+    pub(crate) fn new() -> Self {
         let alarm = unsafe { RTC_DRIVER.allocate_alarm().unwrap() };
         Self {
             os_prio_tbl: SyncUnsafeCell::new([OS_TCB_REF::default(); (OS_LOWEST_PRIO + 1) as usize]),
@@ -503,8 +486,6 @@ impl SyncExecutor {
 
             OSPrioHighRdy: SyncUnsafeCell::new(OS_TASK_IDLE_PRIO),
             OSTCBHighRdy: SyncUnsafeCell::new(OS_TCB_REF::default()),
-
-            _pender: pender,
 
             OSRdyGrp: SyncUnsafeCell::new(0),
             OSRdyTbl: SyncUnsafeCell::new([0; OS_RDY_TBL_SIZE]),
@@ -569,9 +550,7 @@ impl SyncExecutor {
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
             // by noah: *TEST*. Maybe when alloc_stack is called, we need the cs
-            let mut stk = critical_section::with(|_cs|{
-                alloc_stack(layout)
-            });
+            let mut stk = critical_section::with(|_cs| alloc_stack(layout));
             // then we need to mock the stack for the task(the stk will change during the mock)
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
             task.OSTCBStkPtr = Some(stk);
@@ -588,11 +567,19 @@ impl SyncExecutor {
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
         // build this as a loop
         loop {
-            // self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
             // in the executor's thead poll, the highrdy task must be polled
-            let mut task = self.OSTCBHighRdy.get();
-            self.OSPrioCur.set(task.OSTCBPrio);
-            self.OSTCBCur.set(task);
+            let mut task = critical_section::with(|_| {
+                let task = self.OSTCBHighRdy.get();
+                self.OSPrioCur.set(task.OSTCBPrio);
+                self.OSTCBCur.set(task);
+                task
+            });
+            // if the highrdy task is the idle task, we need to delay some time
+            if critical_section::with(|_| *self.OSPrioHighRdy.get_unmut() == OS_TASK_IDLE_PRIO) {
+                info!("begin delay the idle task");
+                delay(block_delay_poll);
+                info!("end delay the idle task");
+            }
             // execute the task depending on if it has stack
             info!("in the poll task loop");
             if task.OSTCBStkPtr.is_none() {

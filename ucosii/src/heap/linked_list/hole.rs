@@ -1,13 +1,9 @@
 use core::alloc::{Layout, LayoutError};
 use core::mem;
 use core::mem::{align_of, size_of};
-use core::ptr::null_mut;
-use core::ptr::NonNull;
+use core::ptr::{null_mut, NonNull};
 
-
-use super::{align_down_size, align_up_size};
-
-use super::align_up;
+use super::{align_down_size, align_up, align_up_size};
 
 /// A sorted list of holes. It uses the the holes itself to store its nodes.
 pub struct HoleList {
@@ -151,9 +147,7 @@ impl Cursor {
         ////////////////////////////////////////////////////////////////////////////
         // This is where we actually perform surgery on the linked list.
         ////////////////////////////////////////////////////////////////////////////
-        let Cursor {
-            mut prev, mut hole, ..
-        } = self;
+        let Cursor { mut prev, mut hole, .. } = self;
         // Remove the current location from the previous node
         unsafe {
             prev.as_mut().next = None;
@@ -259,10 +253,7 @@ impl HoleList {
     /// Creates an empty `HoleList`.
     pub const fn empty() -> HoleList {
         HoleList {
-            first: Hole {
-                size: 0,
-                next: None,
-            },
+            first: Hole { size: 0, next: None },
             bottom: null_mut(),
             top: null_mut(),
             pending_extend: 0,
@@ -280,7 +271,6 @@ impl HoleList {
             None
         }
     }
-
 
     /// Creates a `HoleList` that contains the given hole.
     ///
@@ -407,11 +397,10 @@ impl HoleList {
     /// Returns information about the first hole for test purposes.
     #[cfg(test)]
     pub fn first_hole(&self) -> Option<(*const u8, usize)> {
-        self.first.next.as_ref().map(|hole| {
-            (hole.as_ptr() as *mut u8 as *const u8, unsafe {
-                hole.as_ref().size
-            })
-        })
+        self.first
+            .next
+            .as_ref()
+            .map(|hole| (hole.as_ptr() as *mut u8 as *const u8, unsafe { hole.as_ref().size }))
     }
 
     pub(crate) unsafe fn extend(&mut self, by: usize) {
@@ -455,11 +444,7 @@ impl HoleList {
 
 unsafe fn make_hole(addr: *mut u8, size: usize) -> NonNull<Hole> {
     let hole_addr = addr.cast::<Hole>();
-    debug_assert_eq!(
-        addr as usize % align_of::<Hole>(),
-        0,
-        "Hole address not aligned!",
-    );
+    debug_assert_eq!(addr as usize % align_of::<Hole>(), 0, "Hole address not aligned!",);
     hole_addr.write(Hole { size, next: None });
     NonNull::new_unchecked(hole_addr)
 }
@@ -479,21 +464,13 @@ impl Cursor {
             );
             debug_assert_eq!(self.previous().size, 0);
 
-            let Cursor {
-                mut prev,
-                hole,
-                top,
-            } = self;
+            let Cursor { mut prev, hole, top } = self;
             unsafe {
                 let mut node = check_merge_bottom(node, bottom);
                 prev.as_mut().next = Some(node);
                 node.as_mut().next = Some(hole);
             }
-            Ok(Cursor {
-                prev,
-                hole: node,
-                top,
-            })
+            Ok(Cursor { prev, hole: node, top })
         } else {
             Err(self)
         }
@@ -546,10 +523,7 @@ impl Cursor {
     // Merge the current node with up to n following nodes
     fn try_merge_next_n(self, max: usize) {
         let Cursor {
-            prev: _,
-            mut hole,
-            top,
-            ..
+            prev: _, mut hole, top, ..
         } = self;
 
         for _ in 0..max {
@@ -653,4 +627,3 @@ fn deallocate(list: &mut HoleList, addr: *mut u8, size: usize) {
     // two nodes.
     cursor.try_merge_next_n(n);
 }
-

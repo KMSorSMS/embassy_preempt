@@ -37,7 +37,7 @@ impl ReturnUnitOrNeverReturn for ! {}
 impl ReturnUnitOrNeverReturn for () {}
 /// Create a task in uC/OS-II kernel. This func is used by C
 // _ptos is not used in this func, because stack allocation is done by the stack allocator when scheduling
-pub fn SyncOSTaskCreate<F,R>(task: F, p_arg: *mut (), _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
+pub fn SyncOSTaskCreate<F, R>(task: F, p_arg: *mut (), _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
     F: FnOnce(*mut ()) -> R + 'static,
@@ -83,12 +83,15 @@ where
 
 /// FFI interface
 #[no_mangle]
-pub extern "C" fn OSTaskCreate(fun_ptr: extern "C" fn(*mut ())->!, p_arg: *mut (), ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE {
+pub extern "C" fn OSTaskCreate(
+    fun_ptr: extern "C" fn(*mut ()) -> !,
+    p_arg: *mut (),
+    ptos: *mut OS_STK,
+    prio: INT8U,
+) -> OS_ERR_STATE {
     // wrap the task to "F: FnOnce(*mut ()) -> R + 'static"
     // to force the closure to take ownership of `fun_ptr`, use the `move` keyword: `move `
-    let task = move|p_arg|{
-        fun_ptr(p_arg)
-    };
+    let task = move |p_arg| fun_ptr(p_arg);
     SyncOSTaskCreate(task, p_arg, ptos, prio)
 }
 
@@ -117,7 +120,7 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
         // check whether the task is created after the OS has started
         if OSRunning.load(Acquire) {
             // schedule the task, not using poll, we have to make a preemptive schedule
-            unsafe{
+            unsafe {
                 GlobalSyncExecutor.as_ref().unwrap().IntCtxSW();
             }
         }

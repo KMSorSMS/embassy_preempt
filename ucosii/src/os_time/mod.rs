@@ -1,7 +1,8 @@
-
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 use crate::port::INT32U;
+/// the mod of blockdelay of uC/OS-II kernel
+pub mod blockdelay;
 /// the mod of duration of uC/OS-II kernel
 pub mod duration;
 /// the mod of instant of uC/OS-II kernel

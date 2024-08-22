@@ -52,9 +52,7 @@ impl FixedSizeBlockAllocator {
         match self.fallback_allocator.allocate_first_fit(layout) {
             Ok(ptr) => ptr.as_ptr(),
 
-            Err(_) => {
-                ptr::null_mut()
-            },
+            Err(_) => ptr::null_mut(),
         }
     }
 }

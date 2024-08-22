@@ -1,10 +1,8 @@
 use core::ops::Add;
 
-// use crate::port::time_driver::RTC_DRIVER;
-
-use crate::port::time_driver::{Driver, RTC_DRIVER};
-
 use super::duration::Duration;
+// use crate::port::time_driver::RTC_DRIVER;
+use crate::port::time_driver::{Driver, RTC_DRIVER};
 #[allow(unused)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "defmt", derive(defmt::Format))]

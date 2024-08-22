@@ -38,15 +38,17 @@ use defmt::info;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::{os_task::SyncOSTaskCreate, ucosii::OS_TASK_IDLE_PRIO};
 use crate::executor::GlobalSyncExecutor;
 use crate::heap::stack_allocator::init_stack_allocator;
+use crate::os_task::SyncOSTaskCreate;
 use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
 #[cfg(feature = "OS_TASK_REG_TBL_SIZE")]
 use crate::ucosii::OSTaskRegNextAvailID;
-use crate::ucosii::{OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSRunning, OSTaskCtr, OSTime};
+use crate::ucosii::{
+    OSCtxSwCtr, OSIdleCtr, OSIntNesting, OSLockNesting, OSRunning, OSTaskCtr, OSTime, OS_TASK_IDLE_PRIO,
+};
 
 /*
 *********************************************************************************************************

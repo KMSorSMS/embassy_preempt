@@ -63,3 +63,5 @@ Jdebug: Jdownload JGDBServer
 	-ex 'dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables' \
 	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'source ./bp.gdb'" && \
 	tmux -2 attach-session -d
+clean:
+	rm -rf $(OBJ_DIR)

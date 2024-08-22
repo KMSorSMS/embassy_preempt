@@ -56,8 +56,10 @@ pub fn init_stack_allocator() {
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
     info!("alloc_stack");
-    let heap_ptr: *mut u8 ;
-    unsafe{heap_ptr = STACK_ALLOCATOR.alloc(layout);}
+    let heap_ptr: *mut u8;
+    unsafe {
+        heap_ptr = STACK_ALLOCATOR.alloc(layout);
+    }
     stk_from_ptr(heap_ptr, layout)
 }
 /// dealloc a stack

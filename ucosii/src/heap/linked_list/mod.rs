@@ -1,4 +1,3 @@
-
 #[cfg(feature = "use_spin")]
 extern crate spinning_top;
 
@@ -9,6 +8,7 @@ use core::mem::MaybeUninit;
 #[cfg(feature = "use_spin")]
 use core::ops::Deref;
 use core::ptr::NonNull;
+
 #[cfg(test)]
 use hole::Hole;
 use hole::HoleList;
@@ -22,7 +22,6 @@ pub struct Heap {
     used: usize,
     holes: HoleList,
 }
-
 
 unsafe impl Send for Heap {}
 
@@ -90,10 +89,7 @@ impl Heap {
     /// store the required metadata. Depending on the alignment of the slice, the minimum
     /// size is between `2 * size_of::<usize>` and `3 * size_of::<usize>`.
     pub fn init_from_slice(&mut self, mem: &'static mut [MaybeUninit<u8>]) {
-        assert!(
-            self.bottom().is_null(),
-            "The heap has already been initialized."
-        );
+        assert!(self.bottom().is_null(), "The heap has already been initialized.");
         let size = mem.len();
         let address = mem.as_mut_ptr().cast();
         // SAFETY: All initialization requires the bottom address to be valid, which implies it
@@ -240,7 +236,6 @@ impl Heap {
     }
 }
 
-
 #[cfg(feature = "use_spin")]
 pub struct LockedHeap(Spinlock<Heap>);
 
@@ -296,9 +291,7 @@ unsafe impl GlobalAlloc for LockedHeap {
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        self.0
-            .lock()
-            .deallocate(NonNull::new_unchecked(ptr), layout)
+        self.0.lock().deallocate(NonNull::new_unchecked(ptr), layout)
     }
 }
 

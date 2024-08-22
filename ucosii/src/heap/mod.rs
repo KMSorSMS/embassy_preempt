@@ -16,7 +16,6 @@ pub fn init_heap() {
     }
 }
 
-
 /// A wrapper around spin::Mutex to permit trait implementations.
 pub struct Locked<A> {
     inner: spin::Mutex<A>,

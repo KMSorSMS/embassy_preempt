@@ -3,10 +3,10 @@
 #![feature(impl_trait_in_assoc_type)]
 
 use defmt::info;
-use ucosii::app::blockdelay::delay;
 // <- derive attribute
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::{AsyncOSTaskCreate, SyncOSTaskCreate};
+use ucosii::os_time::blockdelay::delay;
 use ucosii::os_time::timer::Timer;
 use ucosii::os_time::OSTimeDly;
 use ucosii::{self as _};
