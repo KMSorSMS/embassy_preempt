@@ -196,9 +196,14 @@ typedef unsigned int OS_STK;
 extern OS_ERR_STATE OSTaskCreate(void (*fun_ptr)(void*), void* p_arg, OS_STK* ptos, unsigned short prio);
 extern void OSInit();
 extern void OSStart();
+// 开灯操作，用宏定义
+#define LED2_ON() GPIOA->ODR |= 0x00000020; // 设置为1，即高电平
+// 关灯操作，用宏定义
+#define LED2_OFF() GPIOA->ODR &= ~0x00000020; // 设置为0，即低电平
+
 // 定义任务函数
 void task(void* p_arg){
-    while(1);
+    LED2_ON();
 }
 
 int main(){
