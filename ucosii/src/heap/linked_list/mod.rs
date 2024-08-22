@@ -9,7 +9,6 @@ use core::mem::MaybeUninit;
 #[cfg(feature = "use_spin")]
 use core::ops::Deref;
 use core::ptr::NonNull;
-use defmt::info;
 #[cfg(test)]
 use hole::Hole;
 use hole::HoleList;

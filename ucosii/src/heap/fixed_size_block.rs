@@ -1,5 +1,4 @@
 use alloc::alloc::{GlobalAlloc, Layout};
-use defmt::info;
 use core::mem;
 use core::ptr::{self, NonNull};
 

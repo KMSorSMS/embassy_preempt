@@ -1,4 +1,3 @@
-use defmt::info;
 
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};

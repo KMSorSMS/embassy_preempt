@@ -4,7 +4,12 @@
 
 // extern crate ucosii;
 use defmt::info;
-use ucosii::{app::led::{LED_Init, LED_OFF, LED_ON}, os_core::{OSInit, OSStart}, os_task::AsyncOSTaskCreate, os_time::timer::Timer};
+use ucosii::app::blockdelay::delay;
+use ucosii::app::led::{LED_Init, LED_OFF, LED_ON};
+use ucosii::os_core::{OSInit, OSStart};
+use ucosii::os_task::AsyncOSTaskCreate;
+use ucosii::os_time::timer::Timer;
+use ucosii::{self as _};
 
 #[cortex_m_rt::entry]
 fn test_hardware() -> ! {
@@ -17,18 +22,20 @@ fn test_hardware() -> ! {
 }
 
 async fn task1(_args: *mut ()) {
-    // init the led 
+    // init the led
     LED_Init();
-    loop{
+    loop {
         // led on
         LED_ON();
         info!("led on");
+        delay(1);
         // delay 5s
-        Timer::after_secs(1).await;
+        Timer::after_secs(5).await;
         // led off
         LED_OFF();
         info!("led off");
+        delay(1);
         // delay 5s
-        Timer::after_secs(1).await;
+        Timer::after_secs(5).await;
     }
 }

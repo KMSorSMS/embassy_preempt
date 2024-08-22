@@ -4,7 +4,6 @@ use core::mem::{align_of, size_of};
 use core::ptr::null_mut;
 use core::ptr::NonNull;
 
-use defmt::info;
 
 use super::{align_down_size, align_up_size};
 
