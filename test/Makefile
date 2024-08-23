@@ -2,7 +2,7 @@
 TARGET = ffi_test
 .PHONY: bear clean
 UBUNTU_VERSION := $(shell lsb_release -rs)
-
+DEVICE := STM32F401RE
 DEBUG = 1
 OPT = -O0
 # Build path
@@ -115,13 +115,22 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir $@		
 
+# bear: clean
+# 	rm ./compile_commands.json || true 
+# 	bear make -j4
 bear: clean
+	@echo UBUNTU_VERSION:${UBUNTU_VERSION}
+ifeq ($(UBUNTU_VERSION),20.04)
 	rm ./compile_commands.json || true 
 	bear make -j4
+else ifeq ($(UBUNTU_VERSION),22.04)
 
-Jdownload: build bin
+	rm ./compile_commands.json || true 
+	export https_proxy= && export http_proxy= && bear -- make -j4
+endif
+Jdownload: bear
 # 生成脚本
-	@echo "h\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
+	@echo "h\nloadfile $(BUILD_DIR)/$(TARGET).bin 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
 	JLinkExe -device $(DEVICE) -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkDownload.jlink
 
 JGDBServer:kill
@@ -139,10 +148,9 @@ kill:
 
 Jdebug: Jdownload JGDBServer
 	tmux new-session -d \
-	"nc localhost 19021 | defmt-print -e $(FILE_ELF) " && \
-	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
+	"RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(BUILD_DIR)/$(TARGET).elf' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
 	-ex 'dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables' \
-	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'source ./bp.gdb'" && \
+	-ex 'monitor reset'" && \
 	tmux -2 attach-session -d
 STdownload:
 	make
