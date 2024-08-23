@@ -59,7 +59,8 @@ impl TimerQueue {
         }
     }
     pub(crate) unsafe fn dequeue_expired(&self, now: u64, on_task: impl Fn(OS_TCB_REF)) {
-        // #info!("dequeue expired");
+        #[cfg(feature = "defmt")]
+        info!("dequeue expired");
         let head = self.head.get_unmut();
         let mut cur = head;
         while let Some(cur_ref) = cur {

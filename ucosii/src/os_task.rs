@@ -51,13 +51,15 @@ where
 
     // warp the normal func to a async func
     let future_func = move || async move { task(p_arg) };
-    // // #info!("the size of future is {}",core::mem::size_of_val(&future_func));
+    #[cfg(feature = "defmt")]
+    info!("the size of future is {}", core::mem::size_of_val(&future_func));
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
         let layout = Layout::from_size_align(DEFAULT_REVOKE_STACK_SIZE, 4).unwrap();
         let heap_ptr = unsafe { (_ptos as *mut u8).offset(-(DEFAULT_REVOKE_STACK_SIZE as isize)) };
         // by noah: used to test ffi
-        // #info!("Task Create");
+        #[cfg(feature = "defmt")]
+        info!("Task Create");
         let mut stk = stk_from_ptr(heap_ptr as *mut u8, layout);
         dealloc_stack(&mut stk);
     }
@@ -112,7 +114,8 @@ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) 
             return false;
         }
     }) {
-        // #info!("the prio is exist");
+        #[cfg(feature = "defmt")]
+        info!("the prio is exist");
         return OS_ERR_STATE::OS_ERR_PRIO_EXIST;
     }
 

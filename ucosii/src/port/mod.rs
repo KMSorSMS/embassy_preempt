@@ -68,19 +68,20 @@ const TIMER: TimGp16 = stm32_metapac::TIM23;
 #[cfg(feature = "time_driver_tim24")]
 const TIMER: TimGp16 = stm32_metapac::TIM24;
 
+///the language items
+pub mod lang_items;
 pub mod os_cpu;
 /// the time driver
 pub mod time_driver;
-///the language items
-pub mod lang_items;
 
 /*
 ********************************************************************************************************************************************
 *                                                               critical section
 ********************************************************************************************************************************************
 */
+use cortex_m::interrupt;
+use cortex_m::register::primask;
 use critical_section::{set_impl, Impl, RawRestoreState};
-use cortex_m::{interrupt, register::primask};
 
 struct SingleCoreCriticalSection;
 set_impl!(SingleCoreCriticalSection);

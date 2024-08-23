@@ -32,18 +32,22 @@ fn test_basic_schedule() -> ! {
 fn task1(_args: *mut ()) {
     loop {
         // 任务1
-        // #info!("---task1 begin---");
+        #[cfg(feature = "defmt")]
+        info!("---task1 begin---");
         OSTimeDly(100_000);
-        // #info!("---task1 end---");
+        #[cfg(feature = "defmt")]
+        info!("---task1 end---");
         delay(SHORT_TIME);
     }
 }
 fn task2(_args: *mut ()) {
     loop {
         // 任务2
-        // #info!("---task2 begin---");
+        #[cfg(feature = "defmt")]
+        info!("---task2 begin---");
         OSTimeDly(200_000);
-        // #info!("---task2 end---");
+        #[cfg(feature = "defmt")]
+        info!("---task2 end---");
         delay(SHORT_TIME);
     }
 }
@@ -52,19 +56,23 @@ async fn task3(_args: *mut ()) {
     // 任务3
     loop {
         //
-        // #info!("---task3 begin---");
+        #[cfg(feature = "defmt")]
+        info!("---task3 begin---");
         Timer::after_secs(LONG_TIME as u64).await;
         // delay(LONG_TIME);
-        // #info!("---task3 end---");
+        #[cfg(feature = "defmt")]
+        info!("---task3 end---");
         delay(SHORT_TIME);
     }
 }
 fn task4(_args: *mut ()) {
     // 任务4
-    // #info!("---task4 begin---");
+    #[cfg(feature = "defmt")]
+    info!("---task4 begin---");
     // 任务3中涉及任务创建
     SyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 14);
     delay(SHORT_TIME);
-    // #info!("---task4 end---");
+    #[cfg(feature = "defmt")]
+    info!("---task4 end---");
     delay(MID_TIME);
 }

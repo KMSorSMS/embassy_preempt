@@ -27,13 +27,15 @@ async fn task1(_args: *mut ()) {
     loop {
         // led on
         LED_ON();
-        // #info!("led on");
+        #[cfg(feature = "defmt")]
+        info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         LED_OFF();
-        // #info!("led off");
+        #[cfg(feature = "defmt")]
+        info!("led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;

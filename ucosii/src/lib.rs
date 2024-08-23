@@ -20,8 +20,8 @@
 *                                                               pub mod
 ********************************************************************************************************************************************
 */
-// use defmt_rtt as _; // global logger
-
+#[cfg(feature = "defmt")]
+use defmt_rtt as _; // global logger
 extern crate alloc;
 /// the mod of uC/OS-II kernel
 pub mod os_core;
@@ -83,7 +83,6 @@ mod util;
 pub use stm32_metapac as pac;
 #[cfg(not(feature = "unstable-pac"))]
 pub(crate) use stm32_metapac as pac;
-
 
 /*
 ********************************************************************************************************************************************

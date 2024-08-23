@@ -33,7 +33,8 @@ pub static ref INTERRUPT_STACK: UPSafeCell<OS_STK_REF> = unsafe {
 
 pub fn init_stack_allocator() {
     unsafe {
-        // #info!("init the stack_allocator");
+        #[cfg(feature = "defmt")]
+        info!("init the stack_allocator");
         STACK_ALLOCATOR.lock().init(STACK_START, STACK_SIZE);
     }
     // then we init the program stack
@@ -56,7 +57,8 @@ pub fn init_stack_allocator() {
 }
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
-    // #info!("alloc_stack");
+    #[cfg(feature = "defmt")]
+    info!("alloc_stack");
     let heap_ptr: *mut u8;
     unsafe {
         heap_ptr = STACK_ALLOCATOR.alloc(layout);

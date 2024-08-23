@@ -42,7 +42,7 @@ cortex-m = { version = "0.7"}
 cortex-m-rt = {version = "0.7", features = ["device"]}
 critical-section = { version = "1.1",features=["restore-state-bool"]}
 defmt = {version = "0.3", optional = true}
-# defmt-rtt = "0.4"
+defmt-rtt = {version = "0.4", optional = true}
 log = { version = "0.4.14", optional = true }
 spin = "0.5.2"
 # linked_list_allocator = "0.9.0"
@@ -102,7 +102,7 @@ lto = true
 [features]
 # when a feature is set in default, it is active
 default = ["use_spin","unstable-pac","stm32f401re","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
-defmt = ["dep:defmt"]
+defmt = ["dep:defmt","panic-probe","defmt-rtt"]
 nightly = []
 # this feature will be set in build.rs
 OS_EVENT_EN = []

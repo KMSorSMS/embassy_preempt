@@ -155,6 +155,6 @@ liam_defmt:
 lib-run:
 	cargo test --lib
 liam_run:
-	cargo rb $(liam_TARGET)
+	cargo rb $(liam_TARGET) --features "defmt"
 liam_run_release:
 	cargo rrb $(liam_TARGET)

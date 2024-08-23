@@ -32,6 +32,7 @@
 */
 
 use core::sync::atomic::Ordering;
+
 #[cfg(feature = "defmt")]
 use defmt::info;
 // use critical_section::Mutex;
@@ -604,15 +605,16 @@ fn OS_InitTaskIdle() {
         fn run_idle();
     }
     let idle_fn = |_args: *mut ()| -> ! {
-        // #info!("idle task");
         loop {
-            // // #info!("idle loop");
+            #[cfg(feature = "defmt")]
+            info!("idle loop");
             unsafe {
-                // run_idle();
+                run_idle();
             }
         }
     };
-    // // #info!("create idle task");
+    #[cfg(feature = "defmt")]
+    info!("create idle task");
     SyncOSTaskCreate(idle_fn, 0 as *mut (), 0 as *mut usize, OS_TASK_IDLE_PRIO);
 }
 

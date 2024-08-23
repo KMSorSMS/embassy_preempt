@@ -1,5 +1,5 @@
 use cortex_m_semihosting::debug;
-#[cfg(feature = "panic-probe")]
+#[cfg(feature = "defmt")]
 use panic_probe as _;
 
 // same panicking *behavior* as `panic-probe` but doesn't print a panic message
