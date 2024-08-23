@@ -13,6 +13,7 @@
 
 use alloc::string::ToString;
 use core::alloc::Layout;
+use core::ffi::c_void;
 use core::future::Future;
 use core::sync::atomic::Ordering::Acquire;
 
@@ -38,10 +39,10 @@ impl ReturnUnitOrNeverReturn for ! {}
 impl ReturnUnitOrNeverReturn for () {}
 /// Create a task in uC/OS-II kernel. This func is used by C
 // _ptos is not used in this func, because stack allocation is done by the stack allocator when scheduling
-pub fn SyncOSTaskCreate<F, R>(task: F, p_arg: *mut (), _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
+pub fn SyncOSTaskCreate<F, R>(task: F, p_arg: *mut c_void, _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
-    F: FnOnce(*mut ()) -> R + 'static,
+    F: FnOnce(*mut c_void) -> R + 'static,
     R: ReturnUnitOrNeverReturn,
 {
     // check the priority
@@ -67,11 +68,11 @@ where
 }
 
 /// Create a task in uC/OS-II kernel. This func is used by async Rust
-pub fn AsyncOSTaskCreate<F, FutFn>(task: FutFn, p_arg: *mut (), _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
+pub fn AsyncOSTaskCreate<F, FutFn>(task: FutFn, p_arg: *mut c_void, _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
     F: Future + 'static,
-    FutFn: FnOnce(*mut ()) -> F + 'static,
+    FutFn: FnOnce(*mut c_void) -> F + 'static,
 {
     let future_func = || task(p_arg);
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
@@ -87,8 +88,8 @@ where
 /// FFI interface
 #[no_mangle]
 pub extern "C" fn OSTaskCreate(
-    fun_ptr: extern "C" fn(*mut ()) -> !,
-    p_arg: *mut (),
+    fun_ptr: extern "C" fn(*mut c_void),
+    p_arg: *mut c_void,
     ptos: *mut OS_STK,
     prio: INT8U,
 ) -> OS_ERR_STATE {

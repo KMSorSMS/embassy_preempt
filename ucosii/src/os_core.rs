@@ -31,7 +31,7 @@
 *********************************************************************************************************
 */
 
-use core::sync::atomic::Ordering;
+use core::{ffi::c_void, sync::atomic::Ordering};
 
 #[cfg(feature = "defmt")]
 use defmt::info;
@@ -604,7 +604,7 @@ fn OS_InitTaskIdle() {
     extern "Rust" {
         fn run_idle();
     }
-    let idle_fn = |_args: *mut ()| -> ! {
+    let idle_fn = |_args: *mut c_void| -> ! {
         loop {
             #[cfg(feature = "defmt")]
             info!("idle loop");
@@ -615,7 +615,7 @@ fn OS_InitTaskIdle() {
     };
     #[cfg(feature = "defmt")]
     info!("create idle task");
-    SyncOSTaskCreate(idle_fn, 0 as *mut (), 0 as *mut usize, OS_TASK_IDLE_PRIO);
+    SyncOSTaskCreate(idle_fn, 0 as *mut c_void, 0 as *mut usize, OS_TASK_IDLE_PRIO);
 }
 
 /*

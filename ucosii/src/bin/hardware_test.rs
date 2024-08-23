@@ -2,6 +2,8 @@
 #![no_std]
 #![feature(impl_trait_in_assoc_type)]
 
+use core::ffi::c_void;
+
 // extern crate ucosii;
 #[cfg(feature = "defmt")]
 use defmt::info;
@@ -16,12 +18,12 @@ fn test_hardware() -> ! {
     // os初始化
     OSInit();
     // 为了测试硬件以及time driver的正确性，只创建1个任务以避免抢占
-    AsyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 10);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 10);
     // 启动os
     OSStart();
 }
 
-async fn task1(_args: *mut ()) {
+async fn task1(_args: *mut c_void) {
     // init the led
     LED_Init();
     loop {

@@ -2,6 +2,8 @@
 #![no_std]
 #![feature(impl_trait_in_assoc_type)]
 
+use core::ffi::c_void;
+
 #[cfg(feature = "defmt")]
 use defmt::info;
 // <- derive attribute
@@ -21,15 +23,15 @@ fn test_basic_schedule() -> ! {
     // os初始化
     OSInit();
     // 创建两个任务
-    SyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 10);
-    SyncOSTaskCreate(task2, 0 as *mut (), 0 as *mut usize, 11);
-    AsyncOSTaskCreate(task3, 0 as *mut (), 0 as *mut usize, 12);
-    SyncOSTaskCreate(task4, 0 as *mut (), 0 as *mut usize, 13);
+    SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 10);
+    SyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 11);
+    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 12);
+    SyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 13);
     // 启动os
     OSStart();
 }
 
-fn task1(_args: *mut ()) {
+fn task1(_args: *mut c_void) {
     loop {
         // 任务1
         #[cfg(feature = "defmt")]
@@ -40,7 +42,7 @@ fn task1(_args: *mut ()) {
         delay(SHORT_TIME);
     }
 }
-fn task2(_args: *mut ()) {
+fn task2(_args: *mut c_void) {
     loop {
         // 任务2
         #[cfg(feature = "defmt")]
@@ -52,7 +54,7 @@ fn task2(_args: *mut ()) {
     }
 }
 
-async fn task3(_args: *mut ()) {
+async fn task3(_args: *mut c_void) {
     // 任务3
     loop {
         //
@@ -65,12 +67,12 @@ async fn task3(_args: *mut ()) {
         delay(SHORT_TIME);
     }
 }
-fn task4(_args: *mut ()) {
+fn task4(_args: *mut c_void) {
     // 任务4
     #[cfg(feature = "defmt")]
     info!("---task4 begin---");
     // 任务3中涉及任务创建
-    SyncOSTaskCreate(task1, 0 as *mut (), 0 as *mut usize, 14);
+    SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 14);
     delay(SHORT_TIME);
     #[cfg(feature = "defmt")]
     info!("---task4 end---");
