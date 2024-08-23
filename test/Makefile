@@ -147,5 +147,13 @@ Jdebug: Jdownload JGDBServer
 STdownload:
 	make
 	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000" -c "reset" -c "shutdown"
+
+liam_debug: all
+	tmux new-session -d \
+	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000' " && \
+	tmux split-window -h "gdb-multiarch -ex 'file $(BUILD_DIR)/$(TARGET).elf' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
+	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit' -ex 'monitor reset'" && \
+	tmux -2 attach-session -d
+
 clean:
 	rm -rf $(BUILD_DIR)

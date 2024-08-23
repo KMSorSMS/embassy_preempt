@@ -608,7 +608,7 @@ fn OS_InitTaskIdle() {
         loop {
             // // #info!("idle loop");
             unsafe {
-                run_idle();
+                // run_idle();
             }
         }
     };
