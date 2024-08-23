@@ -47,4 +47,9 @@ fn main() {
     // link to the lib
     // println!("cargo:rustc-link-search=native=./target/thumbv7em-none-eabi/release");
     // println!("cargo:rustc-link-lib=static=libucosii");
+    // 编译选项的可选："-C", "link-arg=-Tdefmt.x", 开了defmt才用
+    if env::var("CARGO_FEATURE_DEFMT").is_ok() {
+        println!("cargo:rustc-link-arg=-Tdefmt.x");
+    }
+
 }
