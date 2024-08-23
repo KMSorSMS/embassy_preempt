@@ -21,6 +21,7 @@
 /* Provides information about the memory layout of the device */
 /* This will be provided by the user (see `memory.x`) or by a Board Support Crate */
 INCLUDE memory.x
+INCLUDE device.x
 
 /* # Entry point = reset vector */
 EXTERN(__RESET_VECTOR);

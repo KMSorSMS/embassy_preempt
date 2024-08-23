@@ -204,7 +204,7 @@ extern void OSStart();
 
 // 定义任务函数
 void task(void* p_arg){
-    LED2_OFF();
+    LED2_ON();
 }
 
 int main(){

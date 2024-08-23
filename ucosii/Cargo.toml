@@ -39,7 +39,7 @@ members = []
 [dependencies]
 # import the uc/os-ii library
 cortex-m = { version = "0.7"}
-cortex-m-rt = {version = "0.7"}
+cortex-m-rt = {version = "0.7", features = ["device"]}
 critical-section = { version = "1.1",features=["restore-state-bool"]}
 defmt = {version = "0.3", optional = true}
 # defmt-rtt = "0.4"
