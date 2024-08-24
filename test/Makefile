@@ -4,7 +4,7 @@ TARGET = ffi_test
 UBUNTU_VERSION := $(shell lsb_release -rs)
 DEVICE := STM32F401RE
 DEBUG = 1
-OPT = -O0
+OPT = -O1
 # Build path
 BUILD_DIR = build
 C_SOURCES = $(wildcard src/*.c)

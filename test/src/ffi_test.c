@@ -263,7 +263,7 @@ void RCC_Configuration(void)
     RCC->AHB1ENR |= 0x00000001;
 }
 
-
+// 0x4000040C
 int main(){
     // 时钟初始化
     RCC_Configuration();
@@ -271,7 +271,7 @@ int main(){
     LED2_OFF();
     OSInit();
     // 调用Rust函数
-    OSTaskCreate(task, 0, 0, 0);
+    OSTaskCreate(task, (void*)0, (OS_STK*)0, 10);
     OSStart();
     while(1);
 }
