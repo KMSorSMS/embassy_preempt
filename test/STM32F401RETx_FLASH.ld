@@ -57,7 +57,9 @@ EXTERN(__INTERRUPTS); /* `static` variable similar to `__EXCEPTIONS` */
 /* If the user overrides this using the `pre_init!` macro or by creating a `__pre_init` function,
    then the function this points to will be called before the RAM is initialized. */
 PROVIDE(__pre_init = DefaultPreInit);
-
+/* Generate a link error if heap and stack don't fit into RAM */
+_Min_Heap_Size = 0x5000;      /* required amount of heap  */
+_Min_Stack_Size = 0x5000; /* required amount of stack */
 /* # Sections */
 SECTIONS
 {
@@ -124,6 +126,15 @@ SECTIONS
   } > FLASH
 
   /* ## Sections in RAM */
+  /* ## stack region */
+   ._user_heap_stack :
+  {
+    . = ALIGN(8);
+    . = . + _Min_Heap_Size;
+    . = . + _Min_Stack_Size;
+  } >RAM
+  . = ALIGN(8);
+  _stack_start = .;
   /* ### .data */
   .data : ALIGN(4)
   {

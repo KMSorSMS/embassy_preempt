@@ -4,7 +4,7 @@ TARGET = ffi_test
 UBUNTU_VERSION := $(shell lsb_release -rs)
 
 DEBUG = 1
-OPT = -O0
+OPT = -O3
 # Build path
 BUILD_DIR = build
 C_SOURCES = $(wildcard src/*.c)
@@ -148,7 +148,7 @@ STdownload:
 	make
 	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000" -c "reset" -c "shutdown"
 
-liam_debug: all
+liam_debug: clean all
 	tmux new-session -d \
 	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000' " && \
 	tmux split-window -h "gdb-multiarch -ex 'file $(BUILD_DIR)/$(TARGET).elf' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \

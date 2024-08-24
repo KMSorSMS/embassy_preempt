@@ -92,7 +92,7 @@ overflow-checks = false  # <-
 codegen-units = 1
 debug = 2  # 生成完整的调试信息
 opt-level = 1  # 优化级别
-lto = true
+# lto = true
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }
 # use lazy static to define global variables

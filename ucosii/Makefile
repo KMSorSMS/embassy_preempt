@@ -157,4 +157,4 @@ lib-run:
 liam_run:
 	cargo rb $(liam_TARGET) --features "defmt"
 liam_run_release:
-	cargo rrb $(liam_TARGET)
+	cargo rrb $(liam_TARGET) --features "defmt"

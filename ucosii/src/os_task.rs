@@ -39,7 +39,7 @@ impl ReturnUnitOrNeverReturn for ! {}
 impl ReturnUnitOrNeverReturn for () {}
 /// Create a task in uC/OS-II kernel. This func is used by C
 // _ptos is not used in this func, because stack allocation is done by the stack allocator when scheduling
-pub fn SyncOSTaskCreate<F, R>(task: F, p_arg: *mut c_void, _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
+pub extern "aapcs" fn SyncOSTaskCreate<F, R>(task: F, p_arg: *mut c_void, _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
     F: FnOnce(*mut c_void) -> R + 'static,
@@ -85,21 +85,46 @@ where
     return init_task(prio, future_func);
 }
 
-/// FFI interface
+// /// FFI interface
+// #[no_mangle]
+// #[naked]
+// pub extern "aapcs"  fn OSTaskCreate(
+//     fun_ptr:  extern "aapcs" fn(*mut c_void) -> c_void,
+//     p_arg: *mut c_void,
+//     ptos: *mut OS_STK,
+//     prio: INT8U,
+// ) -> OS_ERR_STATE {
+//     unsafe {
+//         asm!(
+//             "push {{r4-r11, lr}}",
+//             // // prepare arguments to call the rust SyncOSTaskCreate func
+//             // "mov r4, r1",
+//             // "mov r1, r0",
+//             // "mov r0, r2",
+//             // "mov r2, r4",
+//             // "mov r4, r3",
+//             // "mov r3, r0",
+//             // call the rust SyncOSTaskCreate func
+//             "bl helper_rust_sync_ostask_create",
+//             // return to the caller
+//             "pop {{r4-r11, pc}}",
+//             options(noreturn),
+//         );
+//     }
+// }
 #[no_mangle]
-pub extern "C" fn OSTaskCreate(
-    fun_ptr: extern "C" fn(*mut c_void),
+/// helper func
+pub extern "aapcs" fn OSTaskCreate(
+    fun_ptr:  extern "aapcs" fn(*mut c_void),
     p_arg: *mut c_void,
     ptos: *mut OS_STK,
     prio: INT8U,
 ) -> OS_ERR_STATE {
-    // wrap the task to "F: FnOnce(*mut ()) -> R + 'static"
-    // to force the closure to take ownership of `fun_ptr`, use the `move` keyword: `move `
-    let task = move |p_arg| fun_ptr(p_arg);
-    SyncOSTaskCreate(task, p_arg, ptos, prio)
+    let fun_ptr = move |p_arg| fun_ptr(p_arg);
+    SyncOSTaskCreate(fun_ptr, p_arg, ptos, prio)
 }
 
-fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) -> OS_ERR_STATE {
+ fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) -> OS_ERR_STATE {
     // Make sure we don't create the task from within an ISR
     if OSIntNesting.load(Acquire) > 0 {
         return OS_ERR_STATE::OS_ERR_TASK_CREATE_ISR;
