@@ -107,6 +107,5 @@ int main() {
   // 调用Rust函数
   OSTaskCreate(task, 0, &my_task_0[1024 - 1u], 12);
   OSStart();
-  while (1)
-    ;
+  while (1);
 }
