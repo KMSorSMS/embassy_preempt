@@ -5,6 +5,7 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
+use defmt::trace;
 use core::ptr::NonNull;
 
 #[cfg(feature = "defmt")]
@@ -15,8 +16,8 @@ use super::Locked;
 
 pub const STACK_START: *mut u8 = 0x20000000 as *mut u8;
 pub const STACK_SIZE: usize = 40 * 1024; // 40 KiB
-pub const PROGRAM_STACK_SIZE: usize = 2048; // 1KiB 256 B also ok
-pub const INTERRUPT_STACK_SIZE: usize = 2048; // 1 KiB
+pub const PROGRAM_STACK_SIZE: usize = 512; // 1KiB 512 B also ok
+pub const INTERRUPT_STACK_SIZE: usize = 512; // 1 KiB
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
 use crate::port::OS_STK;
@@ -32,9 +33,9 @@ pub static ref INTERRUPT_STACK: UPSafeCell<OS_STK_REF> = unsafe {
 }
 
 pub fn init_stack_allocator() {
+    #[cfg(feature = "defmt")]
+    trace!("init_stack_allocator");
     unsafe {
-        #[cfg(feature = "defmt")]
-        info!("init the stack_allocator");
         STACK_ALLOCATOR.lock().init(STACK_START, STACK_SIZE);
     }
     // then we init the program stack
@@ -58,15 +59,18 @@ pub fn init_stack_allocator() {
 /// alloc a new stack
 pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
     #[cfg(feature = "defmt")]
-    info!("alloc_stack");
+    trace!("alloc_stack");
     let heap_ptr: *mut u8;
     unsafe {
         heap_ptr = STACK_ALLOCATOR.alloc(layout);
     }
+    info!("alloc a stack at {}", heap_ptr);
     stk_from_ptr(heap_ptr, layout)
 }
 /// dealloc a stack
 pub fn dealloc_stack(stk: &mut OS_STK_REF) {
+    #[cfg(feature = "defmt")]
+    trace!("dealloc_stack");
     if stk.STK_REF == NonNull::dangling() || stk.HEAP_REF == NonNull::dangling() {
         return;
     }

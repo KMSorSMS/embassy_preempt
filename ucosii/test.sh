@@ -24,7 +24,8 @@ run_test() {
     MAX_WAIT=3
     WAITED=0
     # 单次测试最长执行时间
-    MAX_TIME=90
+    # 测试两个小时以验证稳定性
+    MAX_TIME=300
     # 记录总时间
     TOTAL_TIME=0
     # # 查找并终止probe-rs run进程
@@ -133,7 +134,8 @@ tests=(
 # "prio_test"
 # "ucosii_main"
 # hardware_test
-preempt_basic
+# preempt_basic
+comprehensive_test
 )
 
 # 循环遍历数组，执行测试

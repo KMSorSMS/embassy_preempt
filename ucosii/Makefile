@@ -10,7 +10,8 @@ TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # preempt_test
 # scheduling_test
 # ffi_test
-TARGET := preempt_test
+# comprehensive_test
+TARGET := comprehensive_test
 liam_TARGET := hardware_test
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE

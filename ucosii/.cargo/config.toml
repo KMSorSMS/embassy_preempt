@@ -24,4 +24,4 @@ OS_SEM_EN = "1"
 OS_MUTEX_EN = "0"
 OS_EVENT_NAME_EN = "1"
 OS_LOWEST_PRIO = "63"
-DEFMT_LOG = "info" # <- can change to info, warn, or error. to print info
+DEFMT_LOG = "trace" # <- can change to info, warn, or error. to print info

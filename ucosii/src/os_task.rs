@@ -12,6 +12,7 @@
 */
 
 use alloc::string::ToString;
+use defmt::trace;
 use core::alloc::Layout;
 use core::ffi::c_void;
 use core::future::Future;
@@ -45,11 +46,12 @@ where
     F: FnOnce(*mut c_void) -> R + 'static,
     R: ReturnUnitOrNeverReturn,
 {
+    #[cfg(feature = "defmt")]
+    trace!("SyncOSTaskCreate");
     // check the priority
     if prio > OS_LOWEST_PRIO as u8 {
         return OS_ERR_STATE::OS_ERR_PRIO_INVALID;
     }
-
     // warp the normal func to a async func
     let future_func = move || async move { task(p_arg) };
     #[cfg(feature = "defmt")]
@@ -74,6 +76,8 @@ where
     F: Future + 'static,
     FutFn: FnOnce(*mut c_void) -> F + 'static,
 {
+    #[cfg(feature = "defmt")]
+    trace!("AsyncOSTaskCreate");
     let future_func = || task(p_arg);
     // if the ptos is not null, we will revoke it as the miniaml stack size(which is 128 B)
     if !_ptos.is_null() {
@@ -120,6 +124,8 @@ pub extern "aapcs" fn OSTaskCreate(
     ptos: *mut OS_STK,
     prio: INT8U,
 ) -> OS_ERR_STATE {
+    #[cfg(feature = "defmt")]
+    trace!("OSTaskCreate");
     let fun_ptr = move |p_arg| fun_ptr(p_arg);
     SyncOSTaskCreate(fun_ptr, p_arg, ptos, prio)
 }

@@ -35,6 +35,7 @@ use core::{ffi::c_void, sync::atomic::Ordering};
 
 #[cfg(feature = "defmt")]
 use defmt::info;
+use defmt::trace;
 // use critical_section::Mutex;
 // use core::cell::RefCell;
 use os_cpu::*;
@@ -156,6 +157,8 @@ pub fn OSEventNameSet() {}
 /// prior to creating any uC/OS-II object and, prior to calling OSStart().
 #[no_mangle]
 pub extern "C" fn OSInit() {
+    #[cfg(feature = "defmt")]
+    trace!("OSInit");
     OSInitHookBegin(); /* Call port specific initialization code   */
 
     // by noah: this func is no need to be called because we give the static var init val
@@ -323,6 +326,8 @@ pub extern "C" fn OSStart() -> ! {
     extern "Rust" {
         fn set_int_change_2_psp(int_ptr: *mut u8);
     }
+    #[cfg(feature="defmt")]
+    trace!("OSStart");
     // set OSRunning
     OSRunning.store(true, Ordering::Release);
     // before we step into the loop, we call set_int_change_2_psp(as part of the function of OSStartHighRdy in ucosii)
@@ -604,6 +609,8 @@ fn OS_InitTaskIdle() {
     extern "Rust" {
         fn run_idle();
     }
+    #[cfg(feature = "defmt")]
+    trace!("OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
             #[cfg(feature = "defmt")]

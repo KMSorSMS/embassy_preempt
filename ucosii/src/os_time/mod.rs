@@ -1,6 +1,8 @@
+use defmt::trace;
+
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};
-use crate::port::INT32U;
+use crate::port::INT64U;
 /// the mod of blockdelay of uC/OS-II kernel
 pub mod blockdelay;
 /// the mod of duration of uC/OS-II kernel
@@ -12,20 +14,24 @@ pub mod timer;
 
 /// init the Timer as the Systick
 pub fn OSTimerInit() {
+    #[cfg(feature = "defmt")]
+    trace!("OSTimerInit");
     RTC_DRIVER.init();
 }
 /// we have to make this delay acting like preemptive delay
-pub fn OSTimeDly(_ticks: INT32U) {
+pub fn OSTimeDly(_ticks: INT64U) {
+    #[cfg(feature = "defmt")]
+    trace!("OSTimeDly");
     unsafe {
         delay_tick(_ticks);
     }
 }
 
-pub(crate) unsafe fn delay_tick(_ticks: INT32U) {
+pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
     // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
-    task.expires_at.set(RTC_DRIVER.now() + _ticks as u64);
+    task.expires_at.set(RTC_DRIVER.now() + _ticks);
     critical_section::with(|_| {
         executor.set_task_unready(*task);
     });

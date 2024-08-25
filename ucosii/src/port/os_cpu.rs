@@ -6,6 +6,7 @@ use core::ptr::NonNull;
 use cortex_m_rt::exception;
 #[cfg(feature = "defmt")]
 use defmt::info;
+use defmt::trace;
 
 use super::OS_STK;
 use crate::executor::GlobalSyncExecutor;
@@ -28,6 +29,8 @@ const NVIC_PENDSVSET: u32 = 0x10000000;
 #[inline]
 /// the function to start the first task
 pub extern "Rust" fn restore_thread_task() {
+    #[cfg(feature="defmt")]
+    trace!("restore_thread_task");
     unsafe {
         asm!(
             "STR     R1, [R0]",
@@ -54,7 +57,7 @@ fn PendSV() {
         );
     }
     #[cfg(feature = "defmt")]
-    info!("entering pendsv");
+    trace!("PendSV");
     // then switch the task
     let stk_ptr: crate::heap::stack_allocator::OS_STK_REF =
         GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
@@ -124,6 +127,8 @@ fn PendSV() {
 #[no_mangle]
 /// the function when there is no task to run
 pub extern "Rust" fn run_idle() {
+    #[cfg(feature = "defmt")]
+    trace!("run_idle");
     // undate the counter of the system
     // OSIdleCtr.fetch_add(1, Ordering::Relaxed);
     unsafe {
@@ -172,6 +177,8 @@ const CONTEXT_STACK_SIZE: usize = 16;
 /// the function to mock/init the stack of the task
 /// set the pc to the executor's poll function
 pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> {
+    #[cfg(feature = "defmt")]
+    trace!("OSTaskStkInit");
     let executor_function_ptr: fn() = || unsafe {
         #[cfg(feature = "defmt")]
         info!("entering the executor function");
@@ -211,6 +218,8 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
 #[inline]
 /// the function to set the program stack
 pub extern "Rust" fn set_program_sp(sp: *mut u8) {
+    #[cfg(feature = "defmt")]
+    trace!("set_program_sp");
     unsafe {
         asm!(
             "MSR psp, r0",
@@ -223,6 +232,8 @@ pub extern "Rust" fn set_program_sp(sp: *mut u8) {
 #[inline]
 /// the function to set the interrupt stack and change the control register to use the psp
 pub extern "Rust" fn set_int_change_2_psp(int_ptr: *mut u8) {
+    #[cfg(feature = "defmt")]
+    trace!("set_int_change_2_psp");
     unsafe {
         asm!(
             // fisrt change the MSP

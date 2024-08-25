@@ -6,7 +6,7 @@
 use core::cell::Cell;
 use core::sync::atomic::{compiler_fence, AtomicU32, AtomicU8, Ordering};
 use core::{mem, ptr};
-
+use defmt::trace;
 use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
 #[cfg(feature = "defmt")]
@@ -41,6 +41,8 @@ const ALARM_COUNT: USIZE = 3;
 #[no_mangle]
 /// TIM3 interrupt handler
 pub extern "C" fn TIM3() {
+    #[cfg(feature = "defmt")]
+    trace!("TIM3");
     RTC_DRIVER.on_interrupt();
 }
 /*
@@ -153,6 +155,8 @@ impl AlarmHandle {
 
 impl RtcDriver {
     pub(crate) fn init(&'static self) {
+        #[cfg(feature = "defmt")]
+        trace!("init of RtcDriver");
         // rcc config
         rcc_init();
         // enable the Timer Driver
@@ -243,7 +247,6 @@ impl RtcDriver {
 
     fn next_period(&self) {
         // let r = regs_gp16();
-
         // We only modify the period from the timer interrupt, so we know this can't race.
         let period = self.period.load(Ordering::Relaxed) + 1;
         self.period.store(period, Ordering::Relaxed);
@@ -271,6 +274,8 @@ impl RtcDriver {
     }
 
     fn trigger_alarm(&self, n: usize, cs: CriticalSection) {
+        #[cfg(feature = "defmt")]
+        trace!("trigger_alarm");
         let alarm = &self.alarms.borrow(cs)[n];
         alarm.timestamp.set(u64::MAX);
 
@@ -317,7 +322,7 @@ impl Driver for RtcDriver {
 
     fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> bool {
         #[cfg(feature = "defmt")]
-        info!("set the alarm");
+        trace!("set_alarm");
         let n = alarm.id() as usize;
         // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm
         if timestamp == INT64U::MAX {
@@ -409,7 +414,7 @@ pub(crate) static RTC_DRIVER: RtcDriver = RtcDriver {
 // }
 
 /// set the rcc of the Timer
-pub fn rcc_init() {
+fn rcc_init() {
     RCC.cr().modify(|v| {
         // disable PLL
         v.set_pllon(DISABLE);
@@ -472,6 +477,8 @@ fn calc_now(period: INT32U, counter: INT16U) -> INT64U {
 #[no_mangle]
 /// Schedule the given waker to be woken at `at`.
 pub fn _embassy_time_schedule_wake(at: u64, waker: &core::task::Waker) {
+    #[cfg(feature = "defmt")]
+    trace!("_embassy_time_schedule_wake");
     let task = waker::task_from_waker(waker);
     let task = task.header();
     unsafe {

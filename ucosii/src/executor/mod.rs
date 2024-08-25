@@ -6,6 +6,7 @@ pub mod state;
 pub mod timer_queue;
 pub mod waker;
 use alloc::string::String;
+use defmt::trace;
 use core::alloc::Layout;
 use core::future::Future;
 use core::mem;
@@ -261,6 +262,8 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         _name: String,
         future_func: impl FnOnce() -> F,
     ) -> OS_ERR_STATE {
+        #[cfg(feature="defmt")]
+        trace!("init of OS_TASK_STORAGE");
         // by noah: claim a TaskStorage
         let task_ref = OS_TASK_STORAGE::<F>::claim();
 
@@ -425,6 +428,8 @@ impl<F: Future + 'static> AvailableTask<F> {}
 ///
 /// You can obtain a `TaskRef` from a `Waker` using [`task_from_waker`].
 pub fn wake_task(task: OS_TCB_REF) {
+    #[cfg(feature="defmt")]
+    trace!("wake_task");
     let header = task.header();
     if header.OSTCBStat.run_enqueue() {
         // We have just marked the task as scheduled, so enqueue it.
@@ -461,7 +466,7 @@ pub(crate) struct SyncExecutor {
 impl SyncExecutor {
     fn alarm_callback(ctx: *mut ()) {
         #[cfg(feature = "defmt")]
-        info!("alarm_callback");
+        trace!("alarm_callback");
         let this: &Self = unsafe { &*(ctx as *const Self) };
         // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
@@ -500,6 +505,8 @@ impl SyncExecutor {
     }
     /// set the current to be highrdy
     pub(crate) unsafe fn set_cur_highrdy(&self) {
+        #[cfg(feature="defmt")]
+        trace!("set_cur_highrdy");
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
         self.OSTCBCur.set(self.OSTCBHighRdy.get());
     }
@@ -525,7 +532,7 @@ impl SyncExecutor {
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
         #[cfg(feature = "defmt")]
-        info!("call the IntCtxSW");
+        trace!("IntCtxSW");
         if critical_section::with(|_| unsafe {
             self.set_highrdy();
             if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
@@ -551,7 +558,7 @@ impl SyncExecutor {
         }
 
         #[cfg(feature = "defmt")]
-        info!("interrupt_poll");
+        trace!("interrupt_poll");
         let mut task = self.OSTCBHighRdy.get();
         // then we need to restore the highest priority task
         if task.OSTCBStkPtr.is_none() {
@@ -574,6 +581,8 @@ impl SyncExecutor {
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
     pub(crate) unsafe fn poll(&'static self) -> ! {
+        #[cfg(feature = "defmt")]
+        trace!("poll");
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
         // build this as a loop
         loop {
@@ -629,6 +638,8 @@ impl SyncExecutor {
                 // The **task which is waiting for the next_expire** must be current task
                 // we must do this until we set the alarm successfully or there is no alarm required
                 while !RTC_DRIVER.set_alarm(self.alarm, next_expire) {
+                    #[cfg(feature = "defmt")]
+                    info!("the set alarm return false");
                     // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
                     // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
                     // (just like the operation in alarm_callback)
@@ -648,6 +659,8 @@ impl SyncExecutor {
         }
     }
     pub(crate) unsafe fn set_highrdy(&self) {
+        #[cfg(feature = "defmt")]
+        trace!("set_highrdy");
         let tmp = self.OSRdyGrp.get_unmut();
         // if there is no task in the ready queue, return None also set the current running task to the lowest priority
         if *tmp == 0 {
@@ -664,6 +677,8 @@ impl SyncExecutor {
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio]);
     }
     pub(crate) unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
+        #[cfg(feature = "defmt")]
+        trace!("set_task_unready");
         // added by liam: we have to make this process in critical section
         // because the bitmap is shared by all the tasks
         critical_section::with(|_| {
@@ -700,7 +715,7 @@ impl SyncExecutor {
 /// Wake a task by `TaskRef`.
 pub fn wake_task_no_pend(task: OS_TCB_REF) {
     #[cfg(feature = "defmt")]
-    info!("wake_task_no_pend");
+    trace!("wake_task_no_pend");
     // We have just marked the task as scheduled, so enqueue it.
     unsafe {
         let executor = GlobalSyncExecutor.as_ref().unwrap();
