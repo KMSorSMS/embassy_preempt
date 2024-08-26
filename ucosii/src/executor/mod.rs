@@ -6,7 +6,6 @@ pub mod state;
 pub mod timer_queue;
 pub mod waker;
 use alloc::string::String;
-use defmt::trace;
 use core::alloc::Layout;
 use core::future::Future;
 use core::mem;
@@ -17,6 +16,7 @@ use core::task::{Context, Poll};
 
 #[cfg(feature = "defmt")]
 use defmt::info;
+use defmt::trace;
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
 use state::State;
@@ -262,7 +262,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         _name: String,
         future_func: impl FnOnce() -> F,
     ) -> OS_ERR_STATE {
-        #[cfg(feature="defmt")]
+        #[cfg(feature = "defmt")]
         trace!("init of OS_TASK_STORAGE");
         // by noah: claim a TaskStorage
         let task_ref = OS_TASK_STORAGE::<F>::claim();
@@ -428,7 +428,7 @@ impl<F: Future + 'static> AvailableTask<F> {}
 ///
 /// You can obtain a `TaskRef` from a `Waker` using [`task_from_waker`].
 pub fn wake_task(task: OS_TCB_REF) {
-    #[cfg(feature="defmt")]
+    #[cfg(feature = "defmt")]
     trace!("wake_task");
     let header = task.header();
     if header.OSTCBStat.run_enqueue() {
@@ -505,7 +505,7 @@ impl SyncExecutor {
     }
     /// set the current to be highrdy
     pub(crate) unsafe fn set_cur_highrdy(&self) {
-        #[cfg(feature="defmt")]
+        #[cfg(feature = "defmt")]
         trace!("set_cur_highrdy");
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
         self.OSTCBCur.set(self.OSTCBHighRdy.get());
@@ -535,6 +535,12 @@ impl SyncExecutor {
         trace!("IntCtxSW");
         if critical_section::with(|_| unsafe {
             self.set_highrdy();
+            #[cfg(feature = "defmt")]
+            info!(
+                "the highrdy task's prio is {}, the cur task's prio is {}",
+                self.OSTCBHighRdy.get().OSTCBPrio,
+                self.OSTCBCur.get().OSTCBPrio
+            );
             if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
                 #[cfg(feature = "defmt")]
                 info!("no need to switch task");
@@ -559,24 +565,32 @@ impl SyncExecutor {
 
         #[cfg(feature = "defmt")]
         trace!("interrupt_poll");
-        let mut task = self.OSTCBHighRdy.get();
+        let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
+
         // then we need to restore the highest priority task
+        #[cfg(feature = "defmt")]
+        info!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
+        info!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
         if task.OSTCBStkPtr.is_none() {
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
             // by noah: *TEST*. Maybe when alloc_stack is called, we need the cs
-            let mut stk = critical_section::with(|_cs| alloc_stack(layout));
+            let mut stk = alloc_stack(layout);
             // then we need to mock the stack for the task(the stk will change during the mock)
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
             task.OSTCBStkPtr = Some(stk);
         }
         // restore the task from stk
-        unsafe {
-            #[cfg(feature = "defmt")]
-            info!("restore the task/thread");
-            restore_thread_task()
-        };
+        critical_section::with(|_| {
+            if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
+                unsafe {
+                    #[cfg(feature = "defmt")]
+                    info!("restore the task/thread");
+                    restore_thread_task()
+                };
+            }
+        });
     }
 
     /// since when it was called, there is no task running, we need poll all the task that is ready in bitmap
@@ -705,7 +719,7 @@ impl SyncExecutor {
         prio_tbl[prio as USIZE].ptr = Some(NonNull::dangling());
     }
 
-    pub extern "aapcs"  fn clear_bit(&self, prio: INT8U) {
+    pub extern "aapcs" fn clear_bit(&self, prio: INT8U) {
         let prio_tbl: &mut [OS_TCB_REF; (OS_LOWEST_PRIO + 1) as usize];
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit

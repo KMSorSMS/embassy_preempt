@@ -59,6 +59,8 @@ fn PendSV() {
     #[cfg(feature = "defmt")]
     trace!("PendSV");
     // then switch the task
+    #[cfg(feature = "defmt")]
+    info!("in pendsv the highrdy task's prio is : {:?}", GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut());
     let stk_ptr: crate::heap::stack_allocator::OS_STK_REF =
         GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();

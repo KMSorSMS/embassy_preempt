@@ -12,7 +12,7 @@ TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # ffi_test
 # comprehensive_test
 TARGET := comprehensive_test
-liam_TARGET := hardware_test
+liam_TARGET := comprehensive_test
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE
 MODE ?= release

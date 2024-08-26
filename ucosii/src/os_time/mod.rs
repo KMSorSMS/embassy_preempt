@@ -70,7 +70,6 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
         executor.OSPrioHighRdy != executor.OSPrioCur
     }) {
         // call the interrupt poll
-        critical_section::with(|_| GlobalSyncExecutor.as_ref().unwrap().set_highrdy());
         GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
     }
 }
