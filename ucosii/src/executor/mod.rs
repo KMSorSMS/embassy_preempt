@@ -173,7 +173,7 @@ impl OS_TCB {
         // let stk = self.OSTCBStkPtr.as_mut().unwrap().STK_REF.as_ptr();
         // in restore_task it will set PROGRAM_STACK a new stk
         // revoke the stk
-        unsafe { restore_thread_task() };
+        critical_section::with(|_| unsafe { restore_thread_task() });
     }
     /// get the stk ptr of tcb, and set the tcb's stk ptr to None
     pub fn take_stk(&mut self) -> OS_STK_REF {
@@ -600,13 +600,8 @@ impl SyncExecutor {
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
         // build this as a loop
         loop {
-            // in the executor's thead poll, the highrdy task must be polled
-            let mut task = critical_section::with(|_| {
-                let task = self.OSTCBHighRdy.get();
-                self.OSPrioCur.set(task.OSTCBPrio);
-                self.OSTCBCur.set(task);
-                task
-            });
+            // in the executor's thead poll, the highrdy task must be polled, there we don't set cur to be highrdy
+            let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
             // if the highrdy task is the idle task, we need to delay some time
             if critical_section::with(|_| *self.OSPrioHighRdy.get_unmut() == OS_TASK_IDLE_PRIO) {
                 #[cfg(feature = "defmt")]
@@ -619,13 +614,21 @@ impl SyncExecutor {
             #[cfg(feature = "defmt")]
             info!("in the poll task loop");
             if task.OSTCBStkPtr.is_none() {
+                // there we set cur to be highrdy
+                critical_section::with(|_| {
+                    self.OSPrioCur.set(task.OSTCBPrio);
+                    self.OSTCBCur.set(task);
+                });
                 #[cfg(feature = "defmt")]
                 info!("poll the task");
                 task.OS_POLL_FN.get().unwrap_unchecked()(task);
             } else {
                 // if the task has stack, it's a thread, we need to resume it not poll it
                 #[cfg(feature = "defmt")]
-                info!("resume the task");
+                {
+                    info!("resume the task");
+                    info!("the highrdy task's prio is {}", task.OSTCBPrio);
+                }
                 task.restore_context_from_stk();
             }
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations

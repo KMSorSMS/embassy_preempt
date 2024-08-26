@@ -1,6 +1,7 @@
 use defmt::trace;
 
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
+use defmt::info;
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 use crate::port::INT64U;
 /// the mod of blockdelay of uC/OS-II kernel
@@ -71,5 +72,7 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
     }) {
         // call the interrupt poll
         GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
+        #[cfg(feature = "defmt")]
+        info!("end the delay");
     }
 }
