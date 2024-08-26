@@ -26,6 +26,7 @@ pub use self::waker::task_from_waker;
 use crate::arena::ARENA;
 use crate::cfg::*;
 use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, TASK_STACK_SIZE};
+#[cfg(feature = "delay_idle")]
 use crate::os_time::blockdelay::delay;
 // use spawner::SpawnToken;
 use crate::port::*;
@@ -533,23 +534,26 @@ impl SyncExecutor {
     }
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
+        // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
         #[cfg(feature = "defmt")]
         trace!("IntCtxSW");
         if critical_section::with(|_| unsafe {
-            self.set_highrdy();
+            let new_prio = self.find_highrdy_prio();
             #[cfg(feature = "defmt")]
             info!(
-                "the highrdy task's prio is {}, the cur task's prio is {}",
-                self.OSTCBHighRdy.get().OSTCBPrio,
-                self.OSTCBCur.get().OSTCBPrio
+                " the new_prio is {}, the highrdy task's prio is {}, the cur task's prio is {}",
+                new_prio,
+                self.OSPrioHighRdy.get_unmut(),
+                self.OSTCBCur.get_unmut().OSTCBPrio
             );
-            if self.OSPrioHighRdy.get() >= self.OSPrioCur.get() {
+            if new_prio >= self.OSPrioCur.get() {
                 #[cfg(feature = "defmt")]
                 info!("no need to switch task");
                 false
             } else {
                 #[cfg(feature = "defmt")]
                 info!("need to switch task");
+                self.set_highrdy_with_prio(new_prio);
                 true
             }
         }) {
@@ -566,7 +570,6 @@ impl SyncExecutor {
         }
         #[cfg(feature = "defmt")]
         trace!("interrupt_poll");
-        // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
         self.OSTCBCur.get().is_in_thread_poll.set(false);
         let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
 
@@ -603,9 +606,8 @@ impl SyncExecutor {
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
         // build this as a loop
         loop {
-            // in the executor's thead poll, the highrdy task must be polled, there we don't set cur to be highrdy
-            let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
             // if the highrdy task is the idle task, we need to delay some time
+            #[cfg(feature = "delay_idle")]
             if critical_section::with(|_| *self.OSPrioHighRdy.get_unmut() == OS_TASK_IDLE_PRIO) {
                 #[cfg(feature = "defmt")]
                 info!("begin delay the idle task");
@@ -613,6 +615,8 @@ impl SyncExecutor {
                 #[cfg(feature = "defmt")]
                 info!("end delay the idle task");
             }
+            // in the executor's thead poll, the highrdy task must be polled, there we don't set cur to be highrdy
+            let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
             // execute the task depending on if it has stack
             #[cfg(feature = "defmt")]
             info!("in the poll task loop");
@@ -696,6 +700,23 @@ impl SyncExecutor {
         // set the current running task
         self.OSPrioHighRdy.set(prio as OS_PRIO);
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio]);
+    }
+    pub(crate) unsafe fn set_highrdy_with_prio(&self, prio: OS_PRIO) {
+        // set the current running task
+        self.OSPrioHighRdy.set(prio as OS_PRIO);
+        self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio as usize]);
+    }
+    pub(crate) fn find_highrdy_prio(&self) -> OS_PRIO {
+        #[cfg(feature = "defmt")]
+        trace!("find_highrdy_prio");
+        let tmp = self.OSRdyGrp.get_unmut();
+        if *tmp == 0 {
+            return OS_TASK_IDLE_PRIO;
+        }
+        let prio = tmp.trailing_zeros() as usize;
+        let tmp = self.OSRdyTbl.get_unmut();
+        let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
+        prio as OS_PRIO
     }
     pub(crate) unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
         #[cfg(feature = "defmt")]

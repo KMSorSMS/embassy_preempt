@@ -160,6 +160,7 @@ time_driver_tim23=[]
 time_driver_tim24=[]
 stm32f401re = [ "stm32-metapac/stm32f401re" ]
 low-power=[]
+delay_idle=[]
 ## Re-export stm32-metapac at `embassy_stm32::pac`.
 ## This is unstable because semver-minor (non-breaking) releases of embassy-stm32 may major-bump (breaking) the stm32-metapac version.
 ## If this is an issue for you, you're encouraged to directly depend on a fixed version of the PAC.

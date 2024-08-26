@@ -64,6 +64,28 @@ fn PendSV() {
         "in pendsv the highrdy task's prio is : {:?}",
         GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
     );
+    if GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
+        == GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut()
+    {
+        #[cfg(feature = "defmt")]
+        info!("the highrdy is the same as the current, no need to switch");
+        // we will reset the msp to the original
+        let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
+        unsafe {
+            asm!(
+                // "CPSID I",
+                "MRS    R0, PSP",
+                "LDMFD   R0!, {{R4-R11, R14}}",
+                "MSR     PSP, R0",
+                // reset the msp
+                "MSR     MSP, R1",
+                "CPSIE   I",
+                "BX      LR",
+                in("r1") msp_stk,
+                options(nostack, preserves_flags),
+            )
+        }
+    }
     let stk_ptr: crate::heap::stack_allocator::OS_STK_REF =
         GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
@@ -115,6 +137,14 @@ fn PendSV() {
     // set the current task to be the highrdy
     unsafe {
         GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
+        // set the current task's is_in_thread_poll to true
+        GlobalSyncExecutor
+            .as_ref()
+            .unwrap()
+            .OSTCBCur
+            .get_mut()
+            .is_in_thread_poll
+            .set(true);
     }
     #[cfg(feature = "defmt")]
     info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
