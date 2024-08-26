@@ -97,6 +97,7 @@ pub struct OS_TCB {
     #[cfg(feature = "OS_TASK_NAME_EN")]
     OSTCBTaskName: String,
     pub(crate) expires_at: SyncUnsafeCell<u64>,
+    pub(crate) is_in_thread_poll: SyncUnsafeCell<bool>,
     // #[cfg(feature="OS_TASK_CREATE_EXT_EN")]
     // OS_TLS OSTCBTLSTbl[OS_TLS_TBL_SIZE];
 
@@ -246,6 +247,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
                 #[cfg(feature = "OS_TASK_NAME_EN")]
                 OSTCBTaskName: String::new(),
                 expires_at: SyncUnsafeCell::new(u64::MAX),
+                is_in_thread_poll: SyncUnsafeCell::new(true),
             },
             future: UninitCell::uninit(),
         }
@@ -531,6 +533,8 @@ impl SyncExecutor {
     }
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
+        // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
+        self.OSTCBCur.get().is_in_thread_poll.set(false);
         #[cfg(feature = "defmt")]
         trace!("IntCtxSW");
         if critical_section::with(|_| unsafe {
@@ -622,6 +626,7 @@ impl SyncExecutor {
                 #[cfg(feature = "defmt")]
                 info!("poll the task");
                 task.OS_POLL_FN.get().unwrap_unchecked()(task);
+                task.is_in_thread_poll.set(true);
             } else {
                 // if the task has stack, it's a thread, we need to resume it not poll it
                 #[cfg(feature = "defmt")]

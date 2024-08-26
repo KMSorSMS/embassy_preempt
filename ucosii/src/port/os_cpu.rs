@@ -29,7 +29,7 @@ const NVIC_PENDSVSET: u32 = 0x10000000;
 #[inline]
 /// the function to start the first task
 pub extern "Rust" fn restore_thread_task() {
-    #[cfg(feature="defmt")]
+    #[cfg(feature = "defmt")]
     trace!("restore_thread_task");
     unsafe {
         asm!(
@@ -60,7 +60,10 @@ fn PendSV() {
     trace!("PendSV");
     // then switch the task
     #[cfg(feature = "defmt")]
-    info!("in pendsv the highrdy task's prio is : {:?}", GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut());
+    info!(
+        "in pendsv the highrdy task's prio is : {:?}",
+        GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
+    );
     let stk_ptr: crate::heap::stack_allocator::OS_STK_REF =
         GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
@@ -68,7 +71,14 @@ fn PendSV() {
     let mut old_stk = PROGRAM_STACK.swap(stk_ptr);
     // by noah: *TEST*
     // let TCB: &OS_TCB;
-    if GlobalSyncExecutor.as_ref().unwrap().OSPrioCur != GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy {
+    if !*GlobalSyncExecutor
+        .as_ref()
+        .unwrap()
+        .OSTCBCur
+        .get_unmut()
+        .is_in_thread_poll
+        .get_unmut()
+    {
         // this situation is in interrupt poll
         #[cfg(feature = "defmt")]
         info!("need to save the context");
@@ -98,13 +108,13 @@ fn PendSV() {
             #[cfg(feature = "defmt")]
             info!("the task stk is none");
         }
-        // set the current task to be the highrdy
-        unsafe {
-            GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
-        }
     } else {
         // the situation is in poll
         drop(old_stk);
+    }
+    // set the current task to be the highrdy
+    unsafe {
+        GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
     }
     #[cfg(feature = "defmt")]
     info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
