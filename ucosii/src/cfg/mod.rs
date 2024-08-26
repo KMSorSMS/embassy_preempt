@@ -18,4 +18,5 @@ pub const TICK_HZ: INT64U = 100_000;
 /// input frequency of the Timer, you should config it yourself(set the Hardware)
 pub const APB_HZ: INT64U = 84000000;
 /// the block delay of idle task in poll
+#[cfg(feature = "delay_idle")]
 pub const block_delay_poll: usize = 2;
