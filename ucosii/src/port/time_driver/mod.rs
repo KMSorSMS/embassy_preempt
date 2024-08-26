@@ -6,11 +6,12 @@
 use core::cell::Cell;
 use core::sync::atomic::{compiler_fence, AtomicU32, AtomicU8, Ordering};
 use core::{mem, ptr};
-use defmt::trace;
+
 use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
 #[cfg(feature = "defmt")]
 use defmt::info;
+use defmt::trace;
 use stm32_metapac::flash::vals::Latency;
 use stm32_metapac::rcc::vals::*;
 use stm32_metapac::timer::{regs, vals};
@@ -44,6 +45,8 @@ pub extern "C" fn TIM3() {
     #[cfg(feature = "defmt")]
     trace!("TIM3");
     RTC_DRIVER.on_interrupt();
+    #[cfg(feature = "defmt")]
+    trace!("exit TIM3");
 }
 /*
 *********************************************************************************************************
@@ -322,7 +325,10 @@ impl Driver for RtcDriver {
 
     fn set_alarm(&self, alarm: AlarmHandle, timestamp: INT64U) -> bool {
         #[cfg(feature = "defmt")]
-        trace!("set_alarm");
+        {
+            trace!("set_alarm");
+            info!("set the alarm at {}", timestamp);
+        }
         let n = alarm.id() as usize;
         // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm
         if timestamp == INT64U::MAX {

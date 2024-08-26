@@ -613,11 +613,11 @@ fn OS_InitTaskIdle() {
     trace!("OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
-            #[cfg(feature = "defmt")]
-            info!("idle loop");
-            unsafe {
-                run_idle();
-            }
+            // #[cfg(feature = "defmt")]
+            // info!("idle loop");
+            // unsafe {
+            //     run_idle();
+            // }
         }
     };
     #[cfg(feature = "defmt")]

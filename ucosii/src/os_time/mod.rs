@@ -37,7 +37,9 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
         executor.set_task_unready(*task);
     });
     // update timer
-    let mut next_expire = executor.timer_queue.update(*task);
+    let mut next_expire = critical_section::with(|_| executor.timer_queue.update(*task));
+    #[cfg(feature = "defmt")]
+    info!("in delay_tick the next expire is {:?}", next_expire);
     if critical_section::with(|_| {
         if next_expire < *executor.timer_queue.set_time.get_unmut() {
             executor.timer_queue.set_time.set(next_expire);
@@ -61,6 +63,8 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
                 .dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
             // then we need to set a new alarm according to the next expiration time
             next_expire = unsafe { executor.timer_queue.next_expiration() };
+            #[cfg(feature = "defmt")]
+            info!("in delay_tick the next expire is {:?}", next_expire);
             // by noah：we also need to updater the set_time of the timer_queue
             executor.timer_queue.set_time.set(next_expire);
         }

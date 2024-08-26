@@ -630,6 +630,8 @@ impl SyncExecutor {
                 #[cfg(feature = "defmt")]
                 info!("poll the task");
                 task.OS_POLL_FN.get().unwrap_unchecked()(task);
+                #[cfg(feature = "defmt")]
+                info!("exit poll the task");
                 task.is_in_thread_poll.set(true);
             } else {
                 // if the task has stack, it's a thread, we need to resume it not poll it
@@ -648,7 +650,10 @@ impl SyncExecutor {
                 task.OSTCBStkPtr = None;
             });
             // update timer
-            let mut next_expire = self.timer_queue.update(task);
+            #[cfg(feature = "defmt")]
+            trace!("find the next expire");
+            let mut next_expire  = critical_section::with(|_| self.timer_queue.update(task));
+            info!("the next expire is {}", next_expire);
             if critical_section::with(|_| {
                 if next_expire < *self.timer_queue.set_time.get_unmut() {
                     self.timer_queue.set_time.set(next_expire);
