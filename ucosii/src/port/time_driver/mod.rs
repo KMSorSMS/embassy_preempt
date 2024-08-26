@@ -214,7 +214,6 @@ impl RtcDriver {
 
     fn on_interrupt(&self) {
         // let r = regs_gp16();
-
         // XXX: reduce the size of this critical section ?
         critical_section::with(|cs| {
             let sr = TIMER.sr().read();
@@ -331,6 +330,8 @@ impl Driver for RtcDriver {
             critical_section::with(|cs| {
                 let alarm = self.get_alarm(cs, alarm);
                 alarm.timestamp.set(u64::MAX);
+                // info!("the timestamp is {}, the timestamp of the alarm is {}", timestamp, alarm.timestamp.get());
+                #[cfg(feature = "defmt")]
                 TIMER.dier().modify(|w| w.set_ccie(n + 1, false));
             });
             return true;

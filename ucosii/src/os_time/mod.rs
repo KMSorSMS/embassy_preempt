@@ -33,11 +33,11 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
     task.expires_at.set(RTC_DRIVER.now() + _ticks);
-    critical_section::with(|_| {
-        executor.set_task_unready(*task);
+    critical_section::with(|cs| {
+        executor.set_task_unready(*task,cs);
     });
     // update timer
-    let mut next_expire = executor.timer_queue.update(*task);
+    let mut next_expire = critical_section::with(|cs|executor.timer_queue.update(*task,cs));
     if critical_section::with(|_| {
         if next_expire < *executor.timer_queue.set_time.get_unmut() {
             executor.timer_queue.set_time.set(next_expire);
@@ -56,9 +56,11 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
             // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
             // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
             // (just like the operation in alarm_callback)
-            executor
+            critical_section::with(|cs|{
+                executor
                 .timer_queue
-                .dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
+                .dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend,cs);
+            });
             // then we need to set a new alarm according to the next expiration time
             next_expire = unsafe { executor.timer_queue.next_expiration() };
             // by noah：we also need to updater the set_time of the timer_queue
@@ -66,8 +68,8 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
         }
     }
     // find the highrdy
-    if critical_section::with(|_| {
-        executor.set_highrdy();
+    if critical_section::with(|cs| {
+        executor.set_highrdy(cs);
         executor.OSPrioHighRdy != executor.OSPrioCur
     }) {
         // call the interrupt poll

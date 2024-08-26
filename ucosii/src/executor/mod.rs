@@ -6,6 +6,8 @@ pub mod state;
 pub mod timer_queue;
 pub mod waker;
 use alloc::string::String;
+use critical_section::CriticalSection;
+// use cortex_m::interrupt::CriticalSection;
 use core::alloc::Layout;
 use core::future::Future;
 use core::mem;
@@ -189,6 +191,11 @@ impl OS_TCB {
     pub fn is_stk_none(&self) -> bool {
         self.OSTCBStkPtr.is_none()
     }
+
+    /// by noah: *TEST*, get the prio
+    pub fn get_prio(&self) -> INT8U {
+        self.OSTCBPrio
+    }
 }
 
 impl OS_TCB_EXT {
@@ -292,8 +299,8 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         // add the task to ready queue
         // the operation about the bitmap will be done in the RunQueue
         // need a cs
-        critical_section::with(|_cs| {
-            unsafe { GlobalSyncExecutor.as_ref().unwrap().enqueue(task_ref) };
+        critical_section::with(|cs| {
+            unsafe { GlobalSyncExecutor.as_ref().unwrap().enqueue(task_ref,cs) };
         });
         #[cfg(feature = "OS_EVENT_EN")]
         {
@@ -438,7 +445,9 @@ pub fn wake_task(task: OS_TCB_REF) {
         // We have just marked the task as scheduled, so enqueue it.
         unsafe {
             let executor = GlobalSyncExecutor.as_ref().unwrap_unchecked();
-            executor.enqueue(task);
+            critical_section::with(|cs|{
+                executor.enqueue(task,cs);
+            });
         }
     }
 }
@@ -474,7 +483,9 @@ impl SyncExecutor {
         // first to dequeue all the expired task, note that there must
         // have a task in the tiemr_queue because the alarm is triggered
         loop {
-            unsafe { this.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend) };
+            critical_section::with(|cs|{
+                unsafe { this.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend,cs) };
+            });
             // then we need to set a new alarm according to the next expiration time
             let next_expire = unsafe { this.timer_queue.next_expiration() };
             // by noah：we also need to updater the set_time of the timer_queue
@@ -507,7 +518,7 @@ impl SyncExecutor {
         }
     }
     /// set the current to be highrdy
-    pub(crate) unsafe fn set_cur_highrdy(&self) {
+    pub(crate) unsafe fn set_cur_highrdy(&self,_cs:CriticalSection) {
         #[cfg(feature = "defmt")]
         trace!("set_cur_highrdy");
         self.OSPrioCur.set(self.OSPrioHighRdy.get());
@@ -520,7 +531,7 @@ impl SyncExecutor {
     // }
     /// Enqueue a task in the task queue
     #[inline(always)]
-    unsafe fn enqueue(&self, task: OS_TCB_REF) {
+    unsafe fn enqueue(&self, task: OS_TCB_REF,_cs:CriticalSection) {
         //according to the priority of the task, we place the task in the right place of os_prio_tbl
         // also we will set the corresponding bit in the OSRdyTbl and OSRdyGrp
         let prio = task.OSTCBPrio as usize;
@@ -537,7 +548,7 @@ impl SyncExecutor {
         // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
         #[cfg(feature = "defmt")]
         trace!("IntCtxSW");
-        if critical_section::with(|_| unsafe {
+        if critical_section::with(|cs| unsafe {
             let new_prio = self.find_highrdy_prio();
             #[cfg(feature = "defmt")]
             info!(
@@ -553,7 +564,7 @@ impl SyncExecutor {
             } else {
                 #[cfg(feature = "defmt")]
                 info!("need to switch task");
-                self.set_highrdy_with_prio(new_prio);
+                self.set_highrdy_with_prio(new_prio,cs);
                 true
             }
         }) {
@@ -640,14 +651,17 @@ impl SyncExecutor {
                 task.restore_context_from_stk();
             }
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
-            critical_section::with(|_| {
-                self.set_task_unready(task);
+            critical_section::with(|cs| {
+                self.set_task_unready(task,cs);
                 // set the task's stack to None
                 // check: this seems no need to set it to None as it will always be None
                 task.OSTCBStkPtr = None;
             });
-            // update timer
-            let mut next_expire = self.timer_queue.update(task);
+            // update timer, need a cs
+
+            let mut next_expire =critical_section::with(|cs|{
+                self.timer_queue.update(task,cs)
+            });
             if critical_section::with(|_| {
                 if next_expire < *self.timer_queue.set_time.get_unmut() {
                     self.timer_queue.set_time.set(next_expire);
@@ -668,7 +682,9 @@ impl SyncExecutor {
                     // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
                     // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
                     // (just like the operation in alarm_callback)
-                    self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
+                    critical_section::with(|cs|{
+                        self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend,cs);
+                    });
                     // then we need to set a new alarm according to the next expiration time
                     next_expire = unsafe { self.timer_queue.next_expiration() };
                     // by noah：we also need to updater the set_time of the timer_queue
@@ -680,10 +696,10 @@ impl SyncExecutor {
             // by noah：maybe we can set the task unready, and call dequeue when set_alarm return false
             // find the highest priority task in the ready queue
             // adapt the method above
-            critical_section::with(|_| self.set_highrdy());
+            critical_section::with(|cs| self.set_highrdy(cs));
         }
     }
-    pub(crate) unsafe fn set_highrdy(&self) {
+    pub(crate) unsafe fn set_highrdy(&self,_cs:CriticalSection) {
         #[cfg(feature = "defmt")]
         trace!("set_highrdy");
         let tmp = self.OSRdyGrp.get_unmut();
@@ -701,7 +717,7 @@ impl SyncExecutor {
         self.OSPrioHighRdy.set(prio as OS_PRIO);
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio]);
     }
-    pub(crate) unsafe fn set_highrdy_with_prio(&self, prio: OS_PRIO) {
+    pub(crate) unsafe fn set_highrdy_with_prio(&self, prio: OS_PRIO,_cs:CriticalSection) {
         // set the current running task
         self.OSPrioHighRdy.set(prio as OS_PRIO);
         self.OSTCBHighRdy.set(self.os_prio_tbl.get_unmut()[prio as usize]);
@@ -718,7 +734,7 @@ impl SyncExecutor {
         let prio = prio * 8 + tmp[prio].trailing_zeros() as usize;
         prio as OS_PRIO
     }
-    pub(crate) unsafe fn set_task_unready(&self, task: OS_TCB_REF) {
+    pub(crate) unsafe fn set_task_unready(&self, task: OS_TCB_REF,_cs:CriticalSection) {
         #[cfg(feature = "defmt")]
         trace!("set_task_unready");
         // added by liam: we have to make this process in critical section
@@ -761,6 +777,9 @@ pub fn wake_task_no_pend(task: OS_TCB_REF) {
     // We have just marked the task as scheduled, so enqueue it.
     unsafe {
         let executor = GlobalSyncExecutor.as_ref().unwrap();
-        executor.enqueue(task);
+        critical_section::with(|cs: critical_section::CriticalSection| {
+            executor.enqueue(task,cs);
+        });
+        // executor.enqueue(task);
     }
 }

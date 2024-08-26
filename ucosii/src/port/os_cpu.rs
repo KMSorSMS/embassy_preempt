@@ -136,7 +136,9 @@ fn PendSV() {
     }
     // set the current task to be the highrdy
     unsafe {
-        GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
+        critical_section::with(|cs|{
+            GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy(cs);
+        });
         // set the current task's is_in_thread_poll to true
         GlobalSyncExecutor
             .as_ref()

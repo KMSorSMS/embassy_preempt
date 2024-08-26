@@ -338,7 +338,7 @@ pub extern "C" fn OSStart() -> ! {
     unsafe {
         set_int_change_2_psp(int_ptr);
         // find the highest priority task in the ready queue
-        critical_section::with(|_| GlobalSyncExecutor.as_ref().unwrap().set_highrdy());
+        critical_section::with(|cs| GlobalSyncExecutor.as_ref().unwrap().set_highrdy(cs));
         GlobalSyncExecutor.as_ref().unwrap().poll();
     }
 }
@@ -613,11 +613,9 @@ fn OS_InitTaskIdle() {
     trace!("OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
-            #[cfg(feature = "defmt")]
-            info!("idle loop");
-            unsafe {
-                run_idle();
-            }
+            // unsafe {
+            //     run_idle();
+            // }
         }
     };
     #[cfg(feature = "defmt")]

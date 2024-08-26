@@ -1,3 +1,5 @@
+use critical_section::CriticalSection;
+use defmt::debug;
 #[cfg(feature = "defmt")]
 use defmt::info;
 
@@ -18,7 +20,7 @@ impl TimerQueue {
     }
     /// Insert a task into the timer queue.(sorted by `expires_at`,the header is the nearest task)
     /// return the next expiration time.
-    pub(crate) unsafe fn update(&self, p: OS_TCB_REF) -> u64 {
+    pub(crate) unsafe fn update(&self, p: OS_TCB_REF,_cs:CriticalSection) -> u64 {
         let p_expires_at = &p.expires_at;
         // by noah：this indicate that the time queue is not updated or the time queue is null
         if *p_expires_at.get_unmut() == u64::MAX {
@@ -47,6 +49,14 @@ impl TimerQueue {
         } else {
             self.head.set(Some(p));
         }
+        // // by noah: TEST
+        // let mut cur = head;
+        // while let Some(cur_ref) = cur {
+        //     let cur_expires_at = &cur_ref.expires_at;
+        //     debug!("the task {} expires at: {}",cur_ref.get_prio() , *cur_expires_at.get_unmut());
+        //     cur = cur_ref.OSTimerNext.get_unmut();
+        // }
+        // debug!("the next expiration time is: {}", *self.head.get_unmut().as_ref().unwrap().expires_at.get_unmut());
         return *head.as_ref().unwrap().expires_at.get_unmut();
     }
 
@@ -58,7 +68,8 @@ impl TimerQueue {
             u64::MAX
         }
     }
-    pub(crate) unsafe fn dequeue_expired(&self, now: u64, on_task: impl Fn(OS_TCB_REF)) {
+
+    pub(crate) unsafe fn dequeue_expired(&self, now: u64, on_task: impl Fn(OS_TCB_REF),_cs:CriticalSection) {
         #[cfg(feature = "defmt")]
         info!("dequeue expired");
         let head = self.head.get_unmut();
@@ -80,6 +91,8 @@ impl TimerQueue {
             } else {
                 self.head.set(*next);
             }
+            cur_ref.OSTimerNext.set(None);
+            cur_ref.OSTimerPrev.set(None);
             cur = next;
         }
     }
