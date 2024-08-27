@@ -31,10 +31,12 @@
 *********************************************************************************************************
 */
 
-use core::{ffi::c_void, sync::atomic::Ordering};
+use core::ffi::c_void;
+use core::sync::atomic::Ordering;
 
 #[cfg(feature = "defmt")]
 use defmt::info;
+#[cfg(feature = "defmt")]
 use defmt::trace;
 // use critical_section::Mutex;
 // use core::cell::RefCell;
@@ -326,7 +328,7 @@ pub extern "C" fn OSStart() -> ! {
     extern "Rust" {
         fn set_int_change_2_psp(int_ptr: *mut u8);
     }
-    #[cfg(feature="defmt")]
+    #[cfg(feature = "defmt")]
     trace!("OSStart");
     // set OSRunning
     OSRunning.store(true, Ordering::Release);
@@ -613,8 +615,6 @@ fn OS_InitTaskIdle() {
     trace!("OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
-            #[cfg(feature = "defmt")]
-            info!("idle loop");
             unsafe {
                 run_idle();
             }

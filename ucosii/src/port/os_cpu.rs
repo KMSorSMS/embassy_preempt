@@ -6,6 +6,7 @@ use core::ptr::NonNull;
 use cortex_m_rt::exception;
 #[cfg(feature = "defmt")]
 use defmt::info;
+#[cfg(feature = "defmt")]
 use defmt::trace;
 
 use super::OS_STK;

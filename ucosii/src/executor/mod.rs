@@ -16,6 +16,7 @@ use core::task::{Context, Poll};
 
 #[cfg(feature = "defmt")]
 use defmt::info;
+#[cfg(feature = "defmt")]
 use defmt::trace;
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
@@ -575,8 +576,10 @@ impl SyncExecutor {
 
         // then we need to restore the highest priority task
         #[cfg(feature = "defmt")]
-        info!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
-        info!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
+        {
+            info!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
+            info!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
+        }
         if task.OSTCBStkPtr.is_none() {
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
@@ -616,29 +619,36 @@ impl SyncExecutor {
                 info!("end delay the idle task");
             }
             // in the executor's thead poll, the highrdy task must be polled, there we don't set cur to be highrdy
-            let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
+            let task = critical_section::with(|_| {
+                let mut task = self.OSTCBHighRdy.get();
+                if task.OSTCBStkPtr.is_none() {
+                    self.OSPrioCur.set(task.OSTCBPrio);
+                    self.OSTCBCur.set(task);
+                } else {
+                    // if the task has stack, it's a thread, we need to resume it not poll it
+                    #[cfg(feature = "defmt")]
+                    {
+                        info!("resume the task");
+                        info!("the highrdy task's prio is {}", task.OSTCBPrio);
+                    }
+                    task.restore_context_from_stk();
+                    return None;
+                }
+                Some(task)
+            });
+            if task.is_none() {
+                continue;
+            }
+            let mut task = task.unwrap();
             // execute the task depending on if it has stack
             #[cfg(feature = "defmt")]
             info!("in the poll task loop");
-            if task.OSTCBStkPtr.is_none() {
-                // there we set cur to be highrdy
-                critical_section::with(|_| {
-                    self.OSPrioCur.set(task.OSTCBPrio);
-                    self.OSTCBCur.set(task);
-                });
-                #[cfg(feature = "defmt")]
-                info!("poll the task");
-                task.OS_POLL_FN.get().unwrap_unchecked()(task);
-                task.is_in_thread_poll.set(true);
-            } else {
-                // if the task has stack, it's a thread, we need to resume it not poll it
-                #[cfg(feature = "defmt")]
-                {
-                    info!("resume the task");
-                    info!("the highrdy task's prio is {}", task.OSTCBPrio);
-                }
-                task.restore_context_from_stk();
-            }
+            #[cfg(feature = "defmt")]
+            info!("poll the task");
+            task.OS_POLL_FN.get().unwrap_unchecked()(task);
+            #[cfg(feature = "defmt")]
+            info!("exit poll the task");
+            task.is_in_thread_poll.set(true);
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
             critical_section::with(|_| {
                 self.set_task_unready(task);
@@ -647,7 +657,11 @@ impl SyncExecutor {
                 task.OSTCBStkPtr = None;
             });
             // update timer
-            let mut next_expire = self.timer_queue.update(task);
+            #[cfg(feature = "defmt")]
+            trace!("find the next expire");
+            let mut next_expire = critical_section::with(|_| self.timer_queue.update(task));
+            #[cfg(feature = "defmt")]
+            info!("the next expire is {}", next_expire);
             if critical_section::with(|_| {
                 if next_expire < *self.timer_queue.set_time.get_unmut() {
                     self.timer_queue.set_time.set(next_expire);

@@ -5,11 +5,12 @@
 */
 
 use alloc::alloc::{GlobalAlloc, Layout};
-use defmt::trace;
 use core::ptr::NonNull;
 
 #[cfg(feature = "defmt")]
 use defmt::info;
+#[cfg(feature = "defmt")]
+use defmt::trace;
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
@@ -64,6 +65,7 @@ pub fn alloc_stack(layout: Layout) -> OS_STK_REF {
     unsafe {
         heap_ptr = STACK_ALLOCATOR.alloc(layout);
     }
+    #[cfg(feature = "defmt")]
     info!("alloc a stack at {}", heap_ptr);
     stk_from_ptr(heap_ptr, layout)
 }

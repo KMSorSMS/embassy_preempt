@@ -12,7 +12,6 @@
 */
 
 use alloc::string::ToString;
-use defmt::trace;
 use core::alloc::Layout;
 use core::ffi::c_void;
 use core::future::Future;
@@ -20,6 +19,8 @@ use core::sync::atomic::Ordering::Acquire;
 
 #[cfg(feature = "defmt")]
 use defmt::info;
+#[cfg(feature = "defmt")]
+use defmt::trace;
 
 use crate::cfg::OS_LOWEST_PRIO;
 use crate::executor::{GlobalSyncExecutor, OS_TASK_STORAGE};
@@ -40,7 +41,12 @@ impl ReturnUnitOrNeverReturn for ! {}
 impl ReturnUnitOrNeverReturn for () {}
 /// Create a task in uC/OS-II kernel. This func is used by C
 // _ptos is not used in this func, because stack allocation is done by the stack allocator when scheduling
-pub extern "aapcs" fn SyncOSTaskCreate<F, R>(task: F, p_arg: *mut c_void, _ptos: *mut OS_STK, prio: INT8U) -> OS_ERR_STATE
+pub extern "aapcs" fn SyncOSTaskCreate<F, R>(
+    task: F,
+    p_arg: *mut c_void,
+    _ptos: *mut OS_STK,
+    prio: INT8U,
+) -> OS_ERR_STATE
 where
     // check by liam: why the future is 'static: because the definition of OS_TASK_STORAGE's generic F is 'static
     F: FnOnce(*mut c_void) -> R + 'static,
@@ -119,7 +125,7 @@ where
 #[no_mangle]
 /// helper func
 pub extern "aapcs" fn OSTaskCreate(
-    fun_ptr:  extern "aapcs" fn(*mut c_void),
+    fun_ptr: extern "aapcs" fn(*mut c_void),
     p_arg: *mut c_void,
     ptos: *mut OS_STK,
     prio: INT8U,
@@ -130,7 +136,7 @@ pub extern "aapcs" fn OSTaskCreate(
     SyncOSTaskCreate(fun_ptr, p_arg, ptos, prio)
 }
 
- fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) -> OS_ERR_STATE {
+fn init_task<F: Future + 'static>(prio: INT8U, future_func: impl FnOnce() -> F) -> OS_ERR_STATE {
     // Make sure we don't create the task from within an ISR
     if OSIntNesting.load(Acquire) > 0 {
         return OS_ERR_STATE::OS_ERR_TASK_CREATE_ISR;

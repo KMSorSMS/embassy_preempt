@@ -101,7 +101,7 @@ opt-level = 3  # 优化级别
 # this part only define features, don't decide whether the feature is active
 [features]
 # when a feature is set in default, it is active
-default = ["defmt","use_spin","unstable-pac","stm32f401re","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+default = ["use_spin","unstable-pac","stm32f401re","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
 defmt = ["dep:defmt","panic-probe","defmt-rtt"]
 nightly = []
 # this feature will be set in build.rs
