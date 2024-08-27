@@ -74,10 +74,10 @@ async fn task1(_args: *mut c_void) {
         info!("---task1 begin---");
 
         Timer::after_ticks(SHORT_SHORT_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task1 end---");
-        
+
         Timer::after_ticks(SHORT_SHORT_TIME).await;
     }
 }
@@ -90,10 +90,10 @@ async fn task2(_args: *mut c_void) {
         info!("---task2 begin---");
 
         Timer::after_ticks(SHORT_SHORT_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task2 end---");
-        
+
         Timer::after_ticks(SHORT_TIME).await;
     }
 }
@@ -106,10 +106,10 @@ async fn task3(_args: *mut c_void) {
         info!("---task3 begin---");
 
         Timer::after_ticks(SHORT_SHORT_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task3 end---");
-        
+
         Timer::after_ticks(MID_TIME).await;
     }
 }
@@ -122,10 +122,10 @@ async fn task4(_args: *mut c_void) {
         info!("---task4 begin---");
 
         Timer::after_ticks(SHORT_SHORT_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task4 end---");
-        
+
         Timer::after_ticks(LONG_TIME).await;
     }
 }
@@ -138,10 +138,10 @@ async fn task5(_args: *mut c_void) {
         info!("---task5 begin---");
 
         Timer::after_ticks(SHORT_SHORT_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task5 end---");
-        
+
         Timer::after_ticks(LONG_LONG_TIME).await;
     }
 }
@@ -154,10 +154,10 @@ async fn task6(_args: *mut c_void) {
         info!("---task6 begin---");
 
         Timer::after_ticks(SHORT_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task6 end---");
-        
+
         Timer::after_ticks(SHORT_TIME).await;
     }
 }
@@ -170,10 +170,10 @@ async fn task7(_args: *mut c_void) {
         info!("---task7 begin---");
 
         Timer::after_ticks(SHORT_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task7 end---");
-        
+
         Timer::after_ticks(MID_TIME).await;
     }
 }
@@ -186,10 +186,10 @@ async fn task8(_args: *mut c_void) {
         info!("---task8 begin---");
 
         Timer::after_ticks(SHORT_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task8 end---");
-        
+
         Timer::after_ticks(LONG_TIME).await;
     }
 }
@@ -202,10 +202,10 @@ async fn task9(_args: *mut c_void) {
         info!("---task9 begin---");
 
         Timer::after_ticks(SHORT_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task9 end---");
-        
+
         Timer::after_ticks(LONG_LONG_TIME).await;
     }
 }
@@ -218,10 +218,10 @@ async fn task10(_args: *mut c_void) {
         info!("---task10 begin---");
 
         Timer::after_ticks(MID_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task10 end---");
-        
+
         Timer::after_ticks(MID_TIME).await;
     }
 }
@@ -234,10 +234,10 @@ async fn task11(_args: *mut c_void) {
         info!("---task11 begin---");
 
         Timer::after_ticks(MID_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task11 end---");
-        
+
         Timer::after_ticks(LONG_TIME).await;
     }
 }
@@ -250,10 +250,10 @@ async fn task12(_args: *mut c_void) {
         info!("---task12 begin---");
 
         Timer::after_ticks(MID_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task12 end---");
-        
+
         Timer::after_ticks(LONG_LONG_TIME).await;
     }
 }
@@ -266,10 +266,10 @@ async fn task13(_args: *mut c_void) {
         info!("---task13 begin---");
 
         Timer::after_ticks(LONG_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task13 end---");
-        
+
         Timer::after_ticks(LONG_TIME).await;
     }
 }
@@ -282,10 +282,10 @@ async fn task14(_args: *mut c_void) {
         info!("---task14 begin---");
 
         Timer::after_ticks(LONG_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task14 end---");
-        
+
         Timer::after_ticks(LONG_LONG_TIME).await;
     }
 }
@@ -298,10 +298,10 @@ async fn task15(_args: *mut c_void) {
         info!("---task15 begin---");
 
         Timer::after_ticks(LONG_LONG_TIME).await;
-    
+
         #[cfg(feature = "defmt")]
         info!("---task15 end---");
-        
+
         Timer::after_ticks(LONG_LONG_TIME).await;
     }
 }
@@ -315,10 +315,10 @@ fn task16(_args: *mut c_void) {
         info!("---task16 begin---");
 
         OSTimeDly(SHORT_SHORT_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task16 end---");
-        
+
         OSTimeDly(SHORT_SHORT_TIME);
     }
 }
@@ -331,10 +331,10 @@ fn task17(_args: *mut c_void) {
         info!("---task17 begin---");
 
         OSTimeDly(SHORT_SHORT_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task17 end---");
-        
+
         OSTimeDly(SHORT_TIME);
     }
 }
@@ -347,10 +347,10 @@ fn task18(_args: *mut c_void) {
         info!("---task18 begin---");
 
         OSTimeDly(SHORT_SHORT_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task18 end---");
-        
+
         OSTimeDly(MID_TIME);
     }
 }
@@ -363,10 +363,10 @@ fn task19(_args: *mut c_void) {
         info!("---task19 begin---");
 
         OSTimeDly(SHORT_SHORT_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task19 end---");
-        
+
         OSTimeDly(LONG_TIME);
     }
 }
@@ -379,10 +379,10 @@ fn task20(_args: *mut c_void) {
         info!("---task20 begin---");
 
         OSTimeDly(SHORT_SHORT_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task20 end---");
-        
+
         OSTimeDly(LONG_LONG_TIME);
     }
 }
@@ -395,10 +395,10 @@ fn task21(_args: *mut c_void) {
         info!("---task21 begin---");
 
         OSTimeDly(SHORT_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task21 end---");
-        
+
         OSTimeDly(SHORT_TIME);
     }
 }
@@ -411,10 +411,10 @@ fn task22(_args: *mut c_void) {
         info!("---task22 begin---");
 
         OSTimeDly(SHORT_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task22 end---");
-        
+
         OSTimeDly(MID_TIME);
     }
 }
@@ -427,10 +427,10 @@ fn task23(_args: *mut c_void) {
         info!("---task23 begin---");
 
         OSTimeDly(SHORT_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task23 end---");
-        
+
         OSTimeDly(LONG_TIME);
     }
 }
@@ -443,10 +443,10 @@ fn task24(_args: *mut c_void) {
         info!("---task24 begin---");
 
         OSTimeDly(SHORT_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task24 end---");
-        
+
         OSTimeDly(LONG_LONG_TIME);
     }
 }
@@ -459,10 +459,10 @@ fn task25(_args: *mut c_void) {
         info!("---task25 begin---");
 
         OSTimeDly(MID_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task25 end---");
-        
+
         OSTimeDly(MID_TIME);
     }
 }
@@ -475,10 +475,10 @@ fn task26(_args: *mut c_void) {
         info!("---task26 begin---");
 
         OSTimeDly(MID_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task26 end---");
-        
+
         OSTimeDly(LONG_TIME);
     }
 }
@@ -491,10 +491,10 @@ fn task27(_args: *mut c_void) {
         info!("---task27 begin---");
 
         OSTimeDly(MID_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task27 end---");
-        
+
         OSTimeDly(LONG_LONG_TIME);
     }
 }
@@ -507,10 +507,10 @@ fn task28(_args: *mut c_void) {
         info!("---task28 begin---");
 
         OSTimeDly(LONG_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task28 end---");
-        
+
         OSTimeDly(LONG_TIME);
     }
 }
@@ -523,10 +523,10 @@ fn task29(_args: *mut c_void) {
         info!("---task29 begin---");
 
         OSTimeDly(LONG_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task29 end---");
-        
+
         OSTimeDly(LONG_LONG_TIME);
     }
 }
@@ -539,10 +539,10 @@ fn task30(_args: *mut c_void) {
         info!("---task30 begin---");
 
         OSTimeDly(LONG_LONG_TIME);
-    
+
         #[cfg(feature = "defmt")]
         info!("---task30 end---");
-        
+
         OSTimeDly(LONG_LONG_TIME);
     }
 }

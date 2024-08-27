@@ -11,6 +11,7 @@ use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
 #[cfg(feature = "defmt")]
 use defmt::info;
+#[cfg(feature = "defmt")]
 use defmt::trace;
 use stm32_metapac::flash::vals::Latency;
 use stm32_metapac::rcc::vals::*;

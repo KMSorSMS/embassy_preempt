@@ -1,7 +1,9 @@
+#[cfg(feature = "defmt")]
+use defmt::info;
+#[cfg(feature = "defmt")]
 use defmt::trace;
 
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
-use defmt::info;
 use crate::port::time_driver::{Driver, RTC_DRIVER};
 use crate::port::INT64U;
 /// the mod of blockdelay of uC/OS-II kernel

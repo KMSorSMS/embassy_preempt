@@ -16,6 +16,7 @@ use core::task::{Context, Poll};
 
 #[cfg(feature = "defmt")]
 use defmt::info;
+#[cfg(feature = "defmt")]
 use defmt::trace;
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
@@ -576,8 +577,10 @@ impl SyncExecutor {
 
         // then we need to restore the highest priority task
         #[cfg(feature = "defmt")]
-        info!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
-        info!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
+        {
+            info!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
+            info!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
+        }
         if task.OSTCBStkPtr.is_none() {
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
@@ -631,7 +634,6 @@ impl SyncExecutor {
                     }
                     task.restore_context_from_stk();
                     return None;
-
                 }
                 Some(task)
             });
@@ -659,6 +661,7 @@ impl SyncExecutor {
             #[cfg(feature = "defmt")]
             trace!("find the next expire");
             let mut next_expire = critical_section::with(|_| self.timer_queue.update(task));
+            #[cfg(feature = "defmt")]
             info!("the next expire is {}", next_expire);
             if critical_section::with(|_| {
                 if next_expire < *self.timer_queue.set_time.get_unmut() {
