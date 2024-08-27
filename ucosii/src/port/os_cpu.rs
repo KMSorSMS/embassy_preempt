@@ -61,7 +61,7 @@ fn PendSV() {
     trace!("PendSV");
     // then switch the task
     #[cfg(feature = "defmt")]
-    info!(
+    trace!(
         "in pendsv the highrdy task's prio is : {:?}",
         GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
     );
@@ -69,7 +69,7 @@ fn PendSV() {
         == GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut()
     {
         #[cfg(feature = "defmt")]
-        info!("the highrdy is the same as the current, no need to switch");
+        trace!("the highrdy is the same as the current, no need to switch");
         // we will reset the msp to the original
         let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
         unsafe {
@@ -104,7 +104,7 @@ fn PendSV() {
     {
         // this situation is in interrupt poll
         #[cfg(feature = "defmt")]
-        info!("need to save the context");
+        trace!("need to save the context");
         // we need to give the current task the old_stk to store the context
         // first we will store the remaining context to the old_stk
         let old_stk_ptr: *mut usize;
@@ -118,7 +118,7 @@ fn PendSV() {
         // then as we have stored the context, we need to update the old_stk's top
         old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OS_STK).unwrap();
         #[cfg(feature = "defmt")]
-        info!("in pendsv, the old stk ptr is {:?}", old_stk_ptr);
+        trace!("in pendsv, the old stk ptr is {:?}", old_stk_ptr);
         // GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk)
         let task_cur = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
         task_cur.set_stk(old_stk);
@@ -129,7 +129,7 @@ fn PendSV() {
         // by noah: judge whether the task stk is none
         if task_cur.is_stk_none() {
             #[cfg(feature = "defmt")]
-            info!("the task stk is none");
+            trace!("the task stk is none");
         }
     } else {
         // the situation is in poll
@@ -148,7 +148,7 @@ fn PendSV() {
             .set(true);
     }
     #[cfg(feature = "defmt")]
-    info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
+    trace!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
     // we will reset the msp to the original
     let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
     unsafe {
@@ -224,7 +224,7 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
     trace!("OSTaskStkInit");
     let executor_function_ptr: fn() = || unsafe {
         #[cfg(feature = "defmt")]
-        info!("entering the executor function");
+        trace!("entering the executor function");
         GlobalSyncExecutor.as_ref().unwrap().poll();
     };
     let executor_function_ptr = executor_function_ptr as *const () as usize;

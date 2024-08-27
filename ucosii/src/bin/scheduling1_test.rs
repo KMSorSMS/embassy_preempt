@@ -38,19 +38,19 @@ fn test_basic_schedule() {
 fn task1(_args: *mut c_void) {
     // 任务1
     #[cfg(feature = "defmt")]
-    info!("---task1 begin---");
+    trace!("---task1 begin---");
     delay(LONG_TIME);
     #[cfg(feature = "defmt")]
-    info!("---task1 end---");
+    trace!("---task1 end---");
     delay(SHORT_TIME);
 }
 fn task2(_args: *mut c_void) {
     // 任务2
     #[cfg(feature = "defmt")]
-    info!("---task2 begin---");
+    trace!("---task2 begin---");
     delay(MID_TIME);
     #[cfg(feature = "defmt")]
-    info!("---task2 end---");
+    trace!("---task2 end---");
     delay(SHORT_TIME);
 }
 async fn task3(_args: *mut c_void) {
@@ -58,23 +58,23 @@ async fn task3(_args: *mut c_void) {
     loop {
         //
         #[cfg(feature = "defmt")]
-        info!("---task3 begin---");
+        trace!("---task3 begin---");
         Timer::after_ticks(LONG_TIME as u64).await;
         // delay(LONG_TIME);
         Timer::after_millis(3000).await;
         #[cfg(feature = "defmt")]
-        info!("---task3 end---");
+        trace!("---task3 end---");
         delay(SHORT_TIME);
     }
 }
 fn task4(_args: *mut c_void) {
     // 任务4
     #[cfg(feature = "defmt")]
-    info!("---task4 begin---");
+    trace!("---task4 begin---");
     // 任务3中涉及任务创建
     SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 14);
     delay(SHORT_TIME);
     #[cfg(feature = "defmt")]
-    info!("---task4 end---");
+    trace!("---task4 end---");
     delay(MID_TIME);
 }

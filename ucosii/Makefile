@@ -71,7 +71,7 @@ test-run:
 
 # 先编译Rust文件，再编译C文件
 build:$(OBJ_FILES)
-	cargo build $(MODE_ARG)
+	cargo build $(MODE_ARG) --features "defmt"
 	
 # $(OBJ_DIR)/%: $(SRC_DIR)/%.c Rust_build
 # 	$(CC) $(CFLAGS) -c -o $@ $<

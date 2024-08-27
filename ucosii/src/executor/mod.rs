@@ -343,13 +343,13 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         match future.poll(&mut cx) {
             Poll::Ready(_) => {
                 #[cfg(feature = "defmt")]
-                info!("the task {} is ready", this.task_tcb.OSTCBPrio);
+                trace!("the task {} is ready", this.task_tcb.OSTCBPrio);
                 this.future.drop_in_place();
                 this.task_tcb.OSTCBStat.despawn();
             }
             Poll::Pending => {
                 #[cfg(feature = "defmt")]
-                info!("the task {} is pending", this.task_tcb.OSTCBPrio);
+                trace!("the task {} is pending", this.task_tcb.OSTCBPrio);
             }
         }
 
@@ -365,7 +365,7 @@ impl<F: Future + 'static> OS_TASK_STORAGE<F> {
         critical_section::with(|cs| {
             let task_storage = ARENA.alloc::<OS_TASK_STORAGE<F>>(cs);
             #[cfg(feature = "defmt")]
-            info!("size of the task storage is {}", mem::size_of::<OS_TASK_STORAGE<F>>());
+            trace!("size of the task storage is {}", mem::size_of::<OS_TASK_STORAGE<F>>());
             // create a new task which is not init
             task_storage.write(OS_TASK_STORAGE::new());
             // by noah：no panic will occurred here because if the Arena is not enough, the program will panic when alloc
@@ -541,7 +541,7 @@ impl SyncExecutor {
         if critical_section::with(|_| unsafe {
             let new_prio = self.find_highrdy_prio();
             #[cfg(feature = "defmt")]
-            info!(
+            trace!(
                 " the new_prio is {}, the highrdy task's prio is {}, the cur task's prio is {}",
                 new_prio,
                 self.OSPrioHighRdy.get_unmut(),
@@ -549,11 +549,11 @@ impl SyncExecutor {
             );
             if new_prio >= self.OSPrioCur.get() {
                 #[cfg(feature = "defmt")]
-                info!("no need to switch task");
+                trace!("no need to switch task");
                 false
             } else {
                 #[cfg(feature = "defmt")]
-                info!("need to switch task");
+                trace!("need to switch task");
                 self.set_highrdy_with_prio(new_prio);
                 true
             }
@@ -569,6 +569,14 @@ impl SyncExecutor {
             fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK>;
             fn restore_thread_task();
         }
+        // test: print the ready queue
+        #[cfg(feature = "defmt")]
+        critical_section::with(|_|{
+            info!("in interrupt_poll");
+            self.print_ready_queue();
+            info!("the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
+        });
+
         #[cfg(feature = "defmt")]
         trace!("interrupt_poll");
         self.OSTCBCur.get().is_in_thread_poll.set(false);
@@ -577,8 +585,8 @@ impl SyncExecutor {
         // then we need to restore the highest priority task
         #[cfg(feature = "defmt")]
         {
-            info!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
-            info!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
+            trace!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
+            trace!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
         }
         if task.OSTCBStkPtr.is_none() {
             // if the task has no stack, it's a task, we need to mock a stack for it.
@@ -595,7 +603,7 @@ impl SyncExecutor {
             if task.OSTCBPrio == *self.OSPrioHighRdy.get_unmut() {
                 unsafe {
                     #[cfg(feature = "defmt")]
-                    info!("restore the task/thread");
+                    trace!("restore the task/thread");
                     restore_thread_task()
                 };
             }
@@ -609,14 +617,21 @@ impl SyncExecutor {
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
         // build this as a loop
         loop {
+            // test: print the ready queue
+            #[cfg(feature = "defmt")]
+            critical_section::with(|_|{
+                info!("in poll");
+                self.print_ready_queue();
+                info!("the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
+            });
             // if the highrdy task is the idle task, we need to delay some time
             #[cfg(feature = "delay_idle")]
             if critical_section::with(|_| *self.OSPrioHighRdy.get_unmut() == OS_TASK_IDLE_PRIO) {
                 #[cfg(feature = "defmt")]
-                info!("begin delay the idle task");
+                trace!("begin delay the idle task");
                 delay(block_delay_poll);
                 #[cfg(feature = "defmt")]
-                info!("end delay the idle task");
+                trace!("end delay the idle task");
             }
             // in the executor's thead poll, the highrdy task must be polled, there we don't set cur to be highrdy
             let task = critical_section::with(|_| {
@@ -628,8 +643,8 @@ impl SyncExecutor {
                     // if the task has stack, it's a thread, we need to resume it not poll it
                     #[cfg(feature = "defmt")]
                     {
-                        info!("resume the task");
-                        info!("the highrdy task's prio is {}", task.OSTCBPrio);
+                        trace!("resume the task");
+                        trace!("the highrdy task's prio is {}", task.OSTCBPrio);
                     }
                     task.restore_context_from_stk();
                     return None;
@@ -642,12 +657,12 @@ impl SyncExecutor {
             let mut task = task.unwrap();
             // execute the task depending on if it has stack
             #[cfg(feature = "defmt")]
-            info!("in the poll task loop");
+            trace!("in the poll task loop");
             #[cfg(feature = "defmt")]
-            info!("poll the task");
+            trace!("poll the task");
             task.OS_POLL_FN.get().unwrap_unchecked()(task);
             #[cfg(feature = "defmt")]
-            info!("exit poll the task");
+            trace!("exit poll the task");
             task.is_in_thread_poll.set(true);
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
             critical_section::with(|_| {
@@ -661,7 +676,7 @@ impl SyncExecutor {
             trace!("find the next expire");
             let mut next_expire = critical_section::with(|_| self.timer_queue.update(task));
             #[cfg(feature = "defmt")]
-            info!("the next expire is {}", next_expire);
+            trace!("the next expire is {}", next_expire);
             if critical_section::with(|_| {
                 if next_expire < *self.timer_queue.set_time.get_unmut() {
                     self.timer_queue.set_time.set(next_expire);
@@ -678,7 +693,7 @@ impl SyncExecutor {
                 // we must do this until we set the alarm successfully or there is no alarm required
                 while !RTC_DRIVER.set_alarm(self.alarm, next_expire) {
                     #[cfg(feature = "defmt")]
-                    info!("the set alarm return false");
+                    trace!("the set alarm return false");
                     // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
                     // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
                     // (just like the operation in alarm_callback)
@@ -766,6 +781,23 @@ impl SyncExecutor {
         prio_tbl = self.os_prio_tbl.get_mut();
         // use the dangling pointer(Some) to reserve the bit
         prio_tbl[prio as USIZE].ptr = None;
+    }
+
+    // by noah:TEST print the ready queue
+    #[cfg(feature = "defmt")]
+    pub fn print_ready_queue(&self) {
+        let tmp:[u8;OS_RDY_TBL_SIZE];
+        unsafe{
+            tmp = self.OSRdyTbl.get();
+        }
+        {
+            info!("the ready queue is:");
+            for i in 0..OS_LOWEST_PRIO+1 {
+                if tmp[(i/8) as usize] & (1<<(i%8)) != 0 {
+                    info!("the {}th task is ready", i);
+                }
+            }
+        }
     }
 }
 /// Wake a task by `TaskRef`.

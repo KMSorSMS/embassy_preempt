@@ -615,13 +615,13 @@ fn OS_InitTaskIdle() {
     trace!("OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
-            unsafe {
-                run_idle();
-            }
+            // unsafe {
+            //     run_idle();
+            // }
         }
     };
     #[cfg(feature = "defmt")]
-    info!("create idle task");
+    trace!("create idle task");
     SyncOSTaskCreate(idle_fn, 0 as *mut c_void, 0 as *mut usize, OS_TASK_IDLE_PRIO);
 }
 

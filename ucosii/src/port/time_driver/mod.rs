@@ -242,7 +242,7 @@ impl RtcDriver {
             for n in 0..ALARM_COUNT {
                 if sr.ccif(n + 1) && dier.ccie(n + 1) {
                     #[cfg(feature = "defmt")]
-                    info!("the alarm is triggered!!!");
+                    trace!("the alarm is triggered!!!");
                     self.trigger_alarm(n, cs);
                 }
             }
@@ -328,7 +328,7 @@ impl Driver for RtcDriver {
         #[cfg(feature = "defmt")]
         {
             trace!("set_alarm");
-            info!("set the alarm at {}", timestamp);
+            trace!("set the alarm at {}", timestamp);
         }
         let n = alarm.id() as usize;
         // by noah：check the timestamp. if timestamp is INT64U::MAX, there is no need to set the alarm

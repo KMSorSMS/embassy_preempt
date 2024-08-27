@@ -10,9 +10,12 @@ run_test() {
     local test_name=$1
     # 如果tmp.yaml文件存在时才删除tmp.yaml文件
     [ -f tmp.yaml ] && rm tmp.yaml
-    cargo run --bin "$test_name" --release > tmp.yaml &
+    cargo run --bin "$test_name" --release --features "defmt"> tmp.yaml &
     # 记录上一次文件大小
     PREV_SIZE=0
+
+    # # tmp.yml文件的最大大小
+    # MAX_SIZE=50000000
 
     # 检查文件大小的时间间隔（秒）
     INTERVAL=2
@@ -24,8 +27,7 @@ run_test() {
     MAX_WAIT=3
     WAITED=0
     # 单次测试最长执行时间
-    # 测试两个小时以验证稳定性
-    MAX_TIME=300
+    MAX_TIME=90
     # 记录总时间
     TOTAL_TIME=0
     # # 查找并终止probe-rs run进程
@@ -51,6 +53,11 @@ run_test() {
         else
             # 文件大小有变化，重置等待时间
             WAITED=0
+            # # 查看文件的大小，如果文件过大则将tmp.yaml文件删除，并重新创建
+            # if [ "$CURRENT_SIZE" -gt "$MAX_SIZE" ]; then
+            #     # 直接清空文件
+            #     > tmp.yaml
+            # fi
         fi
         PREV_SIZE=$CURRENT_SIZE
         ((TOTAL_TIME+=INTERVAL))
@@ -135,7 +142,8 @@ tests=(
 # "ucosii_main"
 # hardware_test
 # preempt_basic
-comprehensive_test
+# comprehensive_test
+scheduling2_test
 )
 
 # 循环遍历数组，执行测试
