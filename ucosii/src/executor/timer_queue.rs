@@ -36,6 +36,8 @@ impl TimerQueue {
             if cur_expires_at > p_expires_at {
                 break;
             }
+            // #[cfg(feature = "defmt")]
+            // info!("the cur priority is {}", cur_ref.OSTCBPrio);
             prev = cur;
             cur = cur_ref.OSTimerNext.get();
         }
@@ -77,10 +79,11 @@ impl TimerQueue {
             // by noah: clear the expire time
             cur_ref.expires_at.set(u64::MAX);
             let next = cur_ref.OSTimerNext.get();
+            let prev = cur_ref.OSTimerPrev.get();
             if let Some(next_ref) = next {
-                next_ref.OSTimerPrev.set(*cur_ref.OSTimerPrev.get_unmut());
+                next_ref.OSTimerPrev.set(prev);
             }
-            if let Some(prev_ref) = cur_ref.OSTimerPrev.get() {
+            if let Some(prev_ref) = prev {
                 prev_ref.OSTimerNext.set(next);
             } else {
                 self.head.set(next);
@@ -90,5 +93,12 @@ impl TimerQueue {
             cur_ref.OSTimerPrev.set(None);
             cur = next;
         }
+        // // test if dequeued clean
+        // let mut cur = self.head.get();
+        // while let Some(cur_ref) = cur {
+        //     #[cfg(feature = "defmt")]
+        //     info!("in dequeue the cur priority is {}", cur_ref.OSTCBPrio);
+        //     cur = cur_ref.OSTimerNext.get();
+        // }
     }
 }
