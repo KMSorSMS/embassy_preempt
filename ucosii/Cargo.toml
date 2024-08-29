@@ -90,8 +90,9 @@ overflow-checks = false  # <-
 # cargo build --release
 [profile.release]
 codegen-units = 1
-debug = 2  # 生成完整的调试信息
+debug = 0  # 生成完整的调试信息
 opt-level = 3  # 优化级别
+overflow-checks = false  # <-
 # lto = true
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }

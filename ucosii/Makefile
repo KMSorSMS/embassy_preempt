@@ -77,31 +77,32 @@ build:$(OBJ_FILES)
 # 	$(CC) $(CFLAGS) -c -o $@ $<
 # Rust_build:
 
-liam_build:
-	cargo build $(MODE_ARG)
-
+liam_build_release:
+	cargo build --release
+liam_build_debug:
+	cargo build --features "defmt"
 bin: $(TARGET)
 	@echo "Build done"
-liam_bin: liam_TARGET
-	@echo "liam bin build done"
+liam_bin_debug: liam_TARGET_DEBUG
+	@echo "liam debug bin build done"
+liam_bin_release: liam_TARGET_RELEASE
+	@echo "liam release bin build done"
 
 $(TARGET): build $(FILE_ELF)
 	$(OBJCOPY) -O binary $(FILE_ELF) $(FILE_BIN)
-liam_TARGET: liam_build $(liam_FILE_ELF)
+liam_TARGET_DEBUG: liam_build_debug $(liam_FILE_ELF)
 	$(OBJCOPY) -O binary $(liam_FILE_ELF) $(liam_FILE_BIN)
-debug: build bin
+liam_TARGET_RELEASE: liam_build_release $(liam_FILE_ELF)
+	$(OBJCOPY) -O binary $(liam_FILE_ELF) $(liam_FILE_BIN)
+liam_debug: liam_build_debug liam_bin_debug
 	tmux new-session -d \
-	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(FILE_BIN) 0x8000000' " && \
-	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
-	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(RTT_ADDR) 0x$(RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
-	tmux -2 attach-session -d
-liam_debug: liam_build liam_bin
-	tmux new-session -d \
-	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(liam_FILE_BIN) 0x8000000' " && \
+	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c 'adapter speed 4000' -c init -c "halt" -c 'flash write_image erase $(liam_FILE_BIN) 0x8000000' " && \
 	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(liam_FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
-	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(liam_RTT_ADDR) 0x$(liam_RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
+	-ex 'set remotetimeout 5' -ex 'source ./bp.gdb' -ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(liam_RTT_ADDR) 0x$(liam_RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
 	tmux -2 attach-session -d
-liam_download: liam_build liam_bin
+liam_download_debug: liam_build_debug liam_bin_debug
+	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(liam_FILE_BIN) 0x8000000" -c "reset" -c "shutdown"
+liam_download_release: liam_build_release liam_bin_release
 	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(liam_FILE_BIN) 0x8000000" -c "reset" -c "shutdown"
 
 download: build bin
@@ -158,4 +159,6 @@ lib-run:
 liam_run:
 	cargo rb $(liam_TARGET) --features "defmt"
 liam_run_release:
-	cargo rrb $(liam_TARGET) --features "defmt"
+	cargo rrb $(liam_TARGET)
+lib:
+	cargo build --release
