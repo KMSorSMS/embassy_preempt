@@ -6,6 +6,7 @@ use core::ffi::c_void;
 
 #[cfg(feature = "defmt")]
 use defmt::info;
+use ucosii::app::led::{LED_Init, LED_OFF, LED_ON};
 // <- derive attribute
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::{AsyncOSTaskCreate, SyncOSTaskCreate};
@@ -26,6 +27,7 @@ const SHORT_SHORT_TIME: u64 = 1;
 
 #[cortex_m_rt::entry]
 fn test_basic_schedule() -> ! {
+    LED_Init();
     // os初始化
     OSInit();
     // TASK create. The prio should be interlude, and the prio should be low to high
@@ -264,12 +266,12 @@ async fn task13(_args: *mut c_void) {
         // 任务1
         #[cfg(feature = "defmt")]
         info!("---task13 begin---");
-
+        LED_ON();
         Timer::after_ticks(LONG_TIME).await;
 
         #[cfg(feature = "defmt")]
         info!("---task13 end---");
-
+        LED_OFF();
         Timer::after_ticks(LONG_TIME).await;
     }
 }
