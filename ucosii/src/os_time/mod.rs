@@ -1,7 +1,6 @@
 #[cfg(feature = "defmt")]
-use defmt::info;
-#[cfg(feature = "defmt")]
-use defmt::trace;
+#[allow(unused_imports)]
+use defmt::{info,trace};
 
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};

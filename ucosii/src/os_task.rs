@@ -18,9 +18,8 @@ use core::future::Future;
 use core::sync::atomic::Ordering::Acquire;
 
 #[cfg(feature = "defmt")]
-use defmt::info;
-#[cfg(feature = "defmt")]
-use defmt::trace;
+#[allow(unused)]
+use defmt::{trace,info};
 
 use crate::cfg::OS_LOWEST_PRIO;
 use crate::executor::{GlobalSyncExecutor, OS_TASK_STORAGE};

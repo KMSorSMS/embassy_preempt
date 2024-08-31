@@ -5,9 +5,8 @@ use core::ptr::NonNull;
 
 use cortex_m_rt::exception;
 #[cfg(feature = "defmt")]
-use defmt::info;
-#[cfg(feature = "defmt")]
-use defmt::trace;
+#[allow(unused_imports)]
+use defmt::{info,trace};
 
 use super::OS_STK;
 use crate::executor::GlobalSyncExecutor;
@@ -20,8 +19,7 @@ use crate::heap::stack_allocator::{INTERRUPT_STACK, PROGRAM_STACK};
 
 /// finish the init part of the CPU/MCU
 pub fn OSInitHookBegin() {
-    // if we need heap, we can init it here
-    // init_heap();
+    
 }
 
 const NVIC_INT_CTRL: u32 = 0xE000ED04;
@@ -58,7 +56,7 @@ fn PendSV() {
         );
     }
     #[cfg(feature = "defmt")]
-    trace!("PendSV");
+    info!("PendSV");
     // then switch the task
     #[cfg(feature = "defmt")]
     trace!(
@@ -68,6 +66,8 @@ fn PendSV() {
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
         == GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut()
     {
+        #[cfg(feature = "defmt")]
+        info!("unreach");
         #[cfg(feature = "defmt")]
         trace!("the highrdy is the same as the current, no need to switch");
         // we will reset the msp to the original
@@ -118,7 +118,7 @@ fn PendSV() {
         // then as we have stored the context, we need to update the old_stk's top
         old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OS_STK).unwrap();
         #[cfg(feature = "defmt")]
-        trace!("in pendsv, the old stk ptr is {:?}", old_stk_ptr);
+        info!("in pendsv, the old stk ptr is {:?}", old_stk_ptr);
         // GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk)
         let task_cur = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
         task_cur.set_stk(old_stk);
@@ -148,7 +148,7 @@ fn PendSV() {
             .set(true);
     }
     #[cfg(feature = "defmt")]
-    trace!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
+    info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
     // we will reset the msp to the original
     let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
     unsafe {
@@ -156,8 +156,8 @@ fn PendSV() {
             // "CPSID I",
             "LDMFD   R0!, {{R4-R11, R14}}",
             "MSR     PSP, R0",
-            // reset the msp
-            "MSR     MSP, R1",
+            // // reset the msp
+            // "MSR     MSP, R1",
             "CPSIE   I",
             "BX      LR",
             in("r0") program_stk_ptr,
@@ -228,6 +228,8 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
         GlobalSyncExecutor.as_ref().unwrap().poll();
     };
     let executor_function_ptr = executor_function_ptr as *const () as usize;
+    #[cfg(feature = "defmt")]
+    info!("the executor function ptr is 0x{:x}", executor_function_ptr);
     let ptos = stk_ref.as_ptr() as *mut usize;
     // do align with 8 and move the stack pointer down an align size
     let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;

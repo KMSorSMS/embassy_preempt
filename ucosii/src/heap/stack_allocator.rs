@@ -8,17 +8,16 @@ use alloc::alloc::{GlobalAlloc, Layout};
 use core::ptr::NonNull;
 
 #[cfg(feature = "defmt")]
-use defmt::info;
-#[cfg(feature = "defmt")]
-use defmt::trace;
+#[allow(unused_imports)]
+use defmt::{info,trace};
 
 use super::fixed_size_block::FixedSizeBlockAllocator;
 use super::Locked;
 
 pub const STACK_START: *mut u8 = 0x20000000 as *mut u8;
 pub const STACK_SIZE: usize = 40 * 1024; // 40 KiB
-pub const PROGRAM_STACK_SIZE: usize = 512; // 1KiB 512 B also ok
-pub const INTERRUPT_STACK_SIZE: usize = 512; // 1 KiB
+pub const PROGRAM_STACK_SIZE: usize = 1024; // 1KiB 512 B also ok
+pub const INTERRUPT_STACK_SIZE: usize = 1024; // 1 KiB
 pub const TASK_STACK_SIZE: usize = PROGRAM_STACK_SIZE; // currently we set it to the same as the program stack
 
 use crate::port::OS_STK;

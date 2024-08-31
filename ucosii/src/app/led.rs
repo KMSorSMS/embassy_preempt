@@ -48,3 +48,51 @@ pub fn LED_OFF() {
         v.set_odr(5, vals::Odr::LOW);
     });
 }
+
+/// TEST:use the PA0 as the test pin
+#[allow(dead_code)]
+pub fn Pin_Init(){
+    // enable the RCC
+    RCC.ahb1enr().modify(|v| {
+        v.set_gpioaen(true);
+    });
+    // set GPIO
+    GPIOA.moder().modify(|v| {
+        // set mode as output
+        v.set_moder(0, vals::Moder::OUTPUT);
+    });
+    GPIOA.otyper().modify(|v| {
+        // set output type as push-pull
+        v.set_ot(0, vals::Ot::PUSHPULL);
+    });
+    GPIOA.ospeedr().modify(|v| {
+        // set output speed as high
+        v.set_ospeedr(0, vals::Ospeedr::HIGHSPEED);
+    });
+    GPIOA.pupdr().modify(|v| {
+        // set pull-up/pull-down as no pull-up/pull-down
+        v.set_pupdr(0, vals::Pupdr::FLOATING);
+    });
+    GPIOA.odr().modify(|v| {
+        // set output as high
+        v.set_odr(0, vals::Odr::LOW);
+    });
+}
+
+/// set the pin high
+#[allow(dead_code)]
+#[inline]
+pub fn pin_high() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(0, vals::Odr::HIGH);
+    });
+}
+
+/// set the pin low
+#[allow(dead_code)]
+#[inline]
+pub fn pin_low() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(0, vals::Odr::LOW);
+    });
+}

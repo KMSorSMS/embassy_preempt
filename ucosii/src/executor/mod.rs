@@ -27,6 +27,7 @@ pub use self::waker::task_from_waker;
 use crate::arena::ARENA;
 use crate::cfg::*;
 use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, TASK_STACK_SIZE};
+// use crate::os_sem::SemHandle;
 #[cfg(feature = "delay_idle")]
 use crate::os_time::blockdelay::delay;
 // use spawner::SpawnToken;
@@ -489,6 +490,9 @@ impl SyncExecutor {
         // call Interrupt Context Switch
         unsafe { this.IntCtxSW() };
     }
+
+
+
     /// The global executor for the uC/OS-II RTOS.
     pub(crate) fn new() -> Self {
         let alarm = unsafe { RTC_DRIVER.allocate_alarm().unwrap() };
@@ -537,7 +541,7 @@ impl SyncExecutor {
     pub(crate) unsafe fn IntCtxSW(&'static self) {
         // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
         #[cfg(feature = "defmt")]
-        trace!("IntCtxSW");
+        info!("IntCtxSW");
         if critical_section::with(|_| unsafe {
             let new_prio = self.find_highrdy_prio();
             #[cfg(feature = "defmt")]
@@ -588,7 +592,10 @@ impl SyncExecutor {
             trace!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
             trace!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
         }
+        
         if task.OSTCBStkPtr.is_none() {
+            #[cfg(feature = "defmt")]
+            info!("the task's stk is none");
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();

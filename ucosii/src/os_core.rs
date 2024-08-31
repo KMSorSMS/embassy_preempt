@@ -34,7 +34,9 @@
 use core::ffi::c_void;
 use core::sync::atomic::Ordering;
 
+use bottom_driver::BOT_DRIVER;
 #[cfg(feature = "defmt")]
+#[allow(unused)]
 use defmt::info;
 #[cfg(feature = "defmt")]
 use defmt::trace;
@@ -194,11 +196,17 @@ pub extern "C" fn OSInit() {
 
     #[cfg(feature = "OS_DEBUG_EN")]
     OSDebugInit();
+
+    // by noah: init the core peripheral
+    init_core_peripherals();
+
     OS_InitTaskIdle(); /* Create the Idle Task                     */
     // by liam: we need to init the stack allocator
     init_stack_allocator();
     // by noah：we need to init the Timer as the time driver
     OSTimerInit();
+    // by noah: *TEST*
+    OS_InitEventList();
 }
 
 /*
@@ -513,7 +521,10 @@ pub fn OS_EventWaitListInit() {}
 */
 
 #[allow(unused)]
-fn OS_InitEventList() {}
+fn OS_InitEventList() {
+    // by noah: *TEST*, init the bototm driver
+    BOT_DRIVER.init();
+}
 
 /*
 *********************************************************************************************************
@@ -615,9 +626,9 @@ fn OS_InitTaskIdle() {
     trace!("OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
-            // unsafe {
-            //     run_idle();
-            // }
+            unsafe {
+                run_idle();
+            }
         }
     };
     #[cfg(feature = "defmt")]

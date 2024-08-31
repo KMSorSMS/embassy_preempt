@@ -10,9 +10,8 @@ use core::{mem, ptr};
 use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
 #[cfg(feature = "defmt")]
-use defmt::info;
-#[cfg(feature = "defmt")]
-use defmt::trace;
+#[allow(unused_imports)]
+use defmt::{info,trace};
 use stm32_metapac::flash::vals::Latency;
 use stm32_metapac::rcc::vals::*;
 use stm32_metapac::timer::{regs, vals};
@@ -209,6 +208,10 @@ impl RtcDriver {
             compiler_fence(Ordering::SeqCst);
             NVIC::unmask(Interrupt::TIM3);
         }
+        // set the priority of the interrupt
+        
+
+        // NVIC::set_priority(Interrupt::TIM3,piro);
         // <T as GeneralInstance1Channel>::CaptureCompareInterrupt::unpend();
         // unsafe { <T as GeneralInstance1Channel>::CaptureCompareInterrupt::enable() };
 

@@ -1,4 +1,5 @@
 #[cfg(feature = "defmt")]
+#[allow(unused)]
 use defmt::{trace,info};
 
 use super::OS_TCB_REF;

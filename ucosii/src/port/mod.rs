@@ -1,13 +1,15 @@
 #![allow(non_camel_case_types)]
 use stm32_metapac::timer::TimGp16;
-
 /*
 **************************************************************************************************************************************
 *                                                               type define
 *                                           this part needs to change according to the platform
 **************************************************************************************************************************************
 */
-
+/// ENABLE
+pub const ENABLE:bool = true;
+/// DISABLE
+pub const DISENABLE:bool = false;
 /// Unsigned  8 bit quantity
 pub type BOOLEAN = bool;
 /// Unsigned  8 bit quantity  
@@ -74,12 +76,14 @@ pub mod os_cpu;
 /// the time driver
 pub mod time_driver;
 
+/// the bottom driver
+pub mod bottom_driver;
 /*
 ********************************************************************************************************************************************
 *                                                               critical section
 ********************************************************************************************************************************************
 */
-use cortex_m::interrupt;
+use cortex_m::{interrupt, Peripherals};
 use cortex_m::register::primask;
 use critical_section::{set_impl, Impl, RawRestoreState};
 
@@ -98,5 +102,24 @@ unsafe impl Impl for SingleCoreCriticalSection {
         if was_active {
             interrupt::enable()
         }
+    }
+}
+
+/*
+********************************************************************************************************************************************
+*                                                          core peripherals init
+********************************************************************************************************************************************
+*/
+
+/// by noah: init the core peripherals. For the task() just can be called **once**, we should init the core peripherals together
+pub fn init_core_peripherals() {
+    let mut p = Peripherals::take().unwrap();
+    // set the NVIC
+    unsafe{
+        // infer that the group is 2-2
+        // set the TIM3 prio as 3
+        p.NVIC.set_priority(stm32_metapac::Interrupt::TIM3, 3<<4);
+        // set the EXTI13 prio as 1
+        p.NVIC.set_priority(stm32_metapac::Interrupt::EXTI15_10, 1<<4);
     }
 }

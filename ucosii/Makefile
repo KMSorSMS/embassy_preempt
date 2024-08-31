@@ -11,8 +11,10 @@ TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # scheduling_test
 # ffi_test
 # comprehensive_test
-TARGET := comprehensive_test
+TARGET := bottom_test
 liam_TARGET := comprehensive_test
+TEST = time_performance
+TEST_FILE = target/$(PLATFORM)/$(MODE)/$(TEST)
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE
 MODE ?= release
@@ -22,6 +24,8 @@ FILE_BIN := target/$(PLATFORM)/$(MODE)/$(TARGET).bin
 liam_FILE_ELF := target/$(PLATFORM)/$(MODE)/$(liam_TARGET)
 liam_FILE_BIN := target/$(PLATFORM)/$(MODE)/$(liam_TARGET).bin
 
+# 测试文件大小，使用方式为SZ + ELF文件
+SZ = arm-none-eabi-size
 # # 定义源文件目录和目标文件目录
 # SRC_DIR := src/bin
 # OBJ_DIR := target/thumbv7em-none-eabi/release
@@ -72,7 +76,11 @@ test-run:
 # 先编译Rust文件，再编译C文件
 build:$(OBJ_FILES)
 	cargo build $(MODE_ARG) --features "defmt"
-	
+
+
+build_test:$(OBJ_FILES)
+	cargo build --bin $(TEST) $(MODE_ARG)
+	$(SZ) $(TEST_FILE)
 # $(OBJ_DIR)/%: $(SRC_DIR)/%.c Rust_build
 # 	$(CC) $(CFLAGS) -c -o $@ $<
 # Rust_build:

@@ -28,12 +28,11 @@ impl Future for Timer {
         if self.yielded_once && self.expires_at <= Instant::now() {
             Poll::Ready(())
         } else {
+            // by noah:this func set the expire time of the task
             schedule_wake(self.expires_at.as_ticks(), cx.waker());
             self.yielded_once = true;
             Poll::Pending
         }
-        // self.yielded_once = true;
-        // Poll::Pending
     }
 }
 
