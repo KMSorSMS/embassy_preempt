@@ -8,7 +8,11 @@ use critical_section::Mutex;
 #[cfg(feature = "defmt")]
 use defmt::{info, trace};
 // use critical_section::{CriticalSection, Mutex};
-use stm32_metapac::{gpio::vals, EXTI, GPIOA, GPIOC, RCC, SYSCFG};
+use stm32_metapac::{gpio::vals, EXTI, RCC, SYSCFG};
+#[cfg(feature = "GPIOA")]
+use stm32_metapac::GPIOA;
+#[cfg(feature = "GPIOC")]
+use stm32_metapac::GPIOC;
 
 use super::{DISENABLE, ENABLE};
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor, OS_TCB_REF};

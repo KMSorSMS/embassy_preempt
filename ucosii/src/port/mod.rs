@@ -1,6 +1,5 @@
 #![allow(non_camel_case_types)]
 use cortex_m::peripheral::scb::SystemHandler;
-use cortex_m::peripheral::{NVIC, SCB};
 use stm32_metapac::timer::TimGp16;
 #[cfg(feature = "defmt")]
 #[allow(unused_imports)]
