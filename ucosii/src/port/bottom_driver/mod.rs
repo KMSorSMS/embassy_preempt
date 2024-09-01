@@ -60,6 +60,8 @@ pub extern "C" fn EXTI15_10() {
     #[cfg(feature = "defmt")]
     info!("EXTI15_10");
     BOT_DRIVER.on_interrupt();
+    #[cfg(feature = "defmt")]
+    info!("exit_EXTI15_10");
 }
 
 /// EXTI15_10 interrupt handler
@@ -118,6 +120,9 @@ impl BotDriver {
             let task: Option<OS_TCB_REF>;
             unsafe {
                 task= bottom.task.get();
+            }
+            if task.is_none() {
+                return;
             }
             // wake up the task (set the task ready) 
             wake_task_no_pend(task.unwrap());
