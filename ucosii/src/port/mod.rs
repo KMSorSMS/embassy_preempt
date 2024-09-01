@@ -123,6 +123,11 @@ pub fn init_core_peripherals() {
     let mut p = Peripherals::take().unwrap();
     // set the NVIC
     unsafe{
+        // set the group as 2-2
+        let aircr = p.SCB.aircr.read();
+        let mut aircr = aircr & !(0b1111 << 8);
+        aircr = aircr | (0b101 << 8);
+        p.SCB.aircr.write(aircr);
         // infer that the group is 2-2
         // set the TIM3 prio as 3
         #[cfg(feature = "defmt")]

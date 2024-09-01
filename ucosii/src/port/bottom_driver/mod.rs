@@ -61,6 +61,8 @@ pub extern "C" fn EXTI15_10() {
     #[cfg(feature = "defmt")]
     info!("EXTI15_10");
     BOT_DRIVER.on_interrupt();
+    #[cfg(feature = "defmt")]
+    info!("exit_EXTI15_10");
 }
 
 /// EXTI15_10 interrupt handler
@@ -89,13 +91,20 @@ impl BotDriver {
     }
 
     fn on_interrupt(&self) {
+        // disable the interrupt
+        #[cfg(feature="GPIOC")]
+        EXTI.imr(0).modify(|w|{
+            // mask the EXTI13
+            w.set_line(13, DISENABLE)
+        });
+        
         #[cfg(feature = "GPIOC")]
         // clear the pending bit in EXTI
         EXTI.pr(0).modify(|w|{
             // This bit is cleared by programming it to ‘1’.
             w.set_line(13, ENABLE)
         });
-
+        
         #[cfg(feature = "GPIOA")]
         // clear the pending bit in EXTI
         EXTI.pr(0).modify(|w|{
@@ -103,36 +112,33 @@ impl BotDriver {
             w.set_line(0, ENABLE)
         });
         
-        // clear the pedning bit in NVIC
-        #[cfg(feature="GPIOC")]
-        NVIC::unpend(Interrupt::EXTI15_10);
-
-        #[cfg(feature = "GPIOA")]
-        NVIC::unpend(Interrupt::EXTI0);
-
         // XXX: reduce the size of this critical section ?
         critical_section::with(|cs| {
+            // clear the pedning bit in NVIC
+            // #[cfg(feature="GPIOC")]
+            // NVIC::unpend(Interrupt::EXTI15_10);
+
+            // #[cfg(feature = "GPIOA")]
+            // NVIC::unpend(Interrupt::EXTI0);
+
             // self.trigger_alarm(cs);
             // inline the trigger_alarm
             let bottom = self.bottoms.borrow(cs);
             // when the bottom is pressed, the task must be waked up
             let task: Option<OS_TCB_REF>;
             unsafe {
-                task= bottom.task.get();
+                task = bottom.task.get();
             }
+            // *TEST*
+            // if task.is_none() {
+            //     return;
+            // }
             // wake up the task (set the task ready) 
             wake_task_no_pend(task.unwrap());
             // clear the task
             unsafe {
                 bottom.task.set(None);
             }
-            // disable the interrupt
-            #[cfg(feature="GPIOC")]
-            EXTI.imr(0).modify(|w|{
-                // mask the EXTI13
-                w.set_line(13, DISENABLE)
-            });
-
             // rescheduling
             unsafe { GlobalSyncExecutor.as_ref().unwrap().IntCtxSW() };
         })
@@ -148,13 +154,6 @@ impl BotDriver {
             }
 
             // enable the interrupt
-            // clear the EXTI13 pending
-            #[cfg(feature="GPIOC")]
-            EXTI.pr(0).modify(|w|{
-                // This bit is cleared by programming it to ‘1’.
-                w.set_line(13, ENABLE)
-            });
-
             #[cfg(feature="GPIOC")]
             // stm32f401 only has one EXTI, so we pass the 0 to the imr
             EXTI.imr(0).modify(|w|{
@@ -162,6 +161,7 @@ impl BotDriver {
                 w.set_line(13, ENABLE)
             });
 
+            // clear the EXTI13 pendiing
             #[cfg(feature="GPIOC")]
             EXTI.pr(0).modify(|w|{
                 // This bit is cleared by programming it to ‘1’.
