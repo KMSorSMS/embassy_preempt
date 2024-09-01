@@ -156,8 +156,8 @@ fn PendSV() {
             // "CPSID I",
             "LDMFD   R0!, {{R4-R11, R14}}",
             "MSR     PSP, R0",
-            // // reset the msp
-            // "MSR     MSP, R1",
+            // reset the msp
+            "MSR     MSP, R1",
             "CPSIE   I",
             "BX      LR",
             in("r0") program_stk_ptr,
@@ -224,7 +224,7 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
     trace!("OSTaskStkInit");
     let executor_function_ptr: fn() = || unsafe {
         #[cfg(feature = "defmt")]
-        trace!("entering the executor function");
+        info!("entering the executor function");
         GlobalSyncExecutor.as_ref().unwrap().poll();
     };
     let executor_function_ptr = executor_function_ptr as *const () as usize;

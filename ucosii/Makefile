@@ -11,6 +11,7 @@ TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # scheduling_test
 # ffi_test
 # comprehensive_test
+# bottom_test
 TARGET := bottom_test
 liam_TARGET := comprehensive_test
 TEST = time_performance

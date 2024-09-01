@@ -27,6 +27,8 @@ fn test_hardware() -> ! {
 }
 
 async fn task1(_args: *mut c_void) {
+    // led on
+    LED_ON();
     loop {
         // led on
         LED_ON();

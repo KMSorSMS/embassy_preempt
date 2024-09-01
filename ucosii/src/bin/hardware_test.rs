@@ -33,13 +33,13 @@ async fn task1(_args: *mut c_void) {
         info!("led on");
         // delay(1);
         // delay 5s
-        Timer::after_ticks(2).await;
+        Timer::after_ticks(20000).await;
         // led off
         LED_OFF();
         #[cfg(feature = "defmt")]
         info!("led off");
         // delay(1);
         // delay 5s
-        Timer::after_ticks(2).await;
+        Timer::after_ticks(20000).await;
     }
 }
