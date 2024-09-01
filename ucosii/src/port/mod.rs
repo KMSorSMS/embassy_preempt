@@ -1,5 +1,11 @@
 #![allow(non_camel_case_types)]
+use cortex_m::peripheral::scb::SystemHandler;
+use cortex_m::peripheral::{NVIC, SCB};
 use stm32_metapac::timer::TimGp16;
+#[cfg(feature = "defmt")]
+#[allow(unused_imports)]
+use defmt::{info,trace};
+
 /*
 **************************************************************************************************************************************
 *                                                               type define
@@ -118,8 +124,22 @@ pub fn init_core_peripherals() {
     unsafe{
         // infer that the group is 2-2
         // set the TIM3 prio as 3
-        p.NVIC.set_priority(stm32_metapac::Interrupt::TIM3, 3<<4);
+        #[cfg(feature = "defmt")]
+        info!("the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
+        p.NVIC.set_priority(stm32_metapac::Interrupt::TIM3, 32);
+        #[cfg(feature = "defmt")]
+        info!("the prio of TIM3 is {}",NVIC::get_priority(stm32_metapac::Interrupt::TIM3));
+
+        #[cfg(feature = "defmt")]
+        info!("the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
         // set the EXTI13 prio as 1
-        p.NVIC.set_priority(stm32_metapac::Interrupt::EXTI15_10, 1<<4);
+        p.NVIC.set_priority(stm32_metapac::Interrupt::EXTI15_10, 16);
+        #[cfg(feature = "defmt")]
+        info!("the prio of EXTI15_10 is {}",NVIC::get_priority(stm32_metapac::Interrupt::EXTI15_10));
+        #[cfg(feature = "defmt")]
+        info!("the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
+        p.SCB.set_priority(SystemHandler::PendSV, 0xf<<4);
+        #[cfg(feature = "defmt")]
+        info!("the prio of PendSV is {}",SCB::get_priority(SystemHandler::PendSV));
     }
 }
