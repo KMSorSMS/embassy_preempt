@@ -4,4 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-ucosii={ path="../../ucosii" }
+cortex-m-rt = { version = "0.7"}
+ucosii={ path="../../ucosii", features=["memory-x","stm32f401re"] }
+[features]
+defmt = ["ucosii/defmt"]

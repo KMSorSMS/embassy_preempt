@@ -49,7 +49,7 @@ spin = "0.5.2"
 lazy_static = {version = "1.5.0", features = ["spin_no_std"]}
 panic-probe = { version = "0.3", features = ["print-defmt"], optional = true}
 cortex-m-semihosting = "0.5.0"
-stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645",  features = ["metadata", "rt"] }
+stm32-metapac = { git = "https://github.com/embassy-rs/stm32-data-generated", tag = "stm32-data-e0cfd165fd8fffaa0df66a35eeca83b228496645", features = ["metadata"], optional = true}
 
 
 #stm32-metapac = { version = "15", default-features = false, features = ["metadata"]}
@@ -101,7 +101,7 @@ opt-level = 1  # 优化级别 # <-
 # this part only define features, don't decide whether the feature is active
 [features]
 # when a feature is set in default, it is active
-default = ["GPIOC","use_spin","unstable-pac","stm32f401re","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
+default = ["GPIOC","rt","use_spin","unstable-pac","time_driver_tim3","OS_STACK_LESS_THAN_64","cortex_m","OS_MEM_EN", "OS_PRIO_LESS_THAN_64", "OS_ARG_CHK_EN","OS_TIME_GET_SET_EN","OS_TASK_CREATE_EXT_EN","OS_TASK_REG_TBL_SIZE"]
 defmt = ["dep:defmt","panic-probe","defmt-rtt"]
 nightly = []
 # this feature will be set in build.rs
@@ -159,6 +159,8 @@ time_driver_tim22=[]
 time_driver_tim23=[]
 time_driver_tim24=[]
 stm32f401re = [ "stm32-metapac/stm32f401re" ]
+## Enable `stm32-metapac`'s `rt` feature
+rt = ["stm32-metapac/rt"]
 low-power=[]
 delay_idle=[]
 GPIOC=[]
@@ -169,6 +171,8 @@ GPIOA=[]
 ## There are no plans to make this stable.
 unstable-pac = []
 use_spin = ["spinning_top"]
+## Automatically generate `memory.x` file using [`stm32-metapac`](https://docs.rs/stm32-metapac/)
+memory-x = ["stm32-metapac/memory-x"]
 
 
 [dependencies.spinning_top]

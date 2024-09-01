@@ -13,8 +13,8 @@
     "default"
   ],
   "rust-analyzer.linkedProjects": [
-    "ucosii/Cargo.toml",
-    // "performance_test/rust_uc/Cargo.toml",
+    // "ucosii/Cargo.toml",
+    "performance_test/rust_uc/Cargo.toml",
     // "performance_test/embassy/Cargo.toml"
   ],
   "liveshare.languages.allowGuestCommandControl": true,
