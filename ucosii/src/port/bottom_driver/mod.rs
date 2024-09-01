@@ -1,20 +1,20 @@
 // this part can be rewrite as the Semaphore part
 
+use core::cell::Cell;
 use core::sync::atomic::{compiler_fence, Ordering};
 
 use cortex_m::peripheral::NVIC;
 use critical_section::Mutex;
 #[cfg(feature = "defmt")]
-use defmt::{info,trace};
+use defmt::{info, trace};
 // use critical_section::{CriticalSection, Mutex};
 #[allow(unused_imports)]
 use stm32_metapac::{gpio::vals, EXTI, GPIOA, GPIOC, RCC, SYSCFG};
-use crate::{executor::{wake_task_no_pend, GlobalSyncExecutor}, pac::Interrupt};
-use crate::executor::OS_TCB_REF;
-use crate::util::SyncUnsafeCell;
-use core::cell::Cell;
 
 use super::{DISENABLE, ENABLE};
+use crate::executor::{wake_task_no_pend, GlobalSyncExecutor, OS_TCB_REF};
+use crate::pac::Interrupt;
+use crate::util::SyncUnsafeCell;
 
 /// async bottom
 pub mod Bottom;
@@ -41,9 +41,9 @@ struct BottomState {
 // }
 
 ///  the bottom driver
-pub struct BotDriver{
+pub struct BotDriver {
     // by noah: we can set the bottom to an array (indicate a pin) in the future
-    bottoms:Mutex<BottomState>,
+    bottoms: Mutex<BottomState>,
 }
 
 pub(crate) static BOT_DRIVER: BotDriver = BotDriver {
@@ -74,7 +74,6 @@ pub extern "C" fn EXTI0() {
     BOT_DRIVER.on_interrupt();
 }
 
-
 unsafe impl Send for BotDriver {}
 unsafe impl Sync for BotDriver {}
 
@@ -92,26 +91,33 @@ impl BotDriver {
 
     fn on_interrupt(&self) {
         // disable the interrupt
-        #[cfg(feature="GPIOC")]
-        EXTI.imr(0).modify(|w|{
+        #[cfg(feature = "GPIOC")]
+        EXTI.imr(0).modify(|w| {
             // mask the EXTI13
             w.set_line(13, DISENABLE)
         });
-        
+
         #[cfg(feature = "GPIOC")]
         // clear the pending bit in EXTI
-        EXTI.pr(0).modify(|w|{
+        EXTI.pr(0).modify(|w| {
             // This bit is cleared by programming it to ‘1’.
             w.set_line(13, ENABLE)
         });
         
         #[cfg(feature = "GPIOA")]
         // clear the pending bit in EXTI
-        EXTI.pr(0).modify(|w|{
+        EXTI.pr(0).modify(|w| {
             // This bit is cleared by programming it to ‘1’.
             w.set_line(0, ENABLE)
         });
-        
+
+        // clear the pedning bit in NVIC
+        #[cfg(feature = "GPIOC")]
+        NVIC::unpend(Interrupt::EXTI15_10);
+
+        #[cfg(feature = "GPIOA")]
+        NVIC::unpend(Interrupt::EXTI0);
+
         // XXX: reduce the size of this critical section ?
         critical_section::with(|cs| {
             // clear the pedning bit in NVIC
@@ -129,16 +135,19 @@ impl BotDriver {
             unsafe {
                 task = bottom.task.get();
             }
-            // *TEST*
-            // if task.is_none() {
-            //     return;
-            // }
-            // wake up the task (set the task ready) 
+            // wake up the task (set the task ready)
             wake_task_no_pend(task.unwrap());
             // clear the task
             unsafe {
                 bottom.task.set(None);
             }
+            // // disable the interrupt
+            // #[cfg(feature="GPIOC")]
+            // EXTI.imr(0).modify(|w|{
+            //     // mask the EXTI13
+            //     w.set_line(13, DISENABLE)
+            // });
+
             // rescheduling
             unsafe { GlobalSyncExecutor.as_ref().unwrap().IntCtxSW() };
         })
@@ -154,28 +163,34 @@ impl BotDriver {
             }
 
             // enable the interrupt
-            #[cfg(feature="GPIOC")]
+            // clear the EXTI13 pending
+            #[cfg(feature = "GPIOC")]
+            EXTI.pr(0).modify(|w| {
+                // This bit is cleared by programming it to ‘1’.
+                w.set_line(13, ENABLE)
+            });
+
+            #[cfg(feature = "GPIOC")]
             // stm32f401 only has one EXTI, so we pass the 0 to the imr
-            EXTI.imr(0).modify(|w|{
+            EXTI.imr(0).modify(|w| {
                 // unmask the EXTI13
                 w.set_line(13, ENABLE)
             });
 
-            // clear the EXTI13 pendiing
-            #[cfg(feature="GPIOC")]
-            EXTI.pr(0).modify(|w|{
+            #[cfg(feature = "GPIOC")]
+            EXTI.pr(0).modify(|w| {
                 // This bit is cleared by programming it to ‘1’.
                 w.set_line(13, ENABLE)
             });
 
             #[cfg(feature = "GPIOA")]
-            EXTI.imr(0).modify(|w|{
+            EXTI.imr(0).modify(|w| {
                 // unmask the EXTI13
                 w.set_line(0, ENABLE)
             });
-            
+
             #[cfg(feature = "GPIOA")]
-            EXTI.pr(0).modify(|w|{
+            EXTI.pr(0).modify(|w| {
                 // This bit is cleared by programming it to ‘1’.
                 w.set_line(0, ENABLE)
             });
@@ -184,7 +199,7 @@ impl BotDriver {
 }
 
 #[cfg(feature = "GPIOC")]
-fn bottom_init(){
+fn bottom_init() {
     // enable the RCC
     RCC.ahb1enr().modify(|v| {
         v.set_gpiocen(ENABLE);
@@ -214,7 +229,7 @@ fn bottom_init(){
 }
 
 #[cfg(feature = "GPIOA")]
-fn bottom_init(){
+fn bottom_init() {
     // enable the RCC
     RCC.ahb1enr().modify(|v| {
         v.set_gpioaen(true);
@@ -244,7 +259,7 @@ fn bottom_init(){
 }
 
 #[cfg(feature = "GPIOC")]
-fn set_Interrupt(){
+fn set_Interrupt() {
     // enable the SYSCFG
     RCC.apb2enr().modify(|v| {
         v.set_syscfgen(ENABLE);
@@ -254,8 +269,8 @@ fn set_Interrupt(){
     SYSCFG.exticr(3).modify(|w| {
         w.set_exti(1, 2);
     });
-    
-    EXTI.ftsr(0).modify(|w|{
+
+    EXTI.ftsr(0).modify(|w| {
         // set the EXTI13 as the raising edge
         w.set_line(13, ENABLE)
     });
@@ -271,7 +286,7 @@ fn set_Interrupt(){
 }
 
 #[cfg(feature = "GPIOA")]
-fn set_Interrupt(){
+fn set_Interrupt() {
     // enable the SYSCFG
     RCC.apb2enr().modify(|v| {
         v.set_syscfgen(ENABLE);
@@ -281,8 +296,8 @@ fn set_Interrupt(){
     SYSCFG.exticr(0).modify(|w| {
         w.set_exti(0, 0);
     });
-    
-    EXTI.rtsr(0).modify(|w|{
+
+    EXTI.rtsr(0).modify(|w| {
         // set the EXTI13 as the raising edge
         w.set_line(0, ENABLE)
     });
