@@ -490,9 +490,7 @@ impl SyncExecutor {
         // call Interrupt Context Switch
         unsafe { this.IntCtxSW() };
     }
-
-
-
+    
     /// The global executor for the uC/OS-II RTOS.
     pub(crate) fn new() -> Self {
         let alarm = unsafe { RTC_DRIVER.allocate_alarm().unwrap() };

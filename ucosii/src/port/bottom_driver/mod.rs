@@ -121,6 +121,17 @@ impl BotDriver {
             }
             // wake up the task (set the task ready) 
             wake_task_no_pend(task.unwrap());
+            // clear the task
+            unsafe {
+                bottom.task.set(None);
+            }
+            // disable the interrupt
+            #[cfg(feature="GPIOC")]
+            EXTI.imr(0).modify(|w|{
+                // mask the EXTI13
+                w.set_line(13, DISENABLE)
+            });
+
             // rescheduling
             unsafe { GlobalSyncExecutor.as_ref().unwrap().IntCtxSW() };
         })
@@ -147,6 +158,12 @@ impl BotDriver {
             // stm32f401 only has one EXTI, so we pass the 0 to the imr
             EXTI.imr(0).modify(|w|{
                 // unmask the EXTI13
+                w.set_line(13, ENABLE)
+            });
+
+            #[cfg(feature="GPIOC")]
+            EXTI.pr(0).modify(|w|{
+                // This bit is cleared by programming it to ‘1’.
                 w.set_line(13, ENABLE)
             });
 
@@ -237,7 +254,7 @@ fn set_Interrupt(){
         w.set_exti(1, 2);
     });
     
-    EXTI.rtsr(0).modify(|w|{
+    EXTI.ftsr(0).modify(|w|{
         // set the EXTI13 as the raising edge
         w.set_line(13, ENABLE)
     });
