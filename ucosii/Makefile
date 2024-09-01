@@ -76,8 +76,8 @@ test-run:
 
 # 先编译Rust文件，再编译C文件
 build:$(OBJ_FILES)
-	cargo build $(MODE_ARG) --features "defmt"
-
+	cargo build $(MODE_ARG)
+# --features "defmt"
 
 build_test:$(OBJ_FILES)
 	cargo build --bin $(TEST) $(MODE_ARG)
