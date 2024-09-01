@@ -106,7 +106,7 @@ impl BotDriver {
             // This bit is cleared by programming it to ‘1’.
             w.set_line(13, ENABLE)
         });
-
+        
         #[cfg(feature = "GPIOA")]
         // clear the pending bit in EXTI
         EXTI.pr(0).modify(|w| {
@@ -123,6 +123,13 @@ impl BotDriver {
 
         // XXX: reduce the size of this critical section ?
         critical_section::with(|cs| {
+            // clear the pedning bit in NVIC
+            // #[cfg(feature="GPIOC")]
+            // NVIC::unpend(Interrupt::EXTI15_10);
+
+            // #[cfg(feature = "GPIOA")]
+            // NVIC::unpend(Interrupt::EXTI0);
+
             // self.trigger_alarm(cs);
             // inline the trigger_alarm
             let bottom = self.bottoms.borrow(cs);
