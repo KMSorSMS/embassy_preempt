@@ -1,50 +1,75 @@
-#![no_main]
 #![no_std]
-#![feature(impl_trait_in_assoc_type)]
-// this test is used to compare with embassy
+#![no_main]
 
-use core::ffi::c_void;
-
-// extern crate ucosii;
-#[cfg(feature = "defmt")]
-use defmt::info;
-use ucosii::app::led::{LED_Init, Pin_Init, LED_OFF, LED_ON};
-use ucosii::os_core::{OSInit, OSStart};
-use ucosii::os_task::AsyncOSTaskCreate;
-use ucosii::os_time::timer::Timer;
-use ucosii::port::bottom_driver::Bottom::bottom;
-// use ucosii::{self as _};
-
-#[cortex_m_rt::entry]
-fn test_time_performance() -> ! {
-    // hardware init
-    LED_Init();
-    Pin_Init();
-    // os初始化
-    OSInit();
-    AsyncOSTaskCreate(test_task,0 as *mut c_void,0 as *mut usize,10);
-    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 11);
-    AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 12);
-    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
-    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 14);
-    AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 15);
-    // 启动os
-    OSStart();
-}
+use embassy_executor::Spawner;
+use embassy_stm32::{gpio::{Level, Output, Speed}, rcc::Pll};
+use embassy_time::Timer;
+use stm32_metapac::rcc::vals;
 
 // 主要测试任务
-async fn test_task(_args: *mut c_void) {
+#[embassy_executor::main]
+async fn main(spawner: Spawner) {
+    // 硬件初始化
+    let hse = Some(embassy_stm32::rcc::Hse {
+        freq: embassy_stm32::time::Hertz(8_000_000),
+        mode: embassy_stm32::rcc::HseMode::Oscillator,
+    });
+    let pll = Some(Pll {
+        prediv: vals::Pllm::DIV4,
+        mul: vals::Plln::MUL84,
+        divp: Some(vals::Pllp::DIV2),
+        divq: Some(vals::Pllq::DIV4),
+        divr: None,
+    });
+    let mut rcc = embassy_stm32::rcc::Config::default();
+    // config the default mannually, its dull
+    rcc.hsi = false;
+    rcc.hse = hse;
+    rcc.sys = vals::Sw::PLL1_P;
+    rcc.pll_src = vals::Pllsrc::HSE;
+    rcc.pll = pll;
+    rcc.ahb_pre = vals::Hpre::DIV1;
+    rcc.apb1_pre = vals::Ppre::DIV2;
+    rcc.apb2_pre = vals::Ppre::DIV2;
+
+    let mut config = embassy_stm32::Config::default();
+    config.rcc = rcc;
+    let p = embassy_stm32::init(config);
+
+    // info!("Hello World");
+
+    let mut led = Output::new(p.PA5, Level::High, Speed::Low);
+
+    // 创建任务
+    spawner.spawn(task1());
+    spawner.spawn(task2());
+    spawner.spawn(task3());
+    spawner.spawn(task4());
+    spawner.spawn(task5());
+
+    // 主要测试任务
+    loop {
+        led.set_high();
+        Timer::after_millis(300).await;
+        // button.wait_for_rising_edge().await;
+        led.set_low();
+        Timer::after_millis(300).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task1() {
     loop {
         // led on
-        LED_ON();
+        // LED_ON();
         #[cfg(feature = "defmt")]
         info!("led on");
         // delay(1);
         // delay 5s
-        bottom::wait_for_rising_edge().await;
         Timer::after_secs(5).await;
         // led off
-        LED_OFF();
+        // LED_OFF();
         #[cfg(feature = "defmt")]
         info!("led off");
         // delay(1);
@@ -53,18 +78,19 @@ async fn test_task(_args: *mut c_void) {
     }
 }
 
-// 用于模拟多任务执行环境
-async fn task1(_args: *mut c_void) {
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task2() {
     loop {
         // led on
-        LED_ON();
+        // LED_ON();
         #[cfg(feature = "defmt")]
         info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
-        LED_OFF();
+        // LED_OFF();
         #[cfg(feature = "defmt")]
         info!("led off");
         // delay(1);
@@ -73,18 +99,19 @@ async fn task1(_args: *mut c_void) {
     }
 }
 
-// 用于模拟多任务执行环境
-async fn task2(_args: *mut c_void) {
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task3() {
     loop {
         // led on
-        LED_ON();
+        // LED_ON();
         #[cfg(feature = "defmt")]
         info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
-        LED_OFF();
+        // LED_OFF();
         #[cfg(feature = "defmt")]
         info!("led off");
         // delay(1);
@@ -93,18 +120,19 @@ async fn task2(_args: *mut c_void) {
     }
 }
 
-// 用于模拟多任务执行环境
-async fn task3(_args: *mut c_void) {
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task4() {
     loop {
         // led on
-        LED_ON();
+        // LED_ON();
         #[cfg(feature = "defmt")]
         info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
-        LED_OFF();
+        // LED_OFF();
         #[cfg(feature = "defmt")]
         info!("led off");
         // delay(1);
@@ -113,38 +141,19 @@ async fn task3(_args: *mut c_void) {
     }
 }
 
-// 用于模拟多任务执行环境
-async fn task4(_args: *mut c_void) {
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task5() {
     loop {
         // led on
-        LED_ON();
+        // LED_ON();
         #[cfg(feature = "defmt")]
         info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
-        LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
-        // delay(1);
-        // delay 5s
-        Timer::after_secs(5).await;
-    }
-}
-
-// 用于模拟多任务执行环境
-async fn task5(_args: *mut c_void) {
-    loop {
-        // led on
-        LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
-        // delay(1);
-        // delay 5s
-        Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
+        // LED_OFF();
         #[cfg(feature = "defmt")]
         info!("led off");
         // delay(1);

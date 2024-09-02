@@ -62,10 +62,10 @@ defmt-test = "0.3"
 # cargo build/run
 [profile.dev]
 codegen-units = 1
-debug = 2
+debug = 0
 debug-assertions = true # <-
 incremental = false
-opt-level = 1         # <-
+opt-level = 3         # <-
 overflow-checks = true  # <-
 
 # cargo test
@@ -90,8 +90,8 @@ overflow-checks = false  # <-
 # cargo build --release
 [profile.release]
 codegen-units = 1
-debug = 2  # 生成完整的调试信息
-opt-level = 1  # 优化级别 # <-
+debug = 0  # 生成完整的调试信息
+opt-level = 3  # 优化级别 # <-
 # lto = true
 
 # futures = { version = "0.3.24", default-features = false, features = ["alloc", "async-await"] }

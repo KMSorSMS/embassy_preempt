@@ -5,17 +5,10 @@ TEST_BINARY_LIB := target/thumbv7em-none-eabi/debug/ucosii_lib.bin
 ENTRY_PA := 0x08000000
 PORT := 8765
 TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
-# hardware_test
-# prio_test
-# preempt_test
-# scheduling_test
-# ffi_test
-# comprehensive_test
-# bottom_test
-TARGET := bottom_test
+# space_performance
+# time_performance 
+TARGET := space_performance
 liam_TARGET := bottom_test
-TEST = time_performance
-TEST_FILE = target/$(PLATFORM)/$(MODE)/$(TEST)
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE
 MODE ?= release
@@ -61,11 +54,10 @@ debug-test: bin-test
 	tmux -2 attach-session -d
 defmt-test:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW) "
-test-run:
-	cargo test --package ucosii --test integration
 
 build:$(OBJ_FILES)
-	cargo build $(MODE_ARG)
+	cargo build --bin $(TARGET) $(MODE_ARG)
+	$(SZ) $(FILE_ELF)
 # --features "defmt"
 
 liam_build_release:
@@ -145,11 +137,7 @@ defmt-lib:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW_LIB) "
 liam_defmt:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(liam_FILE_ELF) "
-lib-run:
-	cargo test --lib
 liam_run:
 	cargo rb $(liam_TARGET) --features "defmt"
 liam_run_release:
 	cargo rrb $(liam_TARGET)
-lib:
-	cargo build --release

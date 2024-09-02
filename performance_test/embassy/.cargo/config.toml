@@ -1,0 +1,27 @@
+[target.'cfg(all(target_arch = "arm", target_os = "none"))']
+runner = "probe-rs run --chip STM32F401RETx"
+rustflags = [
+  "-C", "linker=flip-link",
+  "-C", "link-arg=-Tlink.x",
+  # "-C", "link-arg=-Tdefmt.x",
+  # This is needed if your flash or ram addresses are not aligned to 0x10000 in memory.x
+  # See https://github.com/rust-embedded/cortex-m-quickstart/pull/95
+  "-C", "link-arg=--nmagic",
+]
+[build]
+target = "thumbv7em-none-eabi"
+[alias]
+rb = "run --bin"
+rrb = "run --release --bin"
+[env]
+# the config of max_mem_part
+OS_MAX_MEM_PART = "5"
+# about message
+OS_Q_EN = "0"
+OS_MAX_QS = "0"
+OS_MBOX_EN = "0"
+OS_SEM_EN = "1" 
+OS_MUTEX_EN = "0"
+OS_EVENT_NAME_EN = "1"
+OS_LOWEST_PRIO = "63"
+DEFMT_LOG = "info" # <- can change to info, warn, or error. to print info
