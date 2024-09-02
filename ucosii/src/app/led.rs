@@ -49,7 +49,9 @@ pub fn LED_OFF() {
     });
 }
 
-/// TEST:use the PA0 as the test pin
+/// TEST: thread pin and interrupt pin are used in the time_performance test
+/// use the PA0 as the thread pin
+/// use the PA1 as the interrupt pin
 #[allow(dead_code)]
 pub fn Pin_Init(){
     // enable the RCC
@@ -60,39 +62,62 @@ pub fn Pin_Init(){
     GPIOA.moder().modify(|v| {
         // set mode as output
         v.set_moder(0, vals::Moder::OUTPUT);
+        v.set_moder(1, vals::Moder::OUTPUT);
     });
     GPIOA.otyper().modify(|v| {
         // set output type as push-pull
         v.set_ot(0, vals::Ot::PUSHPULL);
+        v.set_ot(1, vals::Ot::PUSHPULL);
     });
     GPIOA.ospeedr().modify(|v| {
         // set output speed as high
         v.set_ospeedr(0, vals::Ospeedr::HIGHSPEED);
+        v.set_ospeedr(1, vals::Ospeedr::HIGHSPEED);
     });
     GPIOA.pupdr().modify(|v| {
         // set pull-up/pull-down as no pull-up/pull-down
         v.set_pupdr(0, vals::Pupdr::FLOATING);
+        v.set_pupdr(1, vals::Pupdr::FLOATING);
     });
     GPIOA.odr().modify(|v| {
-        // set output as high
+        // set output as low
         v.set_odr(0, vals::Odr::LOW);
+        v.set_odr(1, vals::Odr::LOW);
     });
 }
 
-/// set the pin high
+/// set the thread pin high
 #[allow(dead_code)]
 #[inline]
-pub fn pin_high() {
+pub fn thread_pin_high() {
     GPIOA.odr().modify(|v| {
         v.set_odr(0, vals::Odr::HIGH);
     });
 }
 
-/// set the pin low
+/// set the thread pin low
 #[allow(dead_code)]
 #[inline]
-pub fn pin_low() {
+pub fn thread_pin_low() {
     GPIOA.odr().modify(|v| {
         v.set_odr(0, vals::Odr::LOW);
+    });
+}
+
+/// set the interrupt pin high
+#[allow(dead_code)]
+#[inline]
+pub fn interrupt_pin_high() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(1, vals::Odr::HIGH);
+    });
+}
+
+/// set the interrupt pin low
+#[allow(dead_code)]
+#[inline]
+pub fn interrupt_pin_low() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(1, vals::Odr::LOW);
     });
 }

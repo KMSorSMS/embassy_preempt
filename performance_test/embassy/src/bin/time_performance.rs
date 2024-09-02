@@ -1,7 +1,6 @@
 #![no_std]
 #![no_main]
 
-use defmt::info;
 use embassy_executor::Spawner;
 use embassy_stm32::{gpio::{Level, Output, Speed}, rcc::Pll};
 use embassy_time::Timer;
@@ -64,15 +63,11 @@ async fn task1() {
     loop {
         // led on
         // LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         // LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -85,15 +80,11 @@ async fn task2() {
     loop {
         // led on
         // LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         // LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -106,15 +97,11 @@ async fn task3() {
     loop {
         // led on
         // LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         // LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -127,15 +114,11 @@ async fn task4() {
     loop {
         // led on
         // LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         // LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
@@ -148,15 +131,11 @@ async fn task5() {
     loop {
         // led on
         // LED_ON();
-        #[cfg(feature = "defmt")]
-        info!("led on");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
         // led off
         // LED_OFF();
-        #[cfg(feature = "defmt")]
-        info!("led off");
         // delay(1);
         // delay 5s
         Timer::after_secs(5).await;
