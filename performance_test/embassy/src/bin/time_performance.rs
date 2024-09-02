@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 
+use defmt::info;
 use embassy_executor::Spawner;
 use embassy_stm32::{gpio::{Level, Output, Speed}, rcc::Pll};
 use embassy_time::Timer;
