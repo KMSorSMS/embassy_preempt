@@ -620,6 +620,7 @@ fn OS_InitRdyList() {
 // must use this function
 fn OS_InitTaskIdle() {
     extern "Rust" {
+        #[allow(unused)]
         fn run_idle();
     }
     #[cfg(feature = "defmt")]

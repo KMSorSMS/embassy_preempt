@@ -127,6 +127,9 @@ else ifeq ($(UBUNTU_VERSION),22.04)
 
 	rm ./compile_commands.json || true 
 	export https_proxy= && export http_proxy= && bear -- make -j4
+else 
+	rm ./compile_commands.json || true 
+	export https_proxy= && export http_proxy= && bear -- make -j4
 endif
 Jdownload: bear
 # 生成脚本
