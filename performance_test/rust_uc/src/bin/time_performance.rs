@@ -5,7 +5,7 @@
 
 use core::ffi::c_void;
 
-use ucosii::app::led::{interrupt_pin_low, thread_pin_high, thread_pin_low, LED_Init, Pin_Init, LED_OFF, LED_ON};
+// use ucosii::app::led::{interrupt_pin_low, thread_pin_high, thread_pin_low, LED_Init, Pin_Init, LED_OFF, LED_ON};
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::AsyncOSTaskCreate;
 use ucosii::os_time::timer::Timer;
@@ -37,9 +37,10 @@ async fn test_task(_args: *mut c_void) {
         interrupt_pin_low();
         // set the thread pin high, indicating that the thread time test begins
         thread_pin_high();
-        
+    
         // delay 5s
         Timer::after_secs(5).await;
+        
 
         // set the thread pin low, indicating that the thread time test is finished
         thread_pin_low();
@@ -49,13 +50,10 @@ async fn test_task(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 async fn task1(_args: *mut c_void) {
     loop {
-        // led on
+        // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         LED_ON();
-        // delay 5s
         Timer::after_secs(5).await;
-        // led off
         LED_OFF();
-        // delay 5s
         Timer::after_secs(5).await;
     }
 }
@@ -63,13 +61,9 @@ async fn task1(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 async fn task2(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -77,13 +71,9 @@ async fn task2(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 async fn task3(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -91,13 +81,9 @@ async fn task3(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 async fn task4(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -105,13 +91,154 @@ async fn task4(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 async fn task5(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
+    }
+}
+
+/// init the LED
+#[allow(dead_code)]
+pub fn LED_Init() {
+    // enable the RCC
+    RCC.ahb1enr().modify(|v| {
+        v.set_gpioaen(true);
+    });
+    // set GPIO
+    GPIOA.moder().modify(|v| {
+        // set mode as output
+        v.set_moder(5, gpio::vals::Moder::OUTPUT);
+    });
+    GPIOA.otyper().modify(|v| {
+        // set output type as push-pull
+        v.set_ot(5,gpio::vals::Ot::PUSHPULL);
+    });
+    GPIOA.ospeedr().modify(|v| {
+        // set output speed as high
+        v.set_ospeedr(5, gpio::vals::Ospeedr::HIGHSPEED);
+    });
+    GPIOA.pupdr().modify(|v| {
+        // set pull-up/pull-down as no pull-up/pull-down
+        v.set_pupdr(5, gpio::vals::Pupdr::FLOATING);
+    });
+    GPIOA.odr().modify(|v| {
+        // set output as high
+        v.set_odr(5, gpio::vals::Odr::HIGH);
+    });
+}
+
+/// turn on the LED
+#[allow(dead_code)]
+#[inline]
+pub fn LED_ON() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(5, gpio::vals::Odr::HIGH);
+    });
+}
+
+/// turn off the LED
+#[allow(dead_code)]
+#[inline]
+pub fn LED_OFF() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(5, gpio::vals::Odr::LOW);
+    });
+}
+
+/// TEST: thread pin and interrupt pin are used in the time_performance test
+/// use the PA0 as the thread pin
+/// use the PA1 as the interrupt pin
+#[allow(dead_code)]
+pub fn Pin_Init(){
+    // enable the RCC
+    RCC.ahb1enr().modify(|v| {
+        v.set_gpioaen(true);
+    });
+    // set GPIO
+    GPIOA.moder().modify(|v| {
+        // set mode as output
+        v.set_moder(0, gpio::vals::Moder::OUTPUT);
+        v.set_moder(1, gpio::vals::Moder::OUTPUT);
+    });
+    GPIOA.otyper().modify(|v| {
+        // set output type as push-pull
+        v.set_ot(0, gpio::vals::Ot::PUSHPULL);
+        v.set_ot(1, gpio::vals::Ot::PUSHPULL);
+    });
+    GPIOA.ospeedr().modify(|v| {
+        // set output speed as high
+        v.set_ospeedr(0, gpio::vals::Ospeedr::HIGHSPEED);
+        v.set_ospeedr(1, gpio::vals::Ospeedr::HIGHSPEED);
+    });
+    GPIOA.pupdr().modify(|v| {
+        // set pull-up/pull-down as no pull-up/pull-down
+        v.set_pupdr(0, gpio::vals::Pupdr::FLOATING);
+        v.set_pupdr(1, gpio::vals::Pupdr::FLOATING);
+    });
+    GPIOA.odr().modify(|v| {
+        // set output as low
+        v.set_odr(0, gpio::vals::Odr::LOW);
+        v.set_odr(1, gpio::vals::Odr::LOW);
+    });
+}
+
+/// set the thread pin high
+#[allow(dead_code)]
+#[inline]
+pub fn thread_pin_high() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(0, gpio::vals::Odr::HIGH);
+    });
+}
+
+/// set the thread pin low
+#[allow(dead_code)]
+#[inline]
+pub fn thread_pin_low() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(0, gpio::vals::Odr::LOW);
+    });
+}
+
+/// set the interrupt pin high
+#[allow(dead_code)]
+#[inline]
+pub fn interrupt_pin_high() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(1, gpio::vals::Odr::HIGH);
+    });
+}
+
+/// set the interrupt pin low
+#[allow(dead_code)]
+#[inline]
+pub fn interrupt_pin_low() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(1, gpio::vals::Odr::LOW);
+    });
+}
+
+#[inline]
+pub fn delay(time: usize) {
+    // 延时函数,time的单位约为0.5s，使用汇编编写从而不会被优化
+    unsafe {
+        asm!(
+            // 先来个循环（总共是两层循环，内层循环次数8000000）
+            "mov r0, #0",
+            "1:",
+            // 内层循环
+            "mov r1, #0",
+            "2:",
+            "add r1, r1, #1",
+            "cmp r1, r3",
+            "blt 2b",
+            // 外层循环
+            "add r0, r0, #1",
+            "cmp r0, r2",
+            "blt 1b",
+            in("r2") time,
+            in("r3") 8000000/8,
+        )
     }
 }

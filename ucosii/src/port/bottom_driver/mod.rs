@@ -277,7 +277,7 @@ fn set_Interrupt() {
         w.set_exti(1, 2);
     });
 
-    EXTI.ftsr(0).modify(|w| {
+    EXTI.rtsr(0).modify(|w| {
         // set the EXTI13 as the raising edge
         w.set_line(13, ENABLE)
     });

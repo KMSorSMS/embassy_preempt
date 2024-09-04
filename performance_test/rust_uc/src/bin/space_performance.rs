@@ -5,7 +5,7 @@
 
 use core::ffi::c_void;
 
-use ucosii::app::led::{LED_Init, Pin_Init, LED_OFF, LED_ON};
+// use ucosii::app::led::{LED_Init, Pin_Init, LED_OFF, LED_ON};
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::AsyncOSTaskCreate;
 use ucosii::os_time::timer::Timer;
@@ -59,13 +59,9 @@ async fn test_task(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task1(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -73,13 +69,9 @@ async fn task1(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task2(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -87,13 +79,9 @@ async fn task2(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task3(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -101,13 +89,9 @@ async fn task3(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task4(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -115,13 +99,9 @@ async fn task4(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task5(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -129,13 +109,9 @@ async fn task5(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task6(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -143,13 +119,9 @@ async fn task6(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task7(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -157,13 +129,9 @@ async fn task7(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task8(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -171,13 +139,9 @@ async fn task8(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task9(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -185,13 +149,9 @@ async fn task9(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task10(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -199,13 +159,9 @@ async fn task10(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task11(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -213,13 +169,9 @@ async fn task11(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task12(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -227,13 +179,9 @@ async fn task12(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task13(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -241,13 +189,9 @@ async fn task13(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task14(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -255,13 +199,9 @@ async fn task14(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task15(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -269,13 +209,9 @@ async fn task15(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task16(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -283,13 +219,9 @@ async fn task16(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task17(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -297,13 +229,9 @@ async fn task17(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task18(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -311,13 +239,9 @@ async fn task18(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task19(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
     }
 }
@@ -325,13 +249,82 @@ async fn task19(_args: *mut c_void) {
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task20(_args: *mut c_void) {
     loop {
-        // led on
-        LED_ON();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
-        // led off
-        LED_OFF();
-        // delay 5s
+        delay(6);
         Timer::after_secs(5).await;
+    }
+}
+
+/// init the LED
+#[allow(dead_code)]
+pub fn LED_Init() {
+    // enable the RCC
+    RCC.ahb1enr().modify(|v| {
+        v.set_gpioaen(true);
+    });
+    // set GPIO
+    GPIOA.moder().modify(|v| {
+        // set mode as output
+        v.set_moder(5, gpio::vals::Moder::OUTPUT);
+    });
+    GPIOA.otyper().modify(|v| {
+        // set output type as push-pull
+        v.set_ot(5,gpio::vals::Ot::PUSHPULL);
+    });
+    GPIOA.ospeedr().modify(|v| {
+        // set output speed as high
+        v.set_ospeedr(5, gpio::vals::Ospeedr::HIGHSPEED);
+    });
+    GPIOA.pupdr().modify(|v| {
+        // set pull-up/pull-down as no pull-up/pull-down
+        v.set_pupdr(5, gpio::vals::Pupdr::FLOATING);
+    });
+    GPIOA.odr().modify(|v| {
+        // set output as high
+        v.set_odr(5, gpio::vals::Odr::HIGH);
+    });
+}
+
+/// turn on the LED
+#[allow(dead_code)]
+#[inline]
+pub fn LED_ON() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(5, gpio::vals::Odr::HIGH);
+    });
+}
+
+/// turn off the LED
+#[allow(dead_code)]
+#[inline]
+pub fn LED_OFF() {
+    GPIOA.odr().modify(|v| {
+        v.set_odr(5, gpio::vals::Odr::LOW);
+    });
+}
+
+/// block delay
+#[inline]
+pub fn delay(time: usize) {
+    // 延时函数,time的单位约为0.5s，使用汇编编写从而不会被优化
+    unsafe {
+        asm!(
+            // 先来个循环（总共是两层循环，内层循环次数8000000）
+            "mov r0, #0",
+            "1:",
+            // 内层循环
+            "mov r1, #0",
+            "2:",
+            "add r1, r1, #1",
+            "cmp r1, r3",
+            "blt 2b",
+            // 外层循环
+            "add r0, r0, #1",
+            "cmp r0, r2",
+            "blt 1b",
+            in("r2") time,
+            in("r3") 8000000/8,
+        )
     }
 }
