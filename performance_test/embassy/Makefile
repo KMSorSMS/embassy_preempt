@@ -7,7 +7,7 @@ PORT := 8765
 TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # space_performance
 # time_performance 
-TARGET := space_performance
+TARGET := time_performance
 liam_TARGET := bottom_test
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE
@@ -56,8 +56,9 @@ defmt-test:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW) "
 
 build:$(OBJ_FILES)
-	cargo build --bin $(TARGET) $(MODE_ARG)
+	cargo build $(MODE_ARG)
 	$(SZ) $(FILE_ELF)
+# --bin $(TARGET) 
 # --features "defmt"
 
 liam_build_release:

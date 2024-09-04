@@ -40,7 +40,6 @@ async fn test_task(_args: *mut c_void) {
     
         // delay 5s
         Timer::after_secs(5).await;
-        
 
         // set the thread pin low, indicating that the thread time test is finished
         thread_pin_low();
@@ -198,15 +197,6 @@ pub fn thread_pin_high() {
 pub fn thread_pin_low() {
     GPIOA.odr().modify(|v| {
         v.set_odr(0, gpio::vals::Odr::LOW);
-    });
-}
-
-/// set the interrupt pin high
-#[allow(dead_code)]
-#[inline]
-pub fn interrupt_pin_high() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(1, gpio::vals::Odr::HIGH);
     });
 }
 

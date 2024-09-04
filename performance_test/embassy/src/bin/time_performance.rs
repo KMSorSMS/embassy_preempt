@@ -4,9 +4,13 @@
 use core::arch::asm;
 
 use embassy_executor::Spawner;
-use embassy_stm32::{exti::ExtiInput, gpio::{Level, Output, Pull, Speed}, rcc::Pll};
+use embassy_stm32::exti::ExtiInput;
+use embassy_stm32::gpio::{Level, Output, Pull, Speed};
+use embassy_stm32::rcc::Pll;
 use embassy_time::Timer;
-use stm32_metapac::{gpio, rcc::vals, GPIOA, RCC};
+use stm32_metapac::rcc::vals;
+use stm32_metapac::{gpio, GPIOA, RCC};
+use {defmt_rtt as _, panic_probe as _};
 
 // 主要测试任务
 #[embassy_executor::main]
@@ -43,20 +47,22 @@ async fn main(spawner: Spawner) {
     let led: Output<'static> = Output::new(p.PA5, Level::High, Speed::High);
 
     // 初始化按键，以及对应中断。
-    let mut button = ExtiInput::new(p.PC13, p.EXTI13,Pull::Down);
+    let mut button = ExtiInput::new(p.PC13, p.EXTI13, Pull::Down);
 
     // 初始化process pin 与interrupt pin
     Pin_Init();
 
     // 创建任务
-    spawner.spawn(task1(led));
-    spawner.spawn(task2());
-    spawner.spawn(task3());
-    spawner.spawn(task4());
-    spawner.spawn(task5());
+    spawner.spawn(task1(led)).unwrap();
+    spawner.spawn(task2()).unwrap();
+    spawner.spawn(task3()).unwrap();
+    spawner.spawn(task4()).unwrap();
+    spawner.spawn(task5()).unwrap();
 
     // 主要测试任务
     loop {
+        // set the thread pin low, indicating that the thread time test is finished
+        thread_pin_low();
         button.wait_for_rising_edge().await;
         // set the interrupt pin low, indicating that the interrput and scheduling test is finished
         interrupt_pin_low();
@@ -65,9 +71,12 @@ async fn main(spawner: Spawner) {
 
         // delay 5s
         Timer::after_secs(5).await;
-
-        // set the thread pin low, indicating that the thread time test is finished
         thread_pin_low();
+        button.wait_for_rising_edge().await;
+        interrupt_pin_low();
+        thread_pin_high();
+
+        Timer::after_secs(5).await;
     }
 }
 
@@ -131,7 +140,7 @@ async fn task5() {
 /// use the PA0 as the thread pin
 /// use the PA1 as the interrupt pin
 #[allow(non_snake_case)]
-pub fn Pin_Init(){
+pub fn Pin_Init() {
     // enable the RCC
     RCC.ahb1enr().modify(|v| {
         v.set_gpioaen(true);
@@ -177,14 +186,6 @@ pub fn thread_pin_high() {
 pub fn thread_pin_low() {
     GPIOA.odr().modify(|v| {
         v.set_odr(0, gpio::vals::Odr::LOW);
-    });
-}
-
-/// set the interrupt pin high
-#[inline]
-pub fn interrupt_pin_high() {
-    GPIOA.odr().modify(|v| {
-        v.set_odr(1, gpio::vals::Odr::HIGH);
     });
 }
 

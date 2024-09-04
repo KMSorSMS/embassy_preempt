@@ -56,8 +56,9 @@ defmt-test:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(TEST_ELF_NEW) "
 
 build:$(OBJ_FILES)
-	cargo build --bin $(TARGET) $(MODE_ARG)
+	cargo build $(MODE_ARG)
 	$(SZ) $(FILE_ELF)
+# --bin $(TARGET)
 # --features "defmt"
 
 liam_build_release:
