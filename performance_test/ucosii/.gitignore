@@ -5,4 +5,3 @@ compile_commands.json
 *.gdb
 *.tmp
 *.py
-Makefile

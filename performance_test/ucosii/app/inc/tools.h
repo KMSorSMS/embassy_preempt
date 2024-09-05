@@ -1,10 +1,21 @@
 #ifndef TOOLS_H
 #define TOOLS_H
 #include "ucos_ii.h"
+
+extern OS_EVENT *bottom_sem;
+
 // 开灯操作，用宏定义
-#define LED2_ON() GPIOA->ODR |= 0x00000020; // 设置为1，即高电平
+#define LED_ON() GPIOA->ODR |= 0x00000020; // 设置为1，即高电平
 // 关灯操作，用宏定义
-#define LED2_OFF() GPIOA->ODR &= ~0x00000020; // 设置为0，即低电平
+#define LED_OFF() GPIOA->ODR &= ~0x00000020; // 设置为0，即低电平
+
+// 引脚电平设置函数
+// thread pin is PA0
+#define thread_pin_high() GPIOA->ODR |= 0x00000001; // 设置为1，即高电平
+#define thread_pin_low() GPIOA->ODR &= ~0x00000001; // 设置为0，即低电平
+// interrupt pin is PA1 interrupt_pin_low
+#define interrupt_pin_high() GPIOA->ODR |= 0x00000002; // 设置为1，即高电平
+#define interrupt_pin_low() GPIOA->ODR &= ~0x00000002; // 设置为0，即低电平
 
 // 自己实现的阻塞延时函数，延时精度10微秒
 // 利用 OSTime 变量，我们通过预先设定了OS_TICKS_PER_SEC为100000保证了10微秒一次的中断，OSTime10微秒加一次，这里采取阻塞等待
@@ -19,8 +30,9 @@ static inline void Delay_Congestion(INT32U delay_10us)
     while (OSTime - cur_time < delay_10us);
 }
 
-// 定义一个点灯关灯函数，操作的GPIO是PA5，进行推挽输出
 // 先是初始化函数
-void LED2_Init(void);
+void LED_Init(void);
+void Pin_Init(void);
+void Bottom_Init(void);
 
 #endif
