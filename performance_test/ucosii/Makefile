@@ -3,6 +3,10 @@ TARGET = time_performance
 
 UBUNTU_VERSION := $(shell lsb_release -rs)
 
+FILE_BIN := $(BUILD_DIR)/$(TARGET).bin
+
+DEVICE = STM32F401RE
+
 # 根据 TEST 变量的值设置 EXCLUDE_FILE 变量
 ifeq ($(TARGET), space_performance)
     EXCLUDE_FILE = time_performance
@@ -51,11 +55,9 @@ AS_DEFS =
 C_DEFS =  \
 -DSTM32F401xE
 
-
 # AS includes
 AS_INCLUDES = \
 # -ITrace/ThirdPartyLib/Config \
-
 
 # C includes
 C_INCLUDES =  \
@@ -154,7 +156,7 @@ else ifeq ($(UBUNTU_VERSION),22.04)
 	rm ./compile_commands.json || true 
 	export https_proxy= && export http_proxy= && bear -- make -j4
 else  ifeq ($(UBUNTU_VERSION),24.04)
-	rm ./compile_commands.json || true 
+	rm ./compile_commands.json || true
 	export https_proxy= && export http_proxy= && bear -- make -j4
 endif
 # JLinkExe -device STM32F401RE -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkScript.jlink
@@ -175,6 +177,23 @@ Jdownload:
 	make bear
 # 生成脚本
 	@echo "h\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
-	openocd -f interface/jlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase build/learn_startup.bin 0x8000000" -c "reset" -c "shutdown"
+	JLinkExe -device $(DEVICE) -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkDownload.jlink
+Jdebug: Jdownload JGDBServer
+	tmux new-session -d "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
+	-ex 'dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables' \
+	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'source ./bp.gdb'" && \
+	tmux -2 attach-session -d
+JGDBServer:kill
+	@echo "启动 JLinkGDBServer...";
+	@JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > /dev/null &
+	@sleep 1;
+kill:
+	@PID=$$(lsof -t -i:2331); \
+    if [ -n "$$PID" ]; then \
+        echo "Killing process on port 2331 with PID: $$PID"; \
+        kill -9 $$PID; \
+    else \
+        echo "No process found on port 2331"; \
+    fi
 pico:
 	picocom --omap crcrlf --imap lfcrlf -c -b 115200 /dev/ttyACM0
