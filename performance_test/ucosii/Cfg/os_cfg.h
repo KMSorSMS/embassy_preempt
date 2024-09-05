@@ -108,8 +108,8 @@
 #define OS_TMR_CFG_TICKS_PER_SEC 10u /*     Rate at which timer management task runs (Hz)            */
 
 /* ---------------------- TRACE RECORDER ---------------------- */
-#define OS_TRACE_EN 1u           /* Enable (1) or Disable (0) uC/OS-II Trace instrumentation     */
-#define OS_TRACE_API_ENTER_EN 1u /* Enable (1) or Disable (0) uC/OS-II Trace API enter instrum.  */
-#define OS_TRACE_API_EXIT_EN 1u  /* Enable (1) or Disable (0) uC/OS-II Trace API exit  instrum.  */
+#define OS_TRACE_EN 0u           /* Enable (1) or Disable (0) uC/OS-II Trace instrumentation     */
+#define OS_TRACE_API_ENTER_EN 0u /* Enable (1) or Disable (0) uC/OS-II Trace API enter instrum.  */
+#define OS_TRACE_API_EXIT_EN 0u  /* Enable (1) or Disable (0) uC/OS-II Trace API exit  instrum.  */
 
 #endif
