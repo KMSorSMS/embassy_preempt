@@ -10,7 +10,9 @@ use embassy_stm32::rcc::Pll;
 use embassy_time::Timer;
 use stm32_metapac::rcc::vals;
 use stm32_metapac::{gpio, GPIOA, RCC};
-use {defmt_rtt as _, panic_probe as _};
+use embassy_test as _;
+
+// use panic_probe as _;
 
 // 主要测试任务
 #[embassy_executor::main]
@@ -47,18 +49,24 @@ async fn main(spawner: Spawner) {
     let led: Output<'static> = Output::new(p.PA5, Level::High, Speed::High);
 
     // 初始化按键，以及对应中断。
-    let mut button = ExtiInput::new(p.PC13, p.EXTI13, Pull::Down);
+    let button = ExtiInput::new(p.PC13, p.EXTI13, Pull::Down);
 
     // 初始化process pin 与interrupt pin
     Pin_Init();
 
     // 创建任务
+    spawner.spawn(test_task(button)).unwrap();
     spawner.spawn(task1(led)).unwrap();
     spawner.spawn(task2()).unwrap();
     spawner.spawn(task3()).unwrap();
     spawner.spawn(task4()).unwrap();
     spawner.spawn(task5()).unwrap();
 
+    
+}
+
+#[embassy_executor::task]
+async fn test_task(mut button: ExtiInput<'static>) {
     // 主要测试任务
     loop {
         // set the thread pin low, indicating that the thread time test is finished

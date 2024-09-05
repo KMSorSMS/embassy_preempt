@@ -5,11 +5,9 @@ use embassy_executor::Spawner;
 use embassy_stm32::{gpio::{Level, Output, Speed}, rcc::Pll};
 use embassy_time::Timer;
 use stm32_metapac::rcc;
-use {defmt_rtt as _, panic_probe as _};
-use stm32_metapac::{self};
-// use embassy_stm32::exti::ExtiInput;
-use core::arch::asm;
 
+use core::arch::asm;
+use embassy_test as _;
 
 // 主要测试任务
 #[embassy_executor::main]

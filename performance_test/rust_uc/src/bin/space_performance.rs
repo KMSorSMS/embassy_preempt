@@ -2,22 +2,24 @@
 #![no_std]
 #![feature(impl_trait_in_assoc_type)]
 // this test is used to compare with embassy
-
+use core::arch::asm;
 use core::ffi::c_void;
 
+use ucosii::app::led::Pin_Init;
 // use ucosii::app::led::{LED_Init, Pin_Init, LED_OFF, LED_ON};
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::AsyncOSTaskCreate;
 use ucosii::os_time::timer::Timer;
+use ucosii::pac::{gpio, GPIOA, RCC};
 
 #[cortex_m_rt::entry]
 fn test_space_performance() -> ! {
     // hardware init
-    LED_Init();
+    led_init();
     Pin_Init();
     // os初始化
     OSInit();
-    AsyncOSTaskCreate(test_task,0 as *mut c_void,0 as *mut usize,10);
+    AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
     AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 11);
     AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 12);
     AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
@@ -46,11 +48,11 @@ fn test_space_performance() -> ! {
 async fn test_task(_args: *mut c_void) {
     loop {
         // led on
-        LED_ON();
+        led_on();
         // delay 5s
         Timer::after_secs(5).await;
         // led off
-        LED_OFF();
+        led_off();
         // delay 5s
         Timer::after_secs(5).await;
     }
@@ -258,7 +260,7 @@ async fn task20(_args: *mut c_void) {
 
 /// init the LED
 #[allow(dead_code)]
-pub fn LED_Init() {
+pub fn led_init() {
     // enable the RCC
     RCC.ahb1enr().modify(|v| {
         v.set_gpioaen(true);
@@ -270,7 +272,7 @@ pub fn LED_Init() {
     });
     GPIOA.otyper().modify(|v| {
         // set output type as push-pull
-        v.set_ot(5,gpio::vals::Ot::PUSHPULL);
+        v.set_ot(5, gpio::vals::Ot::PUSHPULL);
     });
     GPIOA.ospeedr().modify(|v| {
         // set output speed as high
@@ -289,7 +291,7 @@ pub fn LED_Init() {
 /// turn on the LED
 #[allow(dead_code)]
 #[inline]
-pub fn LED_ON() {
+pub fn led_on() {
     GPIOA.odr().modify(|v| {
         v.set_odr(5, gpio::vals::Odr::HIGH);
     });
@@ -298,7 +300,7 @@ pub fn LED_ON() {
 /// turn off the LED
 #[allow(dead_code)]
 #[inline]
-pub fn LED_OFF() {
+pub fn led_off() {
     GPIOA.odr().modify(|v| {
         v.set_odr(5, gpio::vals::Odr::LOW);
     });

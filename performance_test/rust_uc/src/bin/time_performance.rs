@@ -3,23 +3,25 @@
 #![feature(impl_trait_in_assoc_type)]
 // this test is used to compare with embassy
 
+use core::arch::asm;
 use core::ffi::c_void;
 
-// use ucosii::app::led::{interrupt_pin_low, thread_pin_high, thread_pin_low, LED_Init, Pin_Init, LED_OFF, LED_ON};
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::AsyncOSTaskCreate;
 use ucosii::os_time::timer::Timer;
+use ucosii::pac::{gpio, GPIOA, RCC};
 use ucosii::port::bottom_driver::Bottom::bottom;
+
 // use ucosii::{self as _};
 
 #[cortex_m_rt::entry]
 fn test_time_performance() -> ! {
     // hardware init
-    LED_Init();
-    Pin_Init();
+    led_init();
+    pin_init();
     // os初始化
     OSInit();
-    AsyncOSTaskCreate(test_task,0 as *mut c_void,0 as *mut usize,10);
+    AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
     AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 11);
     AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 12);
     AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
@@ -32,17 +34,21 @@ fn test_time_performance() -> ! {
 // 主要测试任务
 async fn test_task(_args: *mut c_void) {
     loop {
+        // set the thread pin low, indicating that the thread time test is finished
+        thread_pin_low();
         bottom::wait_for_rising_edge().await;
         // set the interrupt pin low, indicating that the interrput and scheduling test is finished
         interrupt_pin_low();
         // set the thread pin high, indicating that the thread time test begins
         thread_pin_high();
-    
+
         // delay 5s
         Timer::after_secs(5).await;
-
-        // set the thread pin low, indicating that the thread time test is finished
         thread_pin_low();
+        bottom::wait_for_rising_edge().await;
+        interrupt_pin_low();
+        thread_pin_high();
+        Timer::after_secs(5).await;
     }
 }
 
@@ -50,9 +56,9 @@ async fn test_task(_args: *mut c_void) {
 async fn task1(_args: *mut c_void) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
-        LED_ON();
+        led_on();
         Timer::after_secs(5).await;
-        LED_OFF();
+        led_off();
         Timer::after_secs(5).await;
     }
 }
@@ -99,7 +105,7 @@ async fn task5(_args: *mut c_void) {
 
 /// init the LED
 #[allow(dead_code)]
-pub fn LED_Init() {
+pub fn led_init() {
     // enable the RCC
     RCC.ahb1enr().modify(|v| {
         v.set_gpioaen(true);
@@ -111,7 +117,7 @@ pub fn LED_Init() {
     });
     GPIOA.otyper().modify(|v| {
         // set output type as push-pull
-        v.set_ot(5,gpio::vals::Ot::PUSHPULL);
+        v.set_ot(5, gpio::vals::Ot::PUSHPULL);
     });
     GPIOA.ospeedr().modify(|v| {
         // set output speed as high
@@ -130,7 +136,7 @@ pub fn LED_Init() {
 /// turn on the LED
 #[allow(dead_code)]
 #[inline]
-pub fn LED_ON() {
+pub fn led_on() {
     GPIOA.odr().modify(|v| {
         v.set_odr(5, gpio::vals::Odr::HIGH);
     });
@@ -139,7 +145,7 @@ pub fn LED_ON() {
 /// turn off the LED
 #[allow(dead_code)]
 #[inline]
-pub fn LED_OFF() {
+pub fn led_off() {
     GPIOA.odr().modify(|v| {
         v.set_odr(5, gpio::vals::Odr::LOW);
     });
@@ -149,7 +155,7 @@ pub fn LED_OFF() {
 /// use the PA0 as the thread pin
 /// use the PA1 as the interrupt pin
 #[allow(dead_code)]
-pub fn Pin_Init(){
+pub fn pin_init() {
     // enable the RCC
     RCC.ahb1enr().modify(|v| {
         v.set_gpioaen(true);

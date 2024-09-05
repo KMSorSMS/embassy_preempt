@@ -14,8 +14,8 @@
   ],
   "rust-analyzer.linkedProjects": [
     // "ucosii/Cargo.toml",
-    // "performance_test/rust_uc/Cargo.toml",
-    "performance_test/embassy/Cargo.toml"
+    "performance_test/rust_uc/Cargo.toml",
+    "performance_test/embassy_test/Cargo.toml"
   ],
   "liveshare.languages.allowGuestCommandControl": true,
   "files.associations": {
