@@ -1,0 +1,5 @@
+h
+loadfile build/learn_startup.bin 0x08000000
+r
+g
+exit
