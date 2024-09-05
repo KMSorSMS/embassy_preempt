@@ -12,6 +12,9 @@ use ucosii::os_time::timer::Timer;
 use ucosii::pac::{gpio, GPIOA, RCC};
 use ucosii::port::bottom_driver::Bottom::bottom;
 
+const BLOCK_TIME: usize = 1;
+
+
 // use ucosii::{self as _};
 
 #[cortex_m_rt::entry]
@@ -43,12 +46,12 @@ async fn test_task(_args: *mut c_void) {
         thread_pin_high();
 
         // delay 5s
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
         thread_pin_low();
         bottom::wait_for_rising_edge().await;
         interrupt_pin_low();
         thread_pin_high();
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
     }
 }
 
@@ -57,49 +60,49 @@ async fn task1(_args: *mut c_void) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led_on();
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
         led_off();
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境
 async fn task2(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境
 async fn task3(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境
 async fn task4(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境
 async fn task5(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 

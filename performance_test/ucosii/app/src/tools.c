@@ -20,7 +20,7 @@ void LED_Init(void)
     GPIOA->ODR |= 0x00000020; // 设置为1，即高电平
 }
 
-// PC13
+// PC13 在exti13，对应中断号40
 void Bottom_Init(){
     /* GPIO端口设置 */
     // 使能GPIOC时钟
@@ -45,6 +45,7 @@ void Bottom_Init(){
 
     /* NVIC配置 */
     // 使能EXTI15_10_IRQn中断
+    // 是NVIC_ISER1 的第八位
     NVIC->ISER[1] |= 0x00000100;
     // unpend EXTI15_10_IRQn, 写1清除
     NVIC->ICPR[1] = 0x00000100;
@@ -72,6 +73,8 @@ void EXTI15_10_IRQHandler(void)
     // 判断是否产生了EXTI13中断
     if (EXTI->PR & 0x2000)
     {
+        // set the interrup pin high
+        interrupt_pin_high();
         // 清除中断标志位
         EXTI->PR = 0x2000;
 

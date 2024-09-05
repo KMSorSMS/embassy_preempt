@@ -11,6 +11,8 @@ use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::AsyncOSTaskCreate;
 use ucosii::os_time::timer::Timer;
 use ucosii::pac::{gpio, GPIOA, RCC};
+const BLOCK_TIME: usize = 1;
+
 
 #[cortex_m_rt::entry]
 fn test_space_performance() -> ! {
@@ -50,211 +52,211 @@ async fn test_task(_args: *mut c_void) {
         // led on
         led_on();
         // delay 5s
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
         // led off
         led_off();
         // delay 5s
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task1(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task2(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task3(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task4(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task5(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task6(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task7(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task8(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task9(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task10(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task11(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task12(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task13(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task14(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task15(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task16(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task17(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task18(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task19(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
 async fn task20(_args: *mut c_void) {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 

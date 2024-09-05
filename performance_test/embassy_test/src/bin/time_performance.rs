@@ -12,7 +12,7 @@ use stm32_metapac::rcc::vals;
 use stm32_metapac::{gpio, GPIOA, RCC};
 use embassy_test as _;
 
-// use panic_probe as _;
+const BLOCK_TIME: usize = 1;
 
 // 主要测试任务
 #[embassy_executor::main]
@@ -43,8 +43,6 @@ async fn main(spawner: Spawner) {
     let mut config = embassy_stm32::Config::default();
     config.rcc = rcc;
     let p = embassy_stm32::init(config);
-
-    // info!("Hello World");
 
     let led: Output<'static> = Output::new(p.PA5, Level::High, Speed::High);
 
@@ -78,13 +76,13 @@ async fn test_task(mut button: ExtiInput<'static>) {
         thread_pin_high();
 
         // delay 5s
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
         thread_pin_low();
         button.wait_for_rising_edge().await;
         interrupt_pin_low();
         thread_pin_high();
 
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
     }
 }
 
@@ -94,9 +92,9 @@ async fn task1(mut led: Output<'static>) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led.set_high();
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
         led.set_low();
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
     }
 }
 
@@ -104,10 +102,10 @@ async fn task1(mut led: Output<'static>) {
 #[embassy_executor::task]
 async fn task2() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -115,10 +113,10 @@ async fn task2() {
 #[embassy_executor::task]
 async fn task3() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -126,10 +124,10 @@ async fn task3() {
 #[embassy_executor::task]
 async fn task4() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -137,10 +135,10 @@ async fn task4() {
 #[embassy_executor::task]
 async fn task5() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 

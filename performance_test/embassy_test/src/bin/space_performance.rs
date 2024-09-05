@@ -1,13 +1,14 @@
 #![no_std]
 #![no_main]
 
+use core::arch::asm;
+
 use embassy_executor::Spawner;
 use embassy_stm32::{gpio::{Level, Output, Speed}, rcc::Pll};
+use embassy_test as _;
 use embassy_time::Timer;
 use stm32_metapac::rcc;
-
-use core::arch::asm;
-use embassy_test as _;
+const BLOCK_TIME: usize = 1;
 
 // 主要测试任务
 #[embassy_executor::main]
@@ -40,12 +41,13 @@ async fn main(spawner: Spawner) {
     let p = embassy_stm32::init(config);
 
     // 初始化LED
-    let mut led = Output::new(p.PA5, Level::High, Speed::High);
+    let led = Output::new(p.PA5, Level::High, Speed::High);
 
     // 初始化按键，以及对应中断。在空间利用率测试中，按键没有作用，所以不再进行初始化
     // let button = ExtiInput::new(p.PC13, p.EXTI13,Pull::Down);
 
     // 创建任务
+    spawner.spawn(test_task(led)).unwrap();
     spawner.spawn(task1()).unwrap();
     spawner.spawn(task2()).unwrap();
     spawner.spawn(task3()).unwrap();
@@ -66,13 +68,17 @@ async fn main(spawner: Spawner) {
     spawner.spawn(task18()).unwrap();
     spawner.spawn(task19()).unwrap();
     spawner.spawn(task20()).unwrap();
+}
 
-    // 主要测试任务,在空间利用率测试中，与其他任务无异
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn test_task(mut led: Output<'static>) {
     loop {
+        // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led.set_high();
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
         led.set_low();
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
     }
 }
 
@@ -81,10 +87,10 @@ async fn main(spawner: Spawner) {
 async fn task1() {
     loop {
         // 插入阻塞等待(阻塞3s)
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -92,10 +98,10 @@ async fn task1() {
 #[embassy_executor::task]
 async fn task2() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -103,10 +109,10 @@ async fn task2() {
 #[embassy_executor::task]
 async fn task3() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -114,10 +120,10 @@ async fn task3() {
 #[embassy_executor::task]
 async fn task4() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -125,10 +131,10 @@ async fn task4() {
 #[embassy_executor::task]
 async fn task5() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -136,10 +142,10 @@ async fn task5() {
 #[embassy_executor::task]
 async fn task6() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -147,10 +153,10 @@ async fn task6() {
 #[embassy_executor::task]
 async fn task7() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -158,10 +164,10 @@ async fn task7() {
 #[embassy_executor::task]
 async fn task8() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -169,10 +175,10 @@ async fn task8() {
 #[embassy_executor::task]
 async fn task9() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -180,10 +186,10 @@ async fn task9() {
 #[embassy_executor::task]
 async fn task10() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -191,10 +197,10 @@ async fn task10() {
 #[embassy_executor::task]
 async fn task11() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -202,10 +208,10 @@ async fn task11() {
 #[embassy_executor::task]
 async fn task12() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -213,10 +219,10 @@ async fn task12() {
 #[embassy_executor::task]
 async fn task13() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -224,10 +230,10 @@ async fn task13() {
 #[embassy_executor::task]
 async fn task14() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -235,10 +241,10 @@ async fn task14() {
 #[embassy_executor::task]
 async fn task15() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -246,10 +252,10 @@ async fn task15() {
 #[embassy_executor::task]
 async fn task16() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -257,10 +263,10 @@ async fn task16() {
 #[embassy_executor::task]
 async fn task17() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -268,10 +274,10 @@ async fn task17() {
 #[embassy_executor::task]
 async fn task18() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -279,10 +285,10 @@ async fn task18() {
 #[embassy_executor::task]
 async fn task19() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 
@@ -290,10 +296,10 @@ async fn task19() {
 #[embassy_executor::task]
 async fn task20() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
     }
 }
 

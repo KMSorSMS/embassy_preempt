@@ -13,7 +13,7 @@
     "default"
   ],
   "rust-analyzer.linkedProjects": [
-    // "performance_test/rust_uc/Cargo.toml",
+    "performance_test/rust_uc/Cargo.toml",
     "performance_test/embassy_test/Cargo.toml"
   ],
   "liveshare.languages.allowGuestCommandControl": true,

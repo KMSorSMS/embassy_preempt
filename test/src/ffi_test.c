@@ -96,7 +96,7 @@ void RCC_Configuration(void) {
   // 接下来我们需要设置外设的时钟使能，点灯的时候用到AHB1上的GPIOA
   RCC->AHB1ENR |= 0x00000001;
 }
-OS_STK my_task_0[1024];
+OS_STK my_task_stk[1024];
 
 int main() {
   // 时钟初始化
@@ -105,7 +105,7 @@ int main() {
   LED2_OFF();
   OSInit();
   // 调用Rust函数
-  OSTaskCreate(task, 0, &my_task_0[1024 - 1u], 12);
+  OSTaskCreate(task, 0, &my_task_stk[1024 - 1u], 12);
   OSStart();
   while (1);
 }

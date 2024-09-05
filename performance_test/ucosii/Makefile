@@ -1,4 +1,4 @@
-TARGET = time_performance
+TARGET = space_performance
 .PHONY: bear clean
 
 UBUNTU_VERSION := $(shell lsb_release -rs)
