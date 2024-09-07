@@ -89,9 +89,9 @@ void task1(void *args)
     while (1)
     {
         LED_ON()
-        OSTimeDly(5); //delay 5 ms
+        OSTimeDly(5* 100); //delay 5 ms
         LED_OFF()
-        OSTimeDly(5); //delay 5 ms
+        OSTimeDly(5* 100); //delay 5 ms
     }
 }
 
@@ -151,6 +151,7 @@ int main(){
     Pin_Init();
     // 初始化按键以及按键中断
     Bottom_Init();
+    OSInit();
     // 创建按键中断信号量(需要注意的是信号量的创建只能在OSInit之后，因为需要使用OSInit中的事件队列)
     bottom_sem=OSSemCreate(0);
     // OS_TRACE_START();

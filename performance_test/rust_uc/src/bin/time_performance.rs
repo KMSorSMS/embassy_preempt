@@ -60,9 +60,9 @@ async fn task1(_args: *mut c_void) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led_on();
-        Timer::after_millis(5).await;
+        Timer::after_millis(5 * 100).await;
         led_off();
-        Timer::after_millis(5).await;
+        Timer::after_millis(5 * 100).await;
     }
 }
 

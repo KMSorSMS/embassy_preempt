@@ -1,4 +1,4 @@
-TARGET = space_performance
+TARGET ?= space_performance
 .PHONY: bear clean
 
 UBUNTU_VERSION := $(shell lsb_release -rs)
@@ -160,19 +160,18 @@ else  ifeq ($(UBUNTU_VERSION),24.04)
 	export https_proxy= && export http_proxy= && bear -- make -j4
 endif
 # JLinkExe -device STM32F401RE -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkScript.jlink
-debug:
+debug: all
 #	make bear
 # 需要下载tmux
 	tmux has-session -t test0 2>/dev/null && tmux kill-session -t test0 || true
-	tmux new-session -d -s test0 'openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase build/learn_startup.bin 0x8000000" -c reset'
-# 这里看你电脑的性能,因为gdb-server服务器要启动一会儿
-	sleep 5
-	gdb-multiarch -x .gdbinit
+	tmux new-session -d -s test0 'openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000" -c reset' &&\
+	tmux split-window -h "gdb-multiarch -ex 'file $(BUILD_DIR)/$(TARGET).elf' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
+	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit'  " && \
+	tmux -2 attach-session -d
 format:
 	find . -iname *.h -o -iname *.c | xargs clang-format -i
-STdownload:
-	make bear
-	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase build/learn_startup.bin 0x8000000" -c "reset" -c "shutdown"
+STdownload: all
+	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000" -c "reset" -c "shutdown"
 Jdownload:
 	make bear
 # 生成脚本

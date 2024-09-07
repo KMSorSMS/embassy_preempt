@@ -63,8 +63,8 @@ void Pin_Init(){
     GPIOA->OSPEEDR |= 0x0000000A;  // 设置为10，即高速
     // 设置GPIO的上下拉电阻，对应GPIO的PUPDR寄存器，这里我们设置为没有上下拉
     GPIOA->PUPDR &= ~0x0000000F; // 先清零
-    // 最后设置GPIO的输出值，对应GPIO的ODR寄存器，这里我们设置为高电平
-    GPIOA->ODR |= 0x00000003; // 设置为1，即高电平
+    // 最后设置GPIO的输出值，对应GPIO的ODR寄存器，这里我们设置为低电平
+    GPIOA->ODR &= ~0x00000003; // 设置为1，即高电平
 }
 
 // EXTI13中断服务程序
