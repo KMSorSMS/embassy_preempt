@@ -202,6 +202,8 @@ pub fn interrupt_pin_low() {
     });
 }
 
+
+#[inline(never)]
 pub fn delay(time: usize) {
     // 延时函数,time的单位约为0.5s，使用汇编编写从而不会被优化
     unsafe {

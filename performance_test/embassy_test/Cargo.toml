@@ -25,8 +25,8 @@ embassy-time = {git = "https://github.com/embassy-rs/embassy", rev = "4a4b8c9b8d
 embassy-hal-internal =  {git = "https://github.com/embassy-rs/embassy", rev = "4a4b8c9b8de8eaf874372f6239dc1a220f172318"}
 
 [profile.release]
-opt-level = 0
-debug = 2
+opt-level = 3
+# debug = 2
 
 [features]
 default = []

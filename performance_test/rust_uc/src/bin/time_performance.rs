@@ -25,11 +25,11 @@ fn test_time_performance() -> ! {
     // os初始化
     OSInit();
     AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
-    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 11);
-    AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 12);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 15);
+    AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 14);
     AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
-    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 14);
-    AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 15);
+    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 12);
+    AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 11);
     // 启动os
     OSStart();
 }
@@ -46,12 +46,12 @@ async fn test_task(_args: *mut c_void) {
         thread_pin_high();
 
         // delay 5s
-        Timer::after_millis(5).await;
+        Timer::after_millis(50).await;
         thread_pin_low();
         bottom::wait_for_rising_edge().await;
         interrupt_pin_low();
         thread_pin_high();
-        Timer::after_millis(5).await;
+        Timer::after_millis(50).await;
     }
 }
 
@@ -60,9 +60,9 @@ async fn task1(_args: *mut c_void) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led_on();
-        Timer::after_millis(5 * 100).await;
+        Timer::after_millis(5 * 1000).await;
         led_off();
-        Timer::after_millis(5 * 100).await;
+        Timer::after_millis(5 * 1000).await;
     }
 }
 
@@ -70,9 +70,9 @@ async fn task1(_args: *mut c_void) {
 async fn task2(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        Timer::after_millis(100).await;
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        Timer::after_millis(100).await;
     }
 }
 
@@ -80,9 +80,9 @@ async fn task2(_args: *mut c_void) {
 async fn task3(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        Timer::after_millis(2000).await;
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        Timer::after_millis(2000).await;
     }
 }
 
@@ -90,9 +90,9 @@ async fn task3(_args: *mut c_void) {
 async fn task4(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        Timer::after_millis(3000).await;
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        Timer::after_millis(3000).await;
     }
 }
 
@@ -100,9 +100,9 @@ async fn task4(_args: *mut c_void) {
 async fn task5(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        Timer::after_millis(4000).await;
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        Timer::after_millis(4000).await;
     }
 }
 
@@ -218,7 +218,7 @@ pub fn interrupt_pin_low() {
     });
 }
 
-#[inline]
+#[inline(never)]
 pub fn delay(time: usize) {
     // 延时函数,time的单位约为0.5s，使用汇编编写从而不会被优化
     unsafe {
@@ -237,7 +237,7 @@ pub fn delay(time: usize) {
             "cmp r0, r2",
             "blt 1b",
             in("r2") time,
-            in("r3") 8000000/8,
+            in("r3") 8000/8,
         )
     }
 }
