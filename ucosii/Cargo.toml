@@ -89,7 +89,7 @@ overflow-checks = false  # <-
 # cargo build --release
 [profile.release]
 codegen-units = 1
-debug = 0  # 生成完整的调试信息
+debug = 2  # 生成完整的调试信息
 opt-level = 3  # 优化级别 # <-
 # lto = true
 
@@ -172,6 +172,7 @@ unstable-pac = []
 use_spin = ["spinning_top"]
 ## Automatically generate `memory.x` file using [`stm32-metapac`](https://docs.rs/stm32-metapac/)
 memory-x = ["stm32-metapac/memory-x"]
+alarm_test = ["dep:defmt","panic-probe","defmt-rtt"]
 
 
 [dependencies.spinning_top]

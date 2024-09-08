@@ -21,7 +21,7 @@
 *                                                               pub mod
 ********************************************************************************************************************************************
 */
-#[cfg(feature = "defmt")]
+#[cfg(any(feature = "defmt",feature = "alarm_test"))]
 use defmt_rtt as _; // global logger
 extern crate alloc;
 /// the mod of uC/OS-II kernel

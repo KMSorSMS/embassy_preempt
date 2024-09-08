@@ -9,13 +9,15 @@
   "rust-analyzer.check.noDefaultFeatures": false,
   "rust-analyzer.cargo.noDefaultFeatures": false,
   "rust-analyzer.showUnlinkedFileNotification": false,
-  "rust-analyzer.cargo.features": [
-    "default"
-  ],
   "rust-analyzer.linkedProjects": [
-    "performance_test/rust_uc/Cargo.toml",
-    "performance_test/embassy_test/Cargo.toml",
+    // "performance_test/rust_uc/Cargo.toml",
+    // "performance_test/embassy_test/Cargo.toml",
+    "ucosii/Cargo.toml",
 
+  ],
+  "rust-analyzer.cargo.features": [
+    "stm32f401re",
+    "alarm_test",
   ],
   "liveshare.languages.allowGuestCommandControl": true,
   "files.associations": {
