@@ -3,7 +3,7 @@ runner = "probe-rs run --chip STM32F401RETx"
 rustflags = [
   "-C", "linker=flip-link",
   "-C", "link-arg=-Tlink.x",
-  # "-C", "link-arg=-Tdefmt.x",
+  "-C", "link-arg=-Tdefmt.x",
   # This is needed if your flash or ram addresses are not aligned to 0x10000 in memory.x
   # See https://github.com/rust-embedded/cortex-m-quickstart/pull/95
   "-C", "link-arg=--nmagic",
@@ -24,4 +24,4 @@ OS_SEM_EN = "1"
 OS_MUTEX_EN = "0"
 OS_EVENT_NAME_EN = "1"
 OS_LOWEST_PRIO = "63"
-DEFMT_LOG = "info" # <- can change to info, warn, or error. to print info
+DEFMT_LOG = "trace" # <- can change to info, warn, or error. to print info

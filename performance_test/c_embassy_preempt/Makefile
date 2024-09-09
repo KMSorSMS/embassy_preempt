@@ -1,33 +1,20 @@
-TARGET ?= space_performance
+# 定义源文件目录和目标文件目录
+TARGET = ffi_test
 .PHONY: bear clean
-
 UBUNTU_VERSION := $(shell lsb_release -rs)
-
-FILE_BIN := $(BUILD_DIR)/$(TARGET).bin
-
-DEVICE = STM32F401RE
-
-# 根据 TEST 变量的值设置 EXCLUDE_FILE 变量
-ifeq ($(TARGET), space_performance)
-    EXCLUDE_FILE = time_performance
-else ifeq ($(TARGET), time_performance)
-    EXCLUDE_FILE = space_performance
-endif
-
+DEVICE := STM32F401RE
 DEBUG = 1
-OPT = -O0
+OPT = -O3
 # Build path
 BUILD_DIR = build
-C_SOURCES = $(shell find app/src/ -name '*.c' ! -name '$(EXCLUDE_FILE).c')  # 添加 app/src 目录下的所有 .c 文件
-C_SOURCES += $(wildcard app/HARDWARE/*.c)  # 添加 app/HARDWARE/*.c 中的所有 .c 文件
-# C_SOURCES += $(shell find Trace -name '*.c') # 添加 Trace 目录下的所有 .c 文件
-C_SOURCES += Source/ucos_ii.c \
-ports/os_cpu_c.c \
+C_SOURCES = $(wildcard src/*.c)
 
-ASM_SOURCES = startup_stm32f401xe.s
-ASM_SOURCES +=  \
-ports/os_cpu_a.S \
-# SEGGER/SEGGER_RTT_ASM_ARMv7M.S \
+ASM_SOURCES = \
+# startup_stm32f401xe.s
+
+# 从openocd里获取interface路径，interface在openocd的安装的父目录的父目录的tcl目录下
+# OPENOCD_PATH = $(shell which openocd)
+# OPENOCD_TCL_PATH = $(shell dirname $(shell dirname $(OPENOCD_PATH)))/tcl
 
 # ports/os_cpu_a.S 
 
@@ -53,19 +40,15 @@ AS_DEFS =
 
 # C defines
 C_DEFS =  \
--DSTM32F401xE
+
 
 # AS includes
 AS_INCLUDES = \
-# -ITrace/ThirdPartyLib/Config \
+
 
 # C includes
 C_INCLUDES =  \
--ISource \
--ICfg \
--Iports \
--Iapp/inc \
--Iapp/HARDWARE \
+-Iinc \
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
@@ -88,8 +71,8 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDSCRIPT = STM32F401RETx_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys
-LIBDIR = 
+LIBS = -lc -lm -lnosys -lucosii
+LIBDIR = -L../../ucosii/target/thumbv7em-none-eabi/release/
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all
@@ -132,59 +115,30 @@ $(BUILD_DIR)/%.bin: $(BUILD_DIR)/%.elf | $(BUILD_DIR)
 $(BUILD_DIR):
 	mkdir $@		
 
-#######################################
-# clean up
-#######################################
-clean:
-	-rm -fR $(BUILD_DIR)
-  
-#######################################
-# dependencies
-#######################################
--include $(wildcard $(BUILD_DIR)/*.d)
-
-
-# bear -o build/compile_commands.json make -j4
-# arm-none-eabi-gdb -x init.gdb
-# 需要在当前终端中关闭代理才能使用bear。这样在执行make bear的时候，会暂时关闭代理
+# bear: clean
+# 	rm ./compile_commands.json || true 
+# 	bear make -j4
 bear: clean
 	@echo UBUNTU_VERSION:${UBUNTU_VERSION}
 ifeq ($(UBUNTU_VERSION),20.04)
 	rm ./compile_commands.json || true 
 	bear make -j4
 else ifeq ($(UBUNTU_VERSION),22.04)
+
 	rm ./compile_commands.json || true 
 	export https_proxy= && export http_proxy= && bear -- make -j4
-else  ifeq ($(UBUNTU_VERSION),24.04)
-	rm ./compile_commands.json || true
+else ifeq ($(UBUNTU_VERSION),24.04)
+	rm ./compile_commands.json || true 
 	export https_proxy= && export http_proxy= && bear -- make -j4
 endif
-# JLinkExe -device STM32F401RE -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkScript.jlink
-debug: all
-#	make bear
-# 需要下载tmux
-	tmux has-session -t test0 2>/dev/null && tmux kill-session -t test0 || true
-	tmux new-session -d -s test0 'openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000" -c reset' &&\
-	tmux split-window -h "gdb-multiarch -ex 'file $(BUILD_DIR)/$(TARGET).elf' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
-	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit'  " && \
-	tmux -2 attach-session -d
-format:
-	find . -iname *.h -o -iname *.c | xargs clang-format -i
-STdownload: all
-	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000" -c "reset" -c "shutdown"
-Jdownload:
-	make bear
+Jdownload: bear
 # 生成脚本
-	@echo "h\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
+	@echo "h\nloadfile $(BUILD_DIR)/$(TARGET).bin 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
 	JLinkExe -device $(DEVICE) -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkDownload.jlink
-Jdebug: Jdownload JGDBServer
-	tmux new-session -d "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
-	-ex 'dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables' \
-	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'source ./bp.gdb'" && \
-	tmux -2 attach-session -d
+
 JGDBServer:kill
 	@echo "启动 JLinkGDBServer...";
-	@JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > /dev/null &
+	@JLinkGDBServer -device $(DEVICE) -if swd -speed 4000 > /dev/null & 
 	@sleep 1;
 kill:
 	@PID=$$(lsof -t -i:2331); \
@@ -194,5 +148,23 @@ kill:
     else \
         echo "No process found on port 2331"; \
     fi
-pico:
-	picocom --omap crcrlf --imap lfcrlf -c -b 115200 /dev/ttyACM0
+
+Jdebug: Jdownload JGDBServer
+	tmux new-session -d \
+	"RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(BUILD_DIR)/$(TARGET).elf' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
+	-ex 'dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables' \
+	-ex 'monitor reset'" && \
+	tmux -2 attach-session -d
+STdownload:
+	make
+	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000" -c "reset" -c "shutdown"
+
+liam_debug: clean all
+	tmux new-session -d \
+	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c 'flash write_image erase $(BUILD_DIR)/$(TARGET).bin 0x8000000' " && \
+	tmux split-window -h "gdb-multiarch -ex 'file $(BUILD_DIR)/$(TARGET).elf' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
+	-ex 'source ./bp.gdb' -ex 'source ./.gdbinit' -ex 'monitor reset'" && \
+	tmux -2 attach-session -d
+
+clean:
+	rm -rf $(BUILD_DIR)

@@ -10,8 +10,8 @@ cortex-m-semihosting = "0.5.0"
 
 [profile.release]
 codegen-units = 1
-debug = 0  # 生成完整的调试信息
-opt-level = 3  # 优化级别 # <-
+opt-level = 1  # 优化级别 # <-
+debug = 2
 
 [features]
 default = []

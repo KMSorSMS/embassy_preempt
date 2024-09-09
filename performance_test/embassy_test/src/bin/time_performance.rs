@@ -2,17 +2,18 @@
 #![no_main]
 
 use core::arch::asm;
+use core::hint::black_box;
 
 use embassy_executor::Spawner;
 use embassy_stm32::exti::ExtiInput;
 use embassy_stm32::gpio::{Level, Output, Pull, Speed};
 use embassy_stm32::rcc::Pll;
+use embassy_test as _;
 use embassy_time::Timer;
 use stm32_metapac::rcc::vals;
 use stm32_metapac::{gpio, GPIOA, RCC};
-use embassy_test as _;
 
-// use panic_probe as _;
+const BLOCK_TIME: usize = 1;
 
 // 主要测试任务
 #[embassy_executor::main]
@@ -44,8 +45,6 @@ async fn main(spawner: Spawner) {
     config.rcc = rcc;
     let p = embassy_stm32::init(config);
 
-    // info!("Hello World");
-
     let led: Output<'static> = Output::new(p.PA5, Level::High, Speed::High);
 
     // 初始化按键，以及对应中断。
@@ -61,8 +60,6 @@ async fn main(spawner: Spawner) {
     spawner.spawn(task3()).unwrap();
     spawner.spawn(task4()).unwrap();
     spawner.spawn(task5()).unwrap();
-
-    
 }
 
 #[embassy_executor::task]
@@ -78,13 +75,13 @@ async fn test_task(mut button: ExtiInput<'static>) {
         thread_pin_high();
 
         // delay 5s
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
         thread_pin_low();
         button.wait_for_rising_edge().await;
         interrupt_pin_low();
         thread_pin_high();
 
-        Timer::after_secs(5).await;
+        Timer::after_millis(5).await;
     }
 }
 
@@ -94,9 +91,9 @@ async fn task1(mut led: Output<'static>) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led.set_high();
-        Timer::after_secs(5).await;
+        Timer::after_millis(5 * 100).await;
         led.set_low();
-        Timer::after_secs(5).await;
+        Timer::after_millis(5 * 100).await;
     }
 }
 
@@ -104,10 +101,10 @@ async fn task1(mut led: Output<'static>) {
 #[embassy_executor::task]
 async fn task2() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        black_box(delay(BLOCK_TIME));
+        Timer::after_millis(5).await;
+        black_box(delay(BLOCK_TIME));
+        Timer::after_millis(5).await;
     }
 }
 
@@ -115,10 +112,10 @@ async fn task2() {
 #[embassy_executor::task]
 async fn task3() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        black_box(delay(BLOCK_TIME));
+        Timer::after_millis(5).await;
+        black_box(delay(BLOCK_TIME));
+        Timer::after_millis(5).await;
     }
 }
 
@@ -126,10 +123,10 @@ async fn task3() {
 #[embassy_executor::task]
 async fn task4() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        black_box(delay(BLOCK_TIME));
+        Timer::after_millis(5).await;
+        black_box(delay(BLOCK_TIME));
+        Timer::after_millis(5).await;
     }
 }
 
@@ -137,10 +134,10 @@ async fn task4() {
 #[embassy_executor::task]
 async fn task5() {
     loop {
-        delay(6);
-        Timer::after_secs(5).await;
-        delay(6);
-        Timer::after_secs(5).await;
+        black_box(delay(BLOCK_TIME));
+        Timer::after_millis(5).await;
+        black_box(delay(BLOCK_TIME));
+        Timer::after_millis(5).await;
     }
 }
 
@@ -205,7 +202,8 @@ pub fn interrupt_pin_low() {
     });
 }
 
-#[inline]
+
+#[inline(never)]
 pub fn delay(time: usize) {
     // 延时函数,time的单位约为0.5s，使用汇编编写从而不会被优化
     unsafe {
@@ -225,6 +223,7 @@ pub fn delay(time: usize) {
             "blt 1b",
             in("r2") time,
             in("r3") 8000000/8,
+            options(nostack, nomem, preserves_flags) // 防止优化
         )
     }
 }

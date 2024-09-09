@@ -1,18 +1,16 @@
 #![no_main]
 #![no_std]
 #![feature(impl_trait_in_assoc_type)]
-// this test is used to compare with embassy
 use core::arch::asm;
 use core::ffi::c_void;
 
 use ucosii::app::led::Pin_Init;
-// use ucosii::app::led::{LED_Init, Pin_Init, LED_OFF, LED_ON};
 use ucosii::os_core::{OSInit, OSStart};
-use ucosii::os_task::AsyncOSTaskCreate;
-use ucosii::os_time::timer::Timer;
+use ucosii::os_task::SyncOSTaskCreate;
+use ucosii::os_time::OSTimeDly;
 use ucosii::pac::{gpio, GPIOA, RCC};
+const DELAY_TICK: u64 = 5 * 100;
 const BLOCK_TIME: usize = 1;
-
 
 #[cortex_m_rt::entry]
 fn test_space_performance() -> ! {
@@ -21,242 +19,241 @@ fn test_space_performance() -> ! {
     Pin_Init();
     // os初始化
     OSInit();
-    AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
-    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 11);
-    AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 12);
-    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
-    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 14);
-    AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 15);
-    AsyncOSTaskCreate(task6, 0 as *mut c_void, 0 as *mut usize, 16);
-    AsyncOSTaskCreate(task7, 0 as *mut c_void, 0 as *mut usize, 17);
-    AsyncOSTaskCreate(task8, 0 as *mut c_void, 0 as *mut usize, 18);
-    AsyncOSTaskCreate(task9, 0 as *mut c_void, 0 as *mut usize, 19);
-    AsyncOSTaskCreate(task10, 0 as *mut c_void, 0 as *mut usize, 20);
-    AsyncOSTaskCreate(task11, 0 as *mut c_void, 0 as *mut usize, 21);
-    AsyncOSTaskCreate(task12, 0 as *mut c_void, 0 as *mut usize, 22);
-    AsyncOSTaskCreate(task13, 0 as *mut c_void, 0 as *mut usize, 23);
-    AsyncOSTaskCreate(task14, 0 as *mut c_void, 0 as *mut usize, 24);
-    AsyncOSTaskCreate(task15, 0 as *mut c_void, 0 as *mut usize, 25);
-    AsyncOSTaskCreate(task16, 0 as *mut c_void, 0 as *mut usize, 26);
-    AsyncOSTaskCreate(task17, 0 as *mut c_void, 0 as *mut usize, 27);
-    AsyncOSTaskCreate(task18, 0 as *mut c_void, 0 as *mut usize, 28);
-    AsyncOSTaskCreate(task19, 0 as *mut c_void, 0 as *mut usize, 29);
-    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 30);
+    SyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
+    SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 11);
+    SyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 12);
+    SyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
+    SyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 14);
+    SyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 15);
+    SyncOSTaskCreate(task6, 0 as *mut c_void, 0 as *mut usize, 16);
+    SyncOSTaskCreate(task7, 0 as *mut c_void, 0 as *mut usize, 17);
+    SyncOSTaskCreate(task8, 0 as *mut c_void, 0 as *mut usize, 18);
+    SyncOSTaskCreate(task9, 0 as *mut c_void, 0 as *mut usize, 19);
+    SyncOSTaskCreate(task10, 0 as *mut c_void, 0 as *mut usize, 20);
+    SyncOSTaskCreate(task11, 0 as *mut c_void, 0 as *mut usize, 21);
+    SyncOSTaskCreate(task12, 0 as *mut c_void, 0 as *mut usize, 22);
+    SyncOSTaskCreate(task13, 0 as *mut c_void, 0 as *mut usize, 23);
+    SyncOSTaskCreate(task14, 0 as *mut c_void, 0 as *mut usize, 24);
+    SyncOSTaskCreate(task15, 0 as *mut c_void, 0 as *mut usize, 25);
+    SyncOSTaskCreate(task16, 0 as *mut c_void, 0 as *mut usize, 26);
+    SyncOSTaskCreate(task17, 0 as *mut c_void, 0 as *mut usize, 27);
+    SyncOSTaskCreate(task18, 0 as *mut c_void, 0 as *mut usize, 28);
+    SyncOSTaskCreate(task19, 0 as *mut c_void, 0 as *mut usize, 29);
+    SyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 30);
     // 启动os
     OSStart();
 }
 
-// 主要测试任务，在空间利用率测试中与其他任务无异
-async fn test_task(_args: *mut c_void) {
+fn test_task(_args: *mut c_void) {
     loop {
         // led on
         led_on();
         // delay 5s
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         // led off
         led_off();
         // delay 5s
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task1(_args: *mut c_void) {
+fn task1(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task2(_args: *mut c_void) {
+fn task2(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task3(_args: *mut c_void) {
+fn task3(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task4(_args: *mut c_void) {
+fn task4(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task5(_args: *mut c_void) {
+fn task5(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task6(_args: *mut c_void) {
+fn task6(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task7(_args: *mut c_void) {
+fn task7(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task8(_args: *mut c_void) {
+fn task8(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task9(_args: *mut c_void) {
+fn task9(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task10(_args: *mut c_void) {
+fn task10(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task11(_args: *mut c_void) {
+fn task11(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task12(_args: *mut c_void) {
+fn task12(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task13(_args: *mut c_void) {
+fn task13(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task14(_args: *mut c_void) {
+fn task14(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task15(_args: *mut c_void) {
+fn task15(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task16(_args: *mut c_void) {
+fn task16(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task17(_args: *mut c_void) {
+fn task17(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task18(_args: *mut c_void) {
+fn task18(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task19(_args: *mut c_void) {
+fn task19(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-async fn task20(_args: *mut c_void) {
+fn task20(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
         delay(BLOCK_TIME);
-        Timer::after_millis(5).await;
+        OSTimeDly(DELAY_TICK);
     }
 }
 

@@ -1,6 +1,8 @@
 use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
+#[cfg(feature = "alarm_test")]
+use defmt::trace;
 
 use super::duration::Duration;
 use super::instant::Instant;
@@ -26,11 +28,15 @@ impl Future for Timer {
     type Output = ();
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.yielded_once && self.expires_at <= Instant::now() {
+            #[cfg(feature = "alarm_test")]
+            trace!("Timer expired");
             Poll::Ready(())
         } else {
             // by noah:this func set the expire time of the task
             schedule_wake(self.expires_at.as_ticks(), cx.waker());
             self.yielded_once = true;
+            #[cfg(feature = "alarm_test")]
+            trace!("Set wake at {}", self.expires_at.as_ticks());
             Poll::Pending
         }
     }

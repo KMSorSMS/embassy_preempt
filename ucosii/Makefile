@@ -12,8 +12,9 @@ TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # ffi_test
 # comprehensive_test
 # bottom_test
+# time_performance
 TARGET := bottom_test
-liam_TARGET := bottom_test
+liam_TARGET := time_performance
 TEST = time_performance
 TEST_FILE = target/$(PLATFORM)/$(MODE)/$(TEST)
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
@@ -69,7 +70,7 @@ build:$(OBJ_FILES)
 # --features "defmt"
 
 liam_build_release:
-	cargo build --release
+	cargo build --release --features "alarm_test"
 liam_build_debug:
 	cargo build --features "defmt"
 bin: $(TARGET)
@@ -148,8 +149,8 @@ liam_defmt:
 lib-run:
 	cargo test --lib
 liam_run:
-	cargo rb $(liam_TARGET) --features "defmt"
+	cargo rb $(liam_TARGET) --features "stm32f401re"
 liam_run_release:
-	cargo rrb $(liam_TARGET)
+	cargo rrb $(liam_TARGET) --features "stm32f401re","alarm_test"
 lib:
 	cargo build --release

@@ -1,0 +1,5 @@
+h
+loadfile build/ffi_test.bin 0x08000000
+r
+g
+exit

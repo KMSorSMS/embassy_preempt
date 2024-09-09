@@ -16,7 +16,7 @@ use core::task::{Context, Poll};
 
 #[cfg(feature = "defmt")]
 use defmt::info;
-#[cfg(feature = "defmt")]
+#[cfg(any(feature = "defmt", feature = "alarm_test"))]
 use defmt::trace;
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
@@ -490,7 +490,7 @@ impl SyncExecutor {
         // call Interrupt Context Switch
         unsafe { this.IntCtxSW() };
     }
-    
+
     /// The global executor for the uC/OS-II RTOS.
     pub(crate) fn new() -> Self {
         let alarm = unsafe { RTC_DRIVER.allocate_alarm().unwrap() };
@@ -573,7 +573,7 @@ impl SyncExecutor {
         }
         // test: print the ready queue
         #[cfg(feature = "defmt")]
-        critical_section::with(|_|{
+        critical_section::with(|_| {
             info!("in interrupt_poll");
             self.print_ready_queue();
             info!("the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
@@ -590,7 +590,7 @@ impl SyncExecutor {
             trace!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
             trace!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
         }
-        
+
         if task.OSTCBStkPtr.is_none() {
             #[cfg(feature = "defmt")]
             info!("the task's stk is none");
@@ -624,7 +624,7 @@ impl SyncExecutor {
         loop {
             // test: print the ready queue
             #[cfg(feature = "defmt")]
-            critical_section::with(|_|{
+            critical_section::with(|_| {
                 info!("in poll");
                 self.print_ready_queue();
                 info!("the highrdy task's prio is {}", self.OSPrioHighRdy.get_unmut());
@@ -680,7 +680,7 @@ impl SyncExecutor {
             #[cfg(feature = "defmt")]
             trace!("find the next expire");
             let mut next_expire = critical_section::with(|_| self.timer_queue.update(task));
-            #[cfg(feature = "defmt")]
+            #[cfg(any(feature = "defmt", feature = "alarm_test"))]
             trace!("the next expire is {}", next_expire);
             if critical_section::with(|_| {
                 if next_expire < *self.timer_queue.set_time.get_unmut() {
@@ -791,14 +791,14 @@ impl SyncExecutor {
     // by noah:TEST print the ready queue
     #[cfg(feature = "defmt")]
     pub fn print_ready_queue(&self) {
-        let tmp:[u8;OS_RDY_TBL_SIZE];
-        unsafe{
+        let tmp: [u8; OS_RDY_TBL_SIZE];
+        unsafe {
             tmp = self.OSRdyTbl.get();
         }
         {
             info!("the ready queue is:");
-            for i in 0..OS_LOWEST_PRIO+1 {
-                if tmp[(i/8) as usize] & (1<<(i%8)) != 0 {
+            for i in 0..OS_LOWEST_PRIO + 1 {
+                if tmp[(i / 8) as usize] & (1 << (i % 8)) != 0 {
                     info!("the {}th task is ready", i);
                 }
             }
