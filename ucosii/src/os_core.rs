@@ -38,13 +38,15 @@ use bottom_driver::BOT_DRIVER;
 #[cfg(feature = "defmt")]
 #[allow(unused)]
 use defmt::info;
+#[cfg(feature = "alarm_test")]
+use defmt::trace;
 #[cfg(feature = "defmt")]
 use defmt::trace;
 // use critical_section::Mutex;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::executor::GlobalSyncExecutor;
+use crate::{executor::GlobalSyncExecutor, os_time::blockdelay};
 use crate::heap::stack_allocator::init_stack_allocator;
 use crate::os_task::SyncOSTaskCreate;
 use crate::os_time::OSTimerInit;
@@ -627,6 +629,11 @@ fn OS_InitTaskIdle() {
     trace!("OS_InitTaskIdle");
     let idle_fn = |_args: *mut c_void| -> ! {
         loop {
+            #[cfg(feature = "alarm_test")]
+            {
+                trace!("task idle");
+                blockdelay::delay(1);
+            }
             // unsafe {
             //     run_idle();
             // }

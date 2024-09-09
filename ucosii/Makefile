@@ -149,8 +149,8 @@ liam_defmt:
 lib-run:
 	cargo test --lib
 liam_run:
-	cargo rb $(liam_TARGET) --features "alarm_test","stm32f401re"
+	cargo rb $(liam_TARGET) --features "stm32f401re"
 liam_run_release:
-	cargo rrb $(liam_TARGET)
+	cargo rrb $(liam_TARGET) --features "stm32f401re","alarm_test"
 lib:
 	cargo build --release

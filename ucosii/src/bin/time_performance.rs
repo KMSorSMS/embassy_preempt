@@ -5,6 +5,7 @@
 
 use core::arch::asm;
 use core::ffi::c_void;
+
 #[cfg(feature = "alarm_test")]
 use defmt::trace;
 use ucosii::os_core::{OSInit, OSStart};
@@ -14,7 +15,6 @@ use ucosii::pac::{gpio, GPIOA, RCC};
 use ucosii::port::bottom_driver::Bottom::bottom;
 
 const BLOCK_TIME: usize = 1;
-
 
 // use ucosii::{self as _};
 
@@ -28,8 +28,8 @@ fn test_time_performance() -> ! {
     AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
     AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 15);
     AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 14);
-    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
-    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 12);
+    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 12);
+    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 13);
     AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 11);
     // 启动os
     OSStart();
@@ -70,48 +70,56 @@ async fn task1(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 async fn task2(_args: *mut c_void) {
     loop {
+        task_pin_low(2);
         delay(BLOCK_TIME);
-        Timer::after_millis(10).await;
+        // Timer::after_millis(10).await;
         #[cfg(feature = "alarm_test")]
         trace!("the task2");
         delay(BLOCK_TIME);
-        Timer::after_millis(10).await;
+        task_pin_high(2);
+        Timer::after_millis(1000).await;
     }
 }
 
 // 用于模拟多任务执行环境
 async fn task3(_args: *mut c_void) {
     loop {
+        task_pin_low(3);
         delay(BLOCK_TIME);
-        Timer::after_millis(20).await;
+        // Timer::after_millis(20).await;
         #[cfg(feature = "alarm_test")]
         trace!("the task3");
         delay(BLOCK_TIME);
-        Timer::after_millis(20).await;
+        task_pin_high(3);
+        Timer::after_millis(200).await;
     }
 }
 
 // 用于模拟多任务执行环境
 async fn task4(_args: *mut c_void) {
     loop {
+        task_pin_low(4);
         delay(BLOCK_TIME);
-        Timer::after_millis(30).await;
+        // Timer::after_millis(80).await;
         #[cfg(feature = "alarm_test")]
         trace!("the task4");
         delay(BLOCK_TIME);
-        Timer::after_millis(30).await;
+        task_pin_high(4);
+        Timer::after_millis(800).await;
     }
 }
 
 // 用于模拟多任务执行环境
 async fn task5(_args: *mut c_void) {
     loop {
+        task_pin_low(5);
         delay(BLOCK_TIME);
-        Timer::after_millis(15).await;
+        // Timer::after_millis(300).await;
         #[cfg(feature = "alarm_test")]
         trace!("the task5");
         delay(BLOCK_TIME);
-        Timer::after_millis(15).await;
+        task_pin_high(5);
+        Timer::after_millis(300).await;
     }
 }
 
@@ -177,26 +185,46 @@ pub fn pin_init() {
         // set mode as output
         v.set_moder(0, gpio::vals::Moder::OUTPUT);
         v.set_moder(1, gpio::vals::Moder::OUTPUT);
+        v.set_moder(4, gpio::vals::Moder::OUTPUT);
+        v.set_moder(6, gpio::vals::Moder::OUTPUT);
+        v.set_moder(7, gpio::vals::Moder::OUTPUT);
+        v.set_moder(8, gpio::vals::Moder::OUTPUT);
     });
     GPIOA.otyper().modify(|v| {
         // set output type as push-pull
         v.set_ot(0, gpio::vals::Ot::PUSHPULL);
         v.set_ot(1, gpio::vals::Ot::PUSHPULL);
+        v.set_ot(4, gpio::vals::Ot::PUSHPULL);
+        v.set_ot(6, gpio::vals::Ot::PUSHPULL);
+        v.set_ot(7, gpio::vals::Ot::PUSHPULL);
+        v.set_ot(8, gpio::vals::Ot::PUSHPULL);
     });
     GPIOA.ospeedr().modify(|v| {
         // set output speed as high
         v.set_ospeedr(0, gpio::vals::Ospeedr::HIGHSPEED);
         v.set_ospeedr(1, gpio::vals::Ospeedr::HIGHSPEED);
+        v.set_ospeedr(4, gpio::vals::Ospeedr::HIGHSPEED);
+        v.set_ospeedr(6, gpio::vals::Ospeedr::HIGHSPEED);
+        v.set_ospeedr(7, gpio::vals::Ospeedr::HIGHSPEED);
+        v.set_ospeedr(8, gpio::vals::Ospeedr::HIGHSPEED);
     });
     GPIOA.pupdr().modify(|v| {
         // set pull-up/pull-down as no pull-up/pull-down
         v.set_pupdr(0, gpio::vals::Pupdr::FLOATING);
         v.set_pupdr(1, gpio::vals::Pupdr::FLOATING);
+        v.set_pupdr(4, gpio::vals::Pupdr::FLOATING);
+        v.set_pupdr(6, gpio::vals::Pupdr::FLOATING);
+        v.set_pupdr(7, gpio::vals::Pupdr::FLOATING);
+        v.set_pupdr(8, gpio::vals::Pupdr::FLOATING);
     });
     GPIOA.odr().modify(|v| {
         // set output as low
         v.set_odr(0, gpio::vals::Odr::LOW);
         v.set_odr(1, gpio::vals::Odr::LOW);
+        v.set_odr(4, gpio::vals::Odr::LOW);
+        v.set_odr(6, gpio::vals::Odr::LOW);
+        v.set_odr(7, gpio::vals::Odr::LOW);
+        v.set_odr(8, gpio::vals::Odr::LOW);
     });
 }
 
@@ -215,6 +243,42 @@ pub fn thread_pin_high() {
 pub fn thread_pin_low() {
     GPIOA.odr().modify(|v| {
         v.set_odr(0, gpio::vals::Odr::LOW);
+    });
+}
+
+/// set the task() pin high
+#[allow(dead_code)]
+#[inline]
+pub fn task_pin_high(task: usize) {
+    critical_section::with(|_| {
+        let task = match task {
+            2 => 4,
+            3 => 6,
+            4 => 7,
+            5 => 8,
+            _ => 0,
+        };
+        GPIOA.odr().modify(|v| {
+            v.set_odr(task, gpio::vals::Odr::HIGH);
+        });
+    });
+}
+
+/// set the task() pin low
+#[allow(dead_code)]
+#[inline]
+pub fn task_pin_low(task: usize) {
+    critical_section::with(|_| {
+        let task = match task {
+            2 => 4,
+            3 => 6,
+            4 => 7,
+            5 => 8,
+            _ => 0,
+        };
+        GPIOA.odr().modify(|v| {
+            v.set_odr(task, gpio::vals::Odr::LOW);
+        });
     });
 }
 
@@ -246,7 +310,7 @@ pub fn delay(time: usize) {
             "cmp r0, r2",
             "blt 1b",
             in("r2") time,
-            in("r3") 8000/8,
+            in("r3") 800000/8,
         )
     }
 }
