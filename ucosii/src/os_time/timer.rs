@@ -24,10 +24,13 @@ pub fn schedule_wake(at: u64, waker: &Waker) {
     unsafe { _embassy_time_schedule_wake(at, waker) }
 }
 
+impl Unpin for Timer {}
+
 impl Future for Timer {
     type Output = ();
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.yielded_once && self.expires_at <= Instant::now() {
+            self.yielded_once = false;
             #[cfg(feature = "alarm_test")]
             trace!("Timer expired");
             Poll::Ready(())
@@ -104,7 +107,11 @@ impl Timer {
     /// For more details, refer to [`Timer::after`] and [`Duration::from_millis()`].
     #[inline]
     pub fn after_millis(millis: u64) -> Self {
-        Self::after(Duration::from_millis(millis))
+        let tmp = Self::after(Duration::from_millis(millis));
+        #[cfg(feature = "alarm_test")]
+        // 打印timer信息
+        trace!("the timer{:?}'s yield_once is {:?}", millis, tmp.yielded_once);
+        tmp
     }
 
     /// Expire after the specified number of seconds.

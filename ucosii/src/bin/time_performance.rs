@@ -5,6 +5,8 @@
 
 use core::arch::asm;
 use core::ffi::c_void;
+#[cfg(feature = "alarm_test")]
+use core::ptr;
 
 #[cfg(feature = "alarm_test")]
 use defmt::trace;
@@ -28,8 +30,8 @@ fn test_time_performance() -> ! {
     AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
     AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 15);
     AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 14);
-    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 12);
-    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 13);
+    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
+    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 12);
     AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 11);
     // 启动os
     OSStart();
@@ -63,6 +65,8 @@ async fn task1(_args: *mut c_void) {
         led_on();
         Timer::after_millis(5 * 1000).await;
         led_off();
+        #[cfg(feature = "alarm_test")]
+        trace!("the task1");
         Timer::after_millis(5 * 1000).await;
     }
 }
@@ -77,7 +81,14 @@ async fn task2(_args: *mut c_void) {
         trace!("the task2");
         delay(BLOCK_TIME);
         task_pin_high(2);
-        Timer::after_millis(1000).await;
+        let timer10 = Timer::after_millis(100);
+        #[cfg(feature = "alarm_test")]
+        {
+            // 打印变量地址
+            trace!("the address of task2 timer10: {:?}", ptr::addr_of!(timer10));
+        }
+
+        timer10.await;
     }
 }
 
@@ -87,11 +98,17 @@ async fn task3(_args: *mut c_void) {
         task_pin_low(3);
         delay(BLOCK_TIME);
         // Timer::after_millis(20).await;
-        #[cfg(feature = "alarm_test")]
-        trace!("the task3");
+        // #[cfg(feature = "alarm_test")]
+        // trace!("the task3");
         delay(BLOCK_TIME);
         task_pin_high(3);
-        Timer::after_millis(200).await;
+        #[cfg(feature = "alarm_test")]
+        trace!("the task3");
+        let timer20 = Timer::after_millis(250);
+        #[cfg(feature = "alarm_test")]
+        // 打印变量地址
+        trace!("the address of task3 timer20: {:?}", ptr::addr_of!(timer20));
+        timer20.await;
     }
 }
 
@@ -105,7 +122,11 @@ async fn task4(_args: *mut c_void) {
         trace!("the task4");
         delay(BLOCK_TIME);
         task_pin_high(4);
-        Timer::after_millis(800).await;
+        let timer80 = Timer::after_millis(500);
+        #[cfg(feature = "alarm_test")]
+        // 打印变量地址
+        trace!("the address of task4 timer80: {:?}", ptr::addr_of!(timer80));
+        timer80.await;
     }
 }
 
@@ -119,7 +140,11 @@ async fn task5(_args: *mut c_void) {
         trace!("the task5");
         delay(BLOCK_TIME);
         task_pin_high(5);
-        Timer::after_millis(300).await;
+        let timer30 = Timer::after_millis(1000);
+        #[cfg(feature = "alarm_test")]
+        // 打印变量地址
+        trace!("the address of task5 timer30: {:?}", ptr::addr_of!(timer30));
+        timer30.await;
     }
 }
 
@@ -310,7 +335,7 @@ pub fn delay(time: usize) {
             "cmp r0, r2",
             "blt 1b",
             in("r2") time,
-            in("r3") 800000/8,
+            in("r3") 1000000/8,
         )
     }
 }

@@ -46,7 +46,9 @@ use defmt::trace;
 // use core::cell::RefCell;
 use os_cpu::*;
 
-use crate::{executor::GlobalSyncExecutor, os_time::blockdelay};
+use crate::executor::GlobalSyncExecutor;
+#[cfg(feature = "alarm_test")]
+use crate::os_time::blockdelay;
 use crate::heap::stack_allocator::init_stack_allocator;
 use crate::os_task::SyncOSTaskCreate;
 use crate::os_time::OSTimerInit;

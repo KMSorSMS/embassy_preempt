@@ -4,6 +4,8 @@ use core::arch::asm;
 use core::ptr::NonNull;
 
 use cortex_m_rt::exception;
+#[cfg(feature = "alarm_test")]
+use defmt::trace;
 #[cfg(feature = "defmt")]
 #[allow(unused_imports)]
 use defmt::{info,trace};
@@ -58,11 +60,8 @@ fn PendSV() {
     #[cfg(feature = "defmt")]
     info!("PendSV");
     // then switch the task
-    #[cfg(feature = "defmt")]
-    trace!(
-        "in pendsv the highrdy task's prio is : {:?}",
-        GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
-    );
+    #[cfg(feature = "alarm_test")]
+    trace!("change from {:?} to {:?}", GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut(), GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut());
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
         == GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut()
     {
