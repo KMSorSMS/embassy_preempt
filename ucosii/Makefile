@@ -13,7 +13,7 @@ TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # comprehensive_test
 # bottom_test
 # time_performance
-TARGET := bottom_test
+TARGET := time_performance
 liam_TARGET := time_performance
 TEST = time_performance
 TEST_FILE = target/$(PLATFORM)/$(MODE)/$(TEST)
@@ -66,8 +66,7 @@ test-run:
 	cargo test --package ucosii --test integration
 
 build:$(OBJ_FILES)
-	cargo build $(MODE_ARG)
-# --features "defmt"
+	cargo build $(MODE_ARG) --features "stm32f401re","alarm_test"
 
 liam_build_release:
 	cargo build --release --features "alarm_test"
@@ -151,6 +150,6 @@ lib-run:
 liam_run:
 	cargo rb $(liam_TARGET) --features "stm32f401re"
 liam_run_release:
-	cargo rrb $(liam_TARGET) --features "stm32f401re","alarm_test"
+	cargo rrb $(liam_TARGET) --features "stm32f401re"
 lib:
 	cargo build --release

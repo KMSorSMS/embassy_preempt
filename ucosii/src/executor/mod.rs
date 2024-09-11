@@ -14,7 +14,7 @@ use core::pin::Pin;
 use core::ptr::NonNull;
 use core::task::{Context, Poll};
 
-#[cfg(feature = "defmt")]
+#[cfg(any(feature = "defmt", feature = "alarm_test"))]
 use defmt::info;
 #[cfg(any(feature = "defmt", feature = "alarm_test"))]
 use defmt::trace;
@@ -585,7 +585,7 @@ impl SyncExecutor {
         let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
 
         // then we need to restore the highest priority task
-        #[cfg(feature = "defmt")]
+        #[cfg(feature = "alarm_test")]
         {
             trace!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
             trace!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
@@ -702,7 +702,7 @@ impl SyncExecutor {
                     // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
                     // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
                     // (just like the operation in alarm_callback)
-                    self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
+                    critical_section::with(|_cs|self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend));
                     // then we need to set a new alarm according to the next expiration time
                     next_expire = unsafe { self.timer_queue.next_expiration() };
                     // by noah：we also need to updater the set_time of the timer_queue
@@ -804,11 +804,24 @@ impl SyncExecutor {
             }
         }
     }
+
+    // by noah: TEST get the priocur
+    #[cfg(feature = "alarm_test")]
+    pub unsafe fn print_priocur(&self) ->INT8U {
+        let priocur = self.OSPrioCur.get();
+        priocur
+    }
+
+    // by noah: TEST get the expire time
+    #[cfg(feature = "alarm_test")]
+    pub unsafe fn print_expire(&self) -> u64 {
+        let expire = self.OSTCBCur.get().expires_at.get();
+        expire
+    }
 }
 /// Wake a task by `TaskRef`.
 pub fn wake_task_no_pend(task: OS_TCB_REF) {
-    #[cfg(feature = "defmt")]
-    trace!("wake_task_no_pend");
+    info!("wake task{}", task.OSTCBPrio);
     // We have just marked the task as scheduled, so enqueue it.
     unsafe {
         let executor = GlobalSyncExecutor.as_ref().unwrap();

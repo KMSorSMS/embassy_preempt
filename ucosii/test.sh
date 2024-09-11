@@ -10,7 +10,7 @@ run_test() {
     local test_name=$1
     # 如果tmp.yaml文件存在时才删除tmp.yaml文件
     [ -f tmp.yaml ] && rm tmp.yaml
-    cargo run --bin "$test_name" --release --features "defmt"> tmp.yaml &
+    cargo run --bin "$test_name" --release --features "alarm_test","stm32f401re"> tmp.yaml &
     # 记录上一次文件大小
     PREV_SIZE=0
 
@@ -27,7 +27,7 @@ run_test() {
     MAX_WAIT=3
     WAITED=0
     # 单次测试最长执行时间
-    MAX_TIME=10
+    MAX_TIME=30
     # 记录总时间
     TOTAL_TIME=0
     # # 查找并终止probe-rs run进程
@@ -143,7 +143,7 @@ tests=(
 # hardware_test
 # preempt_basic
 # comprehensive_test
-scheduling2_test
+time_performance
 )
 
 # 循环遍历数组，执行测试

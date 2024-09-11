@@ -1,4 +1,4 @@
-#[cfg(feature = "defmt")]
+#[cfg(feature = "alarm_test")]
 #[allow(unused)]
 use defmt::{trace,info};
 
@@ -53,9 +53,12 @@ impl TimerQueue {
         } else {
             self.head.set(Some(p));
         }
-        // #[cfg(feature = "defmt")]
-        // trace!("exit timer update");
-        // return *head.as_ref().unwrap().expires_at.get_unmut();
+        // by noah: print the queue
+        #[cfg(feature = "alarm_test")]
+            critical_section::with(|_cs|{
+                info!("=====update=====");
+                self.print();
+            });
         return *self.head.get_unmut().as_ref().unwrap().expires_at.get_unmut();
     }
 
@@ -68,7 +71,7 @@ impl TimerQueue {
         }
     }
     pub(crate) unsafe fn dequeue_expired(&self, now: u64, on_task: impl Fn(OS_TCB_REF)) {
-        #[cfg(feature = "defmt")]
+        #[cfg(feature = "alarm_test")]
         trace!("dequeue expired");
         let mut cur = self.head.get();
         while let Some(cur_ref) = cur {
@@ -93,6 +96,12 @@ impl TimerQueue {
             cur_ref.OSTimerNext.set(None);
             cur_ref.OSTimerPrev.set(None);
             cur = next;
+            // by noah: print the queue
+            #[cfg(feature = "alarm_test")]
+            critical_section::with(|_cs|{
+                info!("=====dequeue_expired=====");
+                self.print();
+            });
         }
         // // test if dequeued clean
         // let mut cur = self.head.get();
@@ -101,5 +110,19 @@ impl TimerQueue {
         //     trace!("in dequeue the cur priority is {}", cur_ref.OSTCBPrio);
         //     cur = cur_ref.OSTimerNext.get();
         // }
+    }
+    // by noah: TEST print the timer queue
+    #[cfg(feature = "alarm_test")]
+    pub(crate) unsafe fn print(&self) {
+        use defmt::info;
+
+        let mut cur = self.head.get();
+        while let Some(cur_ref) = cur {
+            #[cfg(feature = "alarm_test")]
+            critical_section::with(|_cs|{
+                info!("in print the cur priority is {}, the expire time is {}", cur_ref.OSTCBPrio, cur_ref.expires_at.get());
+            });
+            cur = cur_ref.OSTimerNext.get();
+        }
     }
 }

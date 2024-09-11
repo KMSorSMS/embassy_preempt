@@ -7,14 +7,14 @@ use core::arch::asm;
 use core::ffi::c_void;
 
 #[cfg(feature = "alarm_test")]
-use defmt::trace;
+use defmt::{info,trace};
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::AsyncOSTaskCreate;
 use ucosii::os_time::timer::Timer;
 use ucosii::pac::{gpio, GPIOA, RCC};
 use ucosii::port::bottom_driver::Bottom::bottom;
 
-const BLOCK_TIME: usize = 1;
+const BLOCK_TIME: usize =1;
 
 // use ucosii::{self as _};
 
@@ -28,8 +28,8 @@ fn test_time_performance() -> ! {
     AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
     AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 15);
     AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 14);
-    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 12);
-    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 13);
+    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
+    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 12);
     AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 11);
     // 启动os
     OSStart();
@@ -61,6 +61,8 @@ async fn task1(_args: *mut c_void) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led_on();
+        #[cfg(feature = "alarm_test")]
+        trace!("the task1");
         Timer::after_millis(5 * 1000).await;
         led_off();
         Timer::after_millis(5 * 1000).await;
@@ -310,7 +312,7 @@ pub fn delay(time: usize) {
             "cmp r0, r2",
             "blt 1b",
             in("r2") time,
-            in("r3") 800000/8,
+            in("r3") 4000000/8,
         )
     }
 }

@@ -9,7 +9,7 @@ use core::{mem, ptr};
 
 use cortex_m::peripheral::NVIC;
 use critical_section::{CriticalSection, Mutex};
-#[cfg(feature = "defmt")]
+#[cfg(feature = "alarm_test")]
 #[allow(unused_imports)]
 use defmt::{info,trace};
 use stm32_metapac::flash::vals::Latency;
@@ -244,7 +244,7 @@ impl RtcDriver {
 
             for n in 0..ALARM_COUNT {
                 if sr.ccif(n + 1) && dier.ccie(n + 1) {
-                    #[cfg(feature = "defmt")]
+                    #[cfg(feature = "alarm_test")]
                     trace!("the alarm is triggered!!!");
                     self.trigger_alarm(n, cs);
                 }

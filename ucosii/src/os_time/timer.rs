@@ -2,7 +2,9 @@ use core::future::Future;
 use core::pin::Pin;
 use core::task::{Context, Poll, Waker};
 #[cfg(feature = "alarm_test")]
-use defmt::trace;
+use defmt::{info,trace};
+
+use crate::executor::GlobalSyncExecutor;
 
 use super::duration::Duration;
 use super::instant::Instant;
@@ -24,17 +26,24 @@ pub fn schedule_wake(at: u64, waker: &Waker) {
     unsafe { _embassy_time_schedule_wake(at, waker) }
 }
 
+impl Unpin for Timer {}
+
 impl Future for Timer {
     type Output = ();
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        self.print_address();
         if self.yielded_once && self.expires_at <= Instant::now() {
+            // reset the yield flag, because when the opt level >=2, the Timer's address will be the same.
+            self.yielded_once = false;
+            // ,self.expires_at , the expire time is {}
             #[cfg(feature = "alarm_test")]
-            trace!("Timer expired");
+            trace!("Timer expired, cur task's prio is:{}, the task's expire time is {}, the Timer's expire time is {}", unsafe { GlobalSyncExecutor.as_ref().unwrap().print_priocur()}, unsafe { GlobalSyncExecutor.as_ref().unwrap().print_expire()},self.expires_at.as_ticks());
             Poll::Ready(())
         } else {
             // by noah:this func set the expire time of the task
             schedule_wake(self.expires_at.as_ticks(), cx.waker());
             self.yielded_once = true;
+            // self.yielded_once = true;
             #[cfg(feature = "alarm_test")]
             trace!("Set wake at {}", self.expires_at.as_ticks());
             Poll::Pending
@@ -65,6 +74,8 @@ impl Timer {
     /// }
     /// ```
     pub fn after(duration: Duration) -> Self {
+        #[cfg(feature="alarm_test")]
+        info!("Timer's after function is called");
         Self {
             expires_at: Instant::now() + duration,
             yielded_once: false,
@@ -114,5 +125,14 @@ impl Timer {
     #[inline]
     pub fn after_secs(secs: u64) -> Self {
         Self::after(Duration::from_secs(secs))
+    }
+
+    /// by noah: TEST print the TImer's address
+    pub fn print_address(&self) {
+        let timer_address : *const Timer= self as *const Timer;
+        let expires_address : *const Instant = &self.expires_at;
+        let yielded_address : *const bool = &self.yielded_once;
+        #[cfg(feature = "alarm_test")]
+        info!("Timer's address is {:?}, the expires_at's address is {}, the yield_once's address is {} the val of yield_once is {}", timer_address,expires_address,yielded_address,self.yielded_once);
     }
 }
