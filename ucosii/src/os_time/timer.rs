@@ -29,8 +29,12 @@ impl Unpin for Timer {}
 impl Future for Timer {
     type Output = ();
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
+        #[cfg(feature = "alarm_test")]
+        {
+            // 打印地址信息
+            trace!("Timer's address is {:?},yield_once is {},yield_once_address is {}", &self as *const _, self.yielded_once, &self.yielded_once as *const _);
+        }
         if self.yielded_once && self.expires_at <= Instant::now() {
-            self.yielded_once = false;
             #[cfg(feature = "alarm_test")]
             trace!("Timer expired");
             Poll::Ready(())
@@ -110,7 +114,7 @@ impl Timer {
         let tmp = Self::after(Duration::from_millis(millis));
         #[cfg(feature = "alarm_test")]
         // 打印timer信息
-        trace!("the timer{:?}'s yield_once is {:?}", millis, tmp.yielded_once);
+        trace!("the timer{:?}'s yield_once is {:?} , yield_once address is {}, timer_address is {}", millis, tmp.yielded_once, &tmp.yielded_once as *const _, &tmp as *const _);
         tmp
     }
 

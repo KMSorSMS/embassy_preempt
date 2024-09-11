@@ -5,8 +5,6 @@
 
 use core::arch::asm;
 use core::ffi::c_void;
-#[cfg(feature = "alarm_test")]
-use core::ptr;
 
 #[cfg(feature = "alarm_test")]
 use defmt::trace;
@@ -81,11 +79,11 @@ async fn task2(_args: *mut c_void) {
         trace!("the task2");
         delay(BLOCK_TIME);
         task_pin_high(2);
-        let timer10 = Timer::after_millis(100);
+        let timer10 = Timer::after_millis(10);
         #[cfg(feature = "alarm_test")]
         {
             // 打印变量地址
-            trace!("the address of task2 timer10: {:?}", ptr::addr_of!(timer10));
+            trace!("the address of task2 timer10: {:?}", &timer10 as *const _);
         }
 
         timer10.await;
@@ -104,10 +102,10 @@ async fn task3(_args: *mut c_void) {
         task_pin_high(3);
         #[cfg(feature = "alarm_test")]
         trace!("the task3");
-        let timer20 = Timer::after_millis(250);
+        let timer20 = Timer::after_millis(25);
         #[cfg(feature = "alarm_test")]
         // 打印变量地址
-        trace!("the address of task3 timer20: {:?}", ptr::addr_of!(timer20));
+        trace!("the address of task3 timer20: {:?}", &timer20 as *const _);
         timer20.await;
     }
 }
@@ -122,10 +120,10 @@ async fn task4(_args: *mut c_void) {
         trace!("the task4");
         delay(BLOCK_TIME);
         task_pin_high(4);
-        let timer80 = Timer::after_millis(500);
+        let timer80 = Timer::after_millis(50);
         #[cfg(feature = "alarm_test")]
         // 打印变量地址
-        trace!("the address of task4 timer80: {:?}", ptr::addr_of!(timer80));
+        trace!("the address of task4 timer80: {:?}", &timer80 as *const _);
         timer80.await;
     }
 }
@@ -140,10 +138,10 @@ async fn task5(_args: *mut c_void) {
         trace!("the task5");
         delay(BLOCK_TIME);
         task_pin_high(5);
-        let timer30 = Timer::after_millis(1000);
+        let timer30 = Timer::after_millis(100);
         #[cfg(feature = "alarm_test")]
         // 打印变量地址
-        trace!("the address of task5 timer30: {:?}", ptr::addr_of!(timer30));
+        trace!("the address of task5 timer30: {:?}", &timer30 as *const _);
         timer30.await;
     }
 }

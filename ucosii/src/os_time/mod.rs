@@ -1,6 +1,6 @@
 #[cfg(feature = "defmt")]
 #[allow(unused_imports)]
-use defmt::{info,trace};
+use defmt::{info, trace};
 
 use crate::executor::{wake_task_no_pend, GlobalSyncExecutor};
 use crate::port::time_driver::{Driver, RTC_DRIVER};
@@ -34,11 +34,11 @@ pub(crate) unsafe fn delay_tick(_ticks: INT64U) {
     let executor = GlobalSyncExecutor.as_ref().unwrap();
     let task = executor.OSTCBCur.get_mut();
     task.expires_at.set(RTC_DRIVER.now() + _ticks);
-    critical_section::with(|_| {
-        executor.set_task_unready(*task);
-    });
     // update timer
-    let mut next_expire = critical_section::with(|_| executor.timer_queue.update(*task));
+    let mut next_expire = critical_section::with(|_| {
+        executor.set_task_unready(*task);
+        critical_section::with(|_| executor.timer_queue.update(*task))
+    });
     #[cfg(feature = "defmt")]
     trace!("in delay_tick the next expire is {:?}", next_expire);
     if critical_section::with(|_| {
