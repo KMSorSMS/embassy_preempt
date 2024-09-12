@@ -70,9 +70,9 @@ build:$(OBJ_FILES)
 # --features "defmt"
 
 liam_build_release:
-	cargo build --release --features "alarm_test"
+	cargo build --release --features "stm32f401re"
 liam_build_debug:
-	cargo build --features "defmt"
+	cargo build --features "defmt","stm32f401re"
 bin: $(TARGET)
 	@echo "Build done"
 liam_bin_debug: liam_TARGET_DEBUG
@@ -91,6 +91,12 @@ liam_debug: liam_build_debug liam_bin_debug
 	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c 'adapter speed 4000' -c init -c "halt" -c 'flash write_image erase $(liam_FILE_BIN) 0x8000000' " && \
 	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(liam_FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
 	-ex 'set remotetimeout 5' -ex 'source ./bp.gdb' -ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'monitor rtt server start $(PORT) 0' -ex 'monitor rtt setup 0x$(liam_RTT_ADDR) 0x$(liam_RTT_SIZE) \"SEGGER RTT\" '  -ex 'monitor rtt start'  " && \
+	tmux -2 attach-session -d
+liam_debug_release: liam_build_release liam_bin_release
+	tmux new-session -d \
+	"openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c 'adapter speed 4000' -c init -c "halt" -c 'flash write_image erase $(liam_FILE_BIN) 0x8000000' " && \
+	tmux split-window -h "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(liam_FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:3333' \
+	-ex 'set remotetimeout 5' -ex 'source ./bp.gdb' -ex 'source ./.gdbinit' " && \
 	tmux -2 attach-session -d
 liam_download_debug: liam_build_debug liam_bin_debug
 	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(liam_FILE_BIN) 0x8000000" -c "reset" -c "shutdown"
@@ -151,6 +157,6 @@ lib-run:
 liam_run:
 	cargo rb $(liam_TARGET) --features "stm32f401re"
 liam_run_release:
-	cargo rrb $(liam_TARGET) --features "stm32f401re","alarm_test"
+	cargo rrb $(liam_TARGET) --features "stm32f401re"
 lib:
 	cargo build --release

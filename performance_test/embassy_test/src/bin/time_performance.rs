@@ -13,7 +13,7 @@ use embassy_time::Timer;
 use stm32_metapac::rcc::vals;
 use stm32_metapac::{gpio, GPIOA, RCC};
 
-const BLOCK_TIME: usize = 1;
+const BLOCK_TIME: usize = 2;
 
 // 主要测试任务
 #[embassy_executor::main]
@@ -74,14 +74,14 @@ async fn test_task(mut button: ExtiInput<'static>) {
         // set the thread pin high, indicating that the thread time test begins
         thread_pin_high();
 
-        // delay 5s
-        Timer::after_millis(5).await;
+        // delay 0.05s
+        Timer::after_millis(50).await;
         thread_pin_low();
         button.wait_for_rising_edge().await;
         interrupt_pin_low();
         thread_pin_high();
 
-        Timer::after_millis(5).await;
+        Timer::after_millis(50).await;
     }
 }
 
@@ -102,9 +102,7 @@ async fn task1(mut led: Output<'static>) {
 async fn task2() {
     loop {
         black_box(delay(BLOCK_TIME));
-        Timer::after_millis(5).await;
-        black_box(delay(BLOCK_TIME));
-        Timer::after_millis(5).await;
+        Timer::after_millis(10).await;
     }
 }
 
@@ -113,9 +111,7 @@ async fn task2() {
 async fn task3() {
     loop {
         black_box(delay(BLOCK_TIME));
-        Timer::after_millis(5).await;
-        black_box(delay(BLOCK_TIME));
-        Timer::after_millis(5).await;
+        Timer::after_millis(20).await;
     }
 }
 
@@ -124,9 +120,7 @@ async fn task3() {
 async fn task4() {
     loop {
         black_box(delay(BLOCK_TIME));
-        Timer::after_millis(5).await;
-        black_box(delay(BLOCK_TIME));
-        Timer::after_millis(5).await;
+        Timer::after_millis(30).await;
     }
 }
 
@@ -135,9 +129,7 @@ async fn task4() {
 async fn task5() {
     loop {
         black_box(delay(BLOCK_TIME));
-        Timer::after_millis(5).await;
-        black_box(delay(BLOCK_TIME));
-        Timer::after_millis(5).await;
+        Timer::after_millis(40).await;
     }
 }
 
@@ -222,7 +214,7 @@ pub fn delay(time: usize) {
             "cmp r0, r2",
             "blt 1b",
             in("r2") time,
-            in("r3") 8000000/8,
+            in("r3") 800000/8,
             options(nostack, nomem, preserves_flags) // 防止优化
         )
     }

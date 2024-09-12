@@ -16,7 +16,7 @@ use core::task::{Context, Poll};
 
 #[cfg(feature = "defmt")]
 use defmt::info;
-#[cfg(any(feature = "defmt", feature = "alarm_test"))]
+#[cfg(feature = "defmt")]
 use defmt::trace;
 use lazy_static::lazy_static;
 // use run_queue_atomics::RunQueue;
@@ -666,55 +666,42 @@ impl SyncExecutor {
             #[cfg(feature = "defmt")]
             trace!("poll the task");
             task.OS_POLL_FN.get().unwrap_unchecked()(task);
-            #[cfg(feature = "defmt")]
-            trace!("exit poll the task");
-            task.is_in_thread_poll.set(true);
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
+            // update timer
             critical_section::with(|_| {
+                task.is_in_thread_poll.set(true);
+                self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
                 self.set_task_unready(task);
                 // set the task's stack to None
                 // check: this seems no need to set it to None as it will always be None
                 task.OSTCBStkPtr = None;
-            });
-            // update timer
-            #[cfg(feature = "defmt")]
-            trace!("find the next expire");
-            let mut next_expire = critical_section::with(|_| self.timer_queue.update(task));
-            #[cfg(any(feature = "defmt", feature = "alarm_test"))]
-            trace!("the next expire is {}", next_expire);
-            if critical_section::with(|_| {
+                let mut next_expire = self.timer_queue.update(task);
                 if next_expire < *self.timer_queue.set_time.get_unmut() {
                     self.timer_queue.set_time.set(next_expire);
-                    true
-                } else {
-                    // if the next_expire is not less than the set_time, it means the expire dose not arrive, or the task
-                    // dose not expire a timestamp so we should set the task unready
-                    false
-                }
-            }) {
-                // by noah：if the set alarm return false, it means the expire arrived.
-                // So we can not set the **task which is waiting for the next_expire** as unready
-                // The **task which is waiting for the next_expire** must be current task
-                // we must do this until we set the alarm successfully or there is no alarm required
-                while !RTC_DRIVER.set_alarm(self.alarm, next_expire) {
-                    #[cfg(feature = "defmt")]
-                    trace!("the set alarm return false");
-                    // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
-                    // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
-                    // (just like the operation in alarm_callback)
-                    self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
-                    // then we need to set a new alarm according to the next expiration time
-                    next_expire = unsafe { self.timer_queue.next_expiration() };
-                    // by noah：we also need to updater the set_time of the timer_queue
-                    unsafe {
-                        self.timer_queue.set_time.set(next_expire);
+                    // by noah：if the set alarm return false, it means the expire arrived.
+                    // So we can not set the **task which is waiting for the next_expire** as unready
+                    // The **task which is waiting for the next_expire** must be current task
+                    // we must do this until we set the alarm successfully or there is no alarm required
+                    while !RTC_DRIVER.set_alarm(self.alarm, next_expire) {
+                        #[cfg(feature = "defmt")]
+                        trace!("the set alarm return false");
+                        // by noah: if set alarm failed, it means the expire arrived, so we should not set the task unready
+                        // we should **dequeue the task** from time_queue, **clear the set_time of the time_queue** and continue the loop
+                        // (just like the operation in alarm_callback)
+                        self.timer_queue.dequeue_expired(RTC_DRIVER.now(), wake_task_no_pend);
+                        // then we need to set a new alarm according to the next expiration time
+                        next_expire = unsafe { self.timer_queue.next_expiration() };
+                        // by noah：we also need to updater the set_time of the timer_queue
+                        unsafe {
+                            self.timer_queue.set_time.set(next_expire);
+                        }
                     }
                 }
-            }
-            // by noah：maybe we can set the task unready, and call dequeue when set_alarm return false
-            // find the highest priority task in the ready queue
-            // adapt the method above
-            critical_section::with(|_| self.set_highrdy());
+                // by noah：maybe we can set the task unready, and call dequeue when set_alarm return false
+                // find the highest priority task in the ready queue
+                // adapt the method above
+                self.set_highrdy()
+            });
         }
     }
     pub(crate) unsafe fn set_highrdy(&self) {
