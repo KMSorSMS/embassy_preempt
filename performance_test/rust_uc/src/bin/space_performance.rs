@@ -21,7 +21,17 @@ fn test_space_performance() -> ! {
     Pin_Init();
     // os初始化
     OSInit();
-    AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
+    AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 0);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 1);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 2);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 3);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 4);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 5);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 6);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 7);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 8);
+    AsyncOSTaskCreate(task17, 0 as *mut c_void, 0 as *mut usize, 9);
+    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 10);
     AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 11);
     AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 12);
     AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
@@ -42,6 +52,40 @@ fn test_space_performance() -> ! {
     AsyncOSTaskCreate(task18, 0 as *mut c_void, 0 as *mut usize, 28);
     AsyncOSTaskCreate(task19, 0 as *mut c_void, 0 as *mut usize, 29);
     AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 30);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 31);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 32);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 33);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 34);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 35);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 36);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 37);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 38);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 39);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 40);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 41);
+    AsyncOSTaskCreate(task20, 0 as *mut c_void, 0 as *mut usize, 42);
+    AsyncOSTaskCreate(task13, 0 as *mut c_void, 0 as *mut usize, 43);
+    AsyncOSTaskCreate(task14, 0 as *mut c_void, 0 as *mut usize, 44);
+    AsyncOSTaskCreate(task15, 0 as *mut c_void, 0 as *mut usize, 45);
+    AsyncOSTaskCreate(task16, 0 as *mut c_void, 0 as *mut usize, 46);
+    AsyncOSTaskCreate(task17, 0 as *mut c_void, 0 as *mut usize, 47);
+    AsyncOSTaskCreate(task18, 0 as *mut c_void, 0 as *mut usize, 48);
+    AsyncOSTaskCreate(task19, 0 as *mut c_void, 0 as *mut usize, 49);
+    AsyncOSTaskCreate(task10, 0 as *mut c_void, 0 as *mut usize, 50);
+    AsyncOSTaskCreate(task11, 0 as *mut c_void, 0 as *mut usize, 51);
+    AsyncOSTaskCreate(task12, 0 as *mut c_void, 0 as *mut usize, 52);
+    AsyncOSTaskCreate(task13, 0 as *mut c_void, 0 as *mut usize, 53);
+    AsyncOSTaskCreate(task14, 0 as *mut c_void, 0 as *mut usize, 54);
+    AsyncOSTaskCreate(task15, 0 as *mut c_void, 0 as *mut usize, 55);
+    AsyncOSTaskCreate(task16, 0 as *mut c_void, 0 as *mut usize, 56);
+    AsyncOSTaskCreate(task17, 0 as *mut c_void, 0 as *mut usize, 57);
+    AsyncOSTaskCreate(task18, 0 as *mut c_void, 0 as *mut usize, 58);
+    AsyncOSTaskCreate(task19, 0 as *mut c_void, 0 as *mut usize, 59);
+    AsyncOSTaskCreate(task10, 0 as *mut c_void, 0 as *mut usize, 60);
+    AsyncOSTaskCreate(task11, 0 as *mut c_void, 0 as *mut usize, 61);
+    AsyncOSTaskCreate(task12, 0 as *mut c_void, 0 as *mut usize, 62);
+
+    
     // 启动os
     OSStart();
 }
@@ -52,11 +96,11 @@ async fn test_task(_args: *mut c_void) {
         // led on
         led_on();
         // delay 5s
-        Timer::after_millis(5).await;
+        Timer::after_millis(500).await;
         // led off
         led_off();
         // delay 5s
-        Timer::after_millis(5).await;
+        Timer::after_millis(500).await;
     }
 }
 
