@@ -79,6 +79,7 @@ int main()
     // LED2初始化
     LED_Init();
     INT8U err = 0;
+    OSInit();
     CommTxBuf = OSMemCreate(CommTxPart, 100, 32, &err);
     // opt是可选项，根据被置位的位来进行一些额外的操作，暂时没有用到
     (void)OSTaskCreate(test_task, (void *)0, &my_task_0[TASK_STACK_SIZE - 1u], 10);
@@ -105,7 +106,6 @@ int main()
     // OS启动
     OSStart();
     return 0;
-
 }
 
 // OS_TICKS_PER_SEC被设置为1000，因此每一个tick为1ms
@@ -117,10 +117,10 @@ void test_task(void *args)
         // led on
         LED_ON();
         // 延时5ms
-        OSTimeDly(5);
+        OSTimeDly(500);
         // led off
         LED_OFF();
-        OSTimeDly(5);
+        OSTimeDly(500);
     }
 }
 

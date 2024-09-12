@@ -59,6 +59,7 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 _estack = ORIGIN(RAM) + _Min_Heap_Size + _Min_Stack_Size;    /* end of RAM */
 
 /* Specify the memory areas */
+/* change the RAM SIZE */ 
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 96K

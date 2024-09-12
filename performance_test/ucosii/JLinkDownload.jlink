@@ -1,5 +1,5 @@
 h
-loadfile /time_performance.bin 0x08000000
+loadfile build/space_performance.bin 0x08000000
 r
 g
 exit

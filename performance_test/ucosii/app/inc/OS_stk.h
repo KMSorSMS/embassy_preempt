@@ -3,7 +3,7 @@
 #include "os_cpu.h"
 #include "ucos_ii.h"
 // 任务栈的大小设置为同一个值（因为任务的内容几乎没有区别）
-#define TASK_STACK_SIZE 256
+#define TASK_STACK_SIZE 18
 OS_STK my_task_0[TASK_STACK_SIZE];
 OS_STK my_task_1[TASK_STACK_SIZE];
 OS_STK my_task_2[TASK_STACK_SIZE];
