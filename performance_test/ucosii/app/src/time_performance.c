@@ -75,12 +75,12 @@ void test_task(void *args)
         OSSemPend(bottom_sem, 0, &err);
         interrupt_pin_low();
         thread_pin_high();
-        OSTimeDly(5); //delay 5 ms
+        OSTimeDly(50); //delay 5 ms
         thread_pin_low();
         OSSemPend(bottom_sem, 0, &err);
         interrupt_pin_low();
         thread_pin_high();
-        OSTimeDly(5); //delay 5 ms
+        OSTimeDly(50); //delay 5 ms
     }
 }
 
@@ -100,9 +100,7 @@ void task2(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(5); //delay 5 ms
-        delay(BLOCK_TIME);
-        OSTimeDly(5); //delay 5 ms
+        OSTimeDly(10); //delay 5 ms
     }
 }
 
@@ -111,9 +109,7 @@ void task3(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(5); //delay 5 ms
-        delay(BLOCK_TIME);
-        OSTimeDly(5); //delay 5 ms
+        OSTimeDly(20); //delay 5 ms
     }
 }
 void task4(void *args)
@@ -121,9 +117,7 @@ void task4(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(5); //delay 5 ms
-        delay(BLOCK_TIME);
-        OSTimeDly(5); //delay 5 ms
+        OSTimeDly(30); //delay 5 ms
     }
 }
 
@@ -132,9 +126,7 @@ void task5(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(5); //delay 5 ms
-        delay(BLOCK_TIME);
-        OSTimeDly(5); //delay 5 ms
+        OSTimeDly(40); //delay 5 ms
     }
 }
 
@@ -158,12 +150,12 @@ int main(){
     // 创建两个个自己的任务
     // pnext用于指向任务扩展部分，暂时没有用到
     // opt是可选项，根据被置位的位来进行一些额外的操作，暂时没有用到
-    (void)OSTaskCreate(test_task, (void *)0, &my_task_0[TASK_STACK_SIZE - 1u], 15);
-    (void)OSTaskCreate(task1, (void *)0, &my_task_1[TASK_STACK_SIZE - 1u], 16);
-    (void)OSTaskCreate(task2, (void *)0, &my_task_2[TASK_STACK_SIZE - 1u], 17);
-    (void)OSTaskCreate(task3, (void *)0, &my_task_3[TASK_STACK_SIZE- 1u], 18);
-    (void)OSTaskCreate(task4, (void *)0, &my_task_4[TASK_STACK_SIZE- 1u], 19);
-    (void)OSTaskCreate(task5, (void *)0, &my_task_5[TASK_STACK_SIZE- 1u], 20);
+    (void)OSTaskCreate(test_task, (void *)0, &my_task_0[TASK_STACK_SIZE - 1u], 10);
+    (void)OSTaskCreate(task1, (void *)0, &my_task_1[TASK_STACK_SIZE - 1u], 15);
+    (void)OSTaskCreate(task2, (void *)0, &my_task_2[TASK_STACK_SIZE - 1u], 14);
+    (void)OSTaskCreate(task3, (void *)0, &my_task_3[TASK_STACK_SIZE- 1u], 13);
+    (void)OSTaskCreate(task4, (void *)0, &my_task_4[TASK_STACK_SIZE- 1u], 12);
+    (void)OSTaskCreate(task5, (void *)0, &my_task_5[TASK_STACK_SIZE- 1u], 11);
 
     // OS启动
     OSStart();

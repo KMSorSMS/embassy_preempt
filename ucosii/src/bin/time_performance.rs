@@ -72,21 +72,14 @@ async fn task1(_args: *mut c_void) {
 // 用于模拟多任务执行环境
 async fn task2(_args: *mut c_void) {
     loop {
-        task_pin_low(2);
+        critical_section::with(|_| task_pin_low(2));
         delay(BLOCK_TIME);
         // Timer::after_millis(10).await;
         #[cfg(feature = "alarm_test")]
         trace!("the task2");
         delay(BLOCK_TIME);
-        task_pin_high(2);
-        let timer10 = Timer::after_millis(10);
-        #[cfg(feature = "alarm_test")]
-        {
-            // 打印变量地址
-            trace!("the address of task2 timer10: {:?}", &timer10 as *const _);
-        }
-
-        timer10.await;
+        critical_section::with(|_| task_pin_high(2));
+        Timer::after_millis(5).await;
     }
 }
 
@@ -102,11 +95,7 @@ async fn task3(_args: *mut c_void) {
         task_pin_high(3);
         #[cfg(feature = "alarm_test")]
         trace!("the task3");
-        let timer20 = Timer::after_millis(25);
-        #[cfg(feature = "alarm_test")]
-        // 打印变量地址
-        trace!("the address of task3 timer20: {:?}", &timer20 as *const _);
-        timer20.await;
+        Timer::after_millis(20).await;
     }
 }
 
@@ -120,11 +109,7 @@ async fn task4(_args: *mut c_void) {
         trace!("the task4");
         delay(BLOCK_TIME);
         task_pin_high(4);
-        let timer80 = Timer::after_millis(50);
-        #[cfg(feature = "alarm_test")]
-        // 打印变量地址
-        trace!("the address of task4 timer80: {:?}", &timer80 as *const _);
-        timer80.await;
+        Timer::after_millis(8).await;
     }
 }
 
@@ -138,11 +123,7 @@ async fn task5(_args: *mut c_void) {
         trace!("the task5");
         delay(BLOCK_TIME);
         task_pin_high(5);
-        let timer30 = Timer::after_millis(100);
-        #[cfg(feature = "alarm_test")]
-        // 打印变量地址
-        trace!("the address of task5 timer30: {:?}", &timer30 as *const _);
-        timer30.await;
+        Timer::after_millis(10).await;
     }
 }
 

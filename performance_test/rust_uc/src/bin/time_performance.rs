@@ -12,7 +12,7 @@ use ucosii::os_time::timer::Timer;
 use ucosii::pac::{gpio, GPIOA, RCC};
 use ucosii::port::bottom_driver::Bottom::bottom;
 
-const BLOCK_TIME: usize = 1;
+const BLOCK_TIME: usize = 2;
 
 
 // use ucosii::{self as _};
@@ -70,9 +70,7 @@ async fn task1(_args: *mut c_void) {
 async fn task2(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(100).await;
-        delay(BLOCK_TIME);
-        Timer::after_millis(100).await;
+        Timer::after_millis(10).await;
     }
 }
 
@@ -80,9 +78,7 @@ async fn task2(_args: *mut c_void) {
 async fn task3(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(2000).await;
-        delay(BLOCK_TIME);
-        Timer::after_millis(2000).await;
+        Timer::after_millis(20).await;
     }
 }
 
@@ -90,9 +86,7 @@ async fn task3(_args: *mut c_void) {
 async fn task4(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(3000).await;
-        delay(BLOCK_TIME);
-        Timer::after_millis(3000).await;
+        Timer::after_millis(30).await;
     }
 }
 
@@ -100,9 +94,7 @@ async fn task4(_args: *mut c_void) {
 async fn task5(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(4000).await;
-        delay(BLOCK_TIME);
-        Timer::after_millis(4000).await;
+        Timer::after_millis(40).await;
     }
 }
 
@@ -237,7 +229,7 @@ pub fn delay(time: usize) {
             "cmp r0, r2",
             "blt 1b",
             in("r2") time,
-            in("r3") 8000/8,
+            in("r3") 800000/8,
         )
     }
 }

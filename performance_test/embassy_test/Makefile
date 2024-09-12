@@ -145,6 +145,6 @@ defmt-lib:
 liam_defmt:
 	zsh -c "nc localhost $(PORT) | defmt-print -e $(liam_FILE_ELF) "
 liam_run:
-	cargo rb $(liam_TARGET) --features "defmt"
+	cargo rb $(liam_TARGET) 
 liam_run_release:
-	cargo rrb $(liam_TARGET)
+	cargo rrb $(liam_TARGET) 
