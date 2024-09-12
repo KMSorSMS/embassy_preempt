@@ -7,7 +7,7 @@ use core::arch::asm;
 use core::ffi::c_void;
 
 #[cfg(feature = "alarm_test")]
-use defmt::{info,trace};
+use defmt::trace;
 use ucosii::os_core::{OSInit, OSStart};
 use ucosii::os_task::AsyncOSTaskCreate;
 use ucosii::os_time::timer::Timer;
