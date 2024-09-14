@@ -71,8 +71,8 @@ CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 LDSCRIPT = STM32F401RETx_FLASH.ld
 
 # libraries
-LIBS = -lc -lm -lnosys -lucosii
-LIBDIR = -L../ucosii/target/thumbv7em-none-eabi/release/
+LIBS = -lc -lm -lnosys -lembassy_preempt
+LIBDIR = -L../embassy_preempt/target/thumbv7em-none-eabi/release/
 LDFLAGS = $(MCU) -specs=nano.specs -T$(LDSCRIPT) $(LIBDIR) $(LIBS) -Wl,-Map=$(BUILD_DIR)/$(TARGET).map,--cref -Wl,--gc-sections
 
 # default action: build all

@@ -8,15 +8,15 @@ use core::ffi::c_void;
 
 #[cfg(feature = "alarm_test")]
 use defmt::trace;
-use ucosii::os_core::{OSInit, OSStart};
-use ucosii::os_task::AsyncOSTaskCreate;
-use ucosii::os_time::timer::Timer;
-use ucosii::pac::{gpio, GPIOA, RCC};
-use ucosii::port::bottom_driver::Bottom::bottom;
+use embassy_preempt::os_core::{OSInit, OSStart};
+use embassy_preempt::os_task::AsyncOSTaskCreate;
+use embassy_preempt::os_time::timer::Timer;
+use embassy_preempt::pac::{gpio, GPIOA, RCC};
+use embassy_preempt::port::bottom_driver::Bottom::bottom;
 
 const BLOCK_TIME: usize = 1;
 
-// use ucosii::{self as _};
+// use embassy_preempt::{self as _};
 
 #[cortex_m_rt::entry]
 fn test_time_performance() -> ! {

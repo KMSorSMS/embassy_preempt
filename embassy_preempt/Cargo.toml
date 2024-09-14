@@ -6,7 +6,7 @@ repository = "https://github.com/KMSorSMS/embassy_preempt"
 license = "MIT OR Apache-2.0"
 
 [package]
-name = "ucosii"
+name = "embassy_preempt"
 version.workspace = true
 authors.workspace = true
 edition.workspace = true

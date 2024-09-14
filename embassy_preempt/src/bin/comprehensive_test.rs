@@ -6,14 +6,14 @@ use core::ffi::c_void;
 
 #[cfg(feature = "defmt")]
 use defmt::info;
-use ucosii::app::led::{LED_Init, LED_OFF, LED_ON};
+use embassy_preempt::app::led::{LED_Init, LED_OFF, LED_ON};
 // <- derive attribute
-use ucosii::os_core::{OSInit, OSStart};
-use ucosii::os_task::{AsyncOSTaskCreate, SyncOSTaskCreate};
-// use ucosii::os_time::blockdelay::delay;
-use ucosii::os_time::timer::Timer;
-use ucosii::os_time::OSTimeDly;
-// use ucosii::{self as _};
+use embassy_preempt::os_core::{OSInit, OSStart};
+use embassy_preempt::os_task::{AsyncOSTaskCreate, SyncOSTaskCreate};
+// use embassy_preempt::os_time::blockdelay::delay;
+use embassy_preempt::os_time::timer::Timer;
+use embassy_preempt::os_time::OSTimeDly;
+// use embassy_preempt::{self as _};
 
 // the unit is tick
 // test long TIME delay

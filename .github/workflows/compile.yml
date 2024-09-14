@@ -1,0 +1,11 @@
+name: embassy_preempt compile
+on: [push]
+jobs:
+  Basic-Compile-stm32f401:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: compile embassy_preempt_lib stm32f401re
+        run: |
+          cd embassy_preempt_lib
+          cargo build --release --features stm32f401re

@@ -7,11 +7,11 @@ use core::ffi::c_void;
 #[cfg(feature = "defmt")]
 use defmt::info;
 // <- derive attribute
-use ucosii::os_core::{OSInit, OSStart};
-use ucosii::os_task::{AsyncOSTaskCreate, SyncOSTaskCreate};
-use ucosii::os_time::blockdelay::delay;
-use ucosii::os_time::timer::Timer;
-// use ucosii::{self as _};
+use embassy_preempt::os_core::{OSInit, OSStart};
+use embassy_preempt::os_task::{AsyncOSTaskCreate, SyncOSTaskCreate};
+use embassy_preempt::os_time::blockdelay::delay;
+use embassy_preempt::os_time::timer::Timer;
+// use embassy_preempt::{self as _};
 
 const LONG_TIME: usize = 10;
 const MID_TIME: usize = 5;
