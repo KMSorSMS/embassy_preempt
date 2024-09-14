@@ -212,7 +212,7 @@ struct UcStk {
     pc: u32,
     xpsr: u32,
 }
-const CONTEXT_STACK_SIZE: usize = 16;
+const CONTEXT_STACK_SIZE: usize = 17;
 
 #[no_mangle]
 #[inline]
@@ -232,7 +232,7 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
     let ptos = stk_ref.as_ptr() as *mut usize;
     // do align with 8 and move the stack pointer down an align size
     let mut ptos = ((unsafe { ptos.offset(1) } as usize) & 0xFFFFFFF8) as *mut usize;
-    ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize + 1) as isize) };
+    ptos = unsafe { ptos.offset(-(CONTEXT_STACK_SIZE as isize) as isize) };
     let psp = ptos as *mut UcStk;
     // initialize the stack
     unsafe {

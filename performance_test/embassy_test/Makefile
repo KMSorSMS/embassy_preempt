@@ -7,7 +7,7 @@ PORT := 8765
 TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # space_performance
 # time_performance 
-TARGET := space_performance
+TARGET := time_performance
 liam_TARGET := space_performance
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE

@@ -68,49 +68,11 @@ async fn main(spawner: Spawner) {
     spawner.spawn(task18()).unwrap();
     spawner.spawn(task19()).unwrap();
     spawner.spawn(task20()).unwrap();
-    spawner.spawn(task21()).unwrap();
-    spawner.spawn(task22()).unwrap();
-    spawner.spawn(task23()).unwrap();
-    spawner.spawn(task24()).unwrap();
-    spawner.spawn(task25()).unwrap();
-    spawner.spawn(task26()).unwrap();
-    spawner.spawn(task27()).unwrap();
-    spawner.spawn(task28()).unwrap();
-    spawner.spawn(task29()).unwrap();
-    spawner.spawn(task30()).unwrap();
-    spawner.spawn(task31()).unwrap();
-    spawner.spawn(task32()).unwrap();
-    spawner.spawn(task33()).unwrap();
-    spawner.spawn(task34()).unwrap();
-    spawner.spawn(task35()).unwrap();
-    spawner.spawn(task36()).unwrap();
-    spawner.spawn(task37()).unwrap();
-    spawner.spawn(task38()).unwrap();
-    spawner.spawn(task39()).unwrap();
-    spawner.spawn(task40()).unwrap();
-    spawner.spawn(task41()).unwrap();
-    spawner.spawn(task42()).unwrap();
-    spawner.spawn(task43()).unwrap();
-    spawner.spawn(task44()).unwrap();
-    spawner.spawn(task45()).unwrap();
-    spawner.spawn(task46()).unwrap();
-    spawner.spawn(task47()).unwrap();
-    spawner.spawn(task48()).unwrap();
-    spawner.spawn(task49()).unwrap();
-    spawner.spawn(task50()).unwrap();
-    spawner.spawn(task51()).unwrap();
-    spawner.spawn(task52()).unwrap();
-    spawner.spawn(task53()).unwrap();
-    spawner.spawn(task54()).unwrap();
-    spawner.spawn(task55()).unwrap();
-    spawner.spawn(task56()).unwrap();
-    spawner.spawn(task57()).unwrap();
-    spawner.spawn(task58()).unwrap();
-    spawner.spawn(task59()).unwrap();
-    spawner.spawn(task60()).unwrap();
-    spawner.spawn(task61()).unwrap();
-    spawner.spawn(task62()).unwrap();
-    spawner.spawn(task63()).unwrap();
+
+    // 循环创建剩下42个任务
+    for _ in 0..42 {
+        spawner.spawn(task1()).unwrap();
+    }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
@@ -119,14 +81,14 @@ async fn test_task(mut led: Output<'static>) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led.set_high();
-        Timer::after_millis(500).await;
+        Timer::after_millis(50).await;
         led.set_low();
-        Timer::after_millis(500).await;
+        Timer::after_millis(50).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-#[embassy_executor::task]
+#[embassy_executor::task(pool_size = 43)]
 async fn task1() {
     loop {
         // 插入阻塞等待(阻塞3s)
