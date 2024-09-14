@@ -10,13 +10,13 @@
   "rust-analyzer.cargo.noDefaultFeatures": false,
   "rust-analyzer.showUnlinkedFileNotification": false,
   "rust-analyzer.linkedProjects": [
-    "performance_test/embassy_test/Cargo.toml",
+    // "performance_test/embassy_test/Cargo.toml",
     // "performance_test/rust_uc/Cargo.toml",
-    // "ucosii/Cargo.toml",
+    "ucosii/Cargo.toml",
 
   ],
   "rust-analyzer.cargo.features": [
-    // "stm32f401re",
+    "stm32f401re",
     // "alarm_test",
   ],
   "liveshare.languages.allowGuestCommandControl": true,
