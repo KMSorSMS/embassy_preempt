@@ -68,6 +68,11 @@ async fn main(spawner: Spawner) {
     spawner.spawn(task18()).unwrap();
     spawner.spawn(task19()).unwrap();
     spawner.spawn(task20()).unwrap();
+
+    // 循环创建剩下42个任务
+    for _ in 0..42 {
+        spawner.spawn(task1()).unwrap();
+    }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
@@ -76,14 +81,14 @@ async fn test_task(mut led: Output<'static>) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led.set_high();
-        Timer::after_millis(5).await;
+        Timer::after_millis(50).await;
         led.set_low();
-        Timer::after_millis(5).await;
+        Timer::after_millis(50).await;
     }
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
-#[embassy_executor::task]
+#[embassy_executor::task(pool_size = 43)]
 async fn task1() {
     loop {
         // 插入阻塞等待(阻塞3s)

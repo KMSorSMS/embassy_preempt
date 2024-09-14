@@ -102,6 +102,7 @@ int main()
     (void)OSTaskCreate(task18, (void *)0, &my_task_18[TASK_STACK_SIZE - 1u], 28);
     (void)OSTaskCreate(task19, (void *)0, &my_task_19[TASK_STACK_SIZE - 1u], 29);
     (void)OSTaskCreate(task20, (void *)0, &my_task_20[TASK_STACK_SIZE - 1u], 30);
+    
     // OS启动
     OSStart();
     return 0;

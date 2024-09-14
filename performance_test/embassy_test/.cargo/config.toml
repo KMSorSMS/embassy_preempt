@@ -14,5 +14,5 @@ target = "thumbv7em-none-eabi"
 rb = "run --bin"
 rrb = "run --release --bin"
 [env]
-EMBASSY_EXECUTOR_TASK_ARENA_SIZE="3072"
+EMBASSY_EXECUTOR_TASK_ARENA_SIZE="10240"
 DEFMT_LOG = "info" # <- can change to info, warn, or error. to print info
