@@ -58,6 +58,7 @@ defmt-test:
 build:$(OBJ_FILES)
 	cargo build $(MODE_ARG)
 	$(SZ) $(FILE_ELF)
+	objdump -h $(FILE_ELF)
 # --bin $(TARGET) 
 # --features "defmt"
 
@@ -99,7 +100,7 @@ download: build bin
 	openocd -f interface/stlink.cfg -f target/stm32f4x.cfg -c init -c "halt" -c "flash write_image erase $(FILE_BIN) 0x8000000" -c "reset" -c "shutdown"
 Jdownload: build bin
 # 生成脚本
-	@echo "h\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
+	@echo "h\nerase 0x08000000 0x0807FFFF\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
 	JLinkExe -device $(DEVICE) -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkDownload.jlink
 Jdebug: Jdownload JGDBServer
 	tmux new-session -d \
@@ -147,4 +148,4 @@ liam_defmt:
 liam_run:
 	cargo rb $(liam_TARGET) 
 liam_run_release:
-	cargo rrb $(liam_TARGET) 
+	cargo rrb $(liam_TARGET)

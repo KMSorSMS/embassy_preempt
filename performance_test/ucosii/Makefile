@@ -3,8 +3,6 @@ TARGET ?= space_performance
 
 UBUNTU_VERSION := $(shell lsb_release -rs)
 
-FILE_BIN := $(BUILD_DIR)/$(TARGET).bin
-
 DEVICE = STM32F401RE
 
 # 根据 TEST 变量的值设置 EXCLUDE_FILE 变量
@@ -15,9 +13,11 @@ else ifeq ($(TARGET), time_performance)
 endif
 
 DEBUG = 1
-OPT = -O0
+OPT = -O3
 # Build path
 BUILD_DIR = build
+FILE_BIN := $(BUILD_DIR)/$(TARGET).bin
+FILE_ELF := $(BUILD_DIR)/$(TARGET).elf
 C_SOURCES = $(shell find app/src/ -name '*.c' ! -name '$(EXCLUDE_FILE).c')  # 添加 app/src 目录下的所有 .c 文件
 C_SOURCES += $(wildcard app/HARDWARE/*.c)  # 添加 app/HARDWARE/*.c 中的所有 .c 文件
 # C_SOURCES += $(shell find Trace -name '*.c') # 添加 Trace 目录下的所有 .c 文件
@@ -29,7 +29,7 @@ ASM_SOURCES +=  \
 ports/os_cpu_a.S \
 # SEGGER/SEGGER_RTT_ASM_ARMv7M.S \
 
-# ports/os_cpu_a.S 
+# ports/os_cpu_a.S
 
 #######################################
 # binaries
@@ -178,7 +178,7 @@ Jdownload:
 	@echo "h\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
 	JLinkExe -device $(DEVICE) -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkDownload.jlink
 Jdebug: Jdownload JGDBServer
-	tmux new-session -d "RUST_GDB=/usr/bin/gdb-multiarch rust-gdb -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
+	tmux new-session -d "gdb-multiarch -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \
 	-ex 'dashboard -layout assembly !breakpoints !expressions !history memory registers source !stack !threads variables' \
 	-ex 'source ./.gdbinit' -ex 'monitor reset' -ex 'source ./bp.gdb'" && \
 	tmux -2 attach-session -d

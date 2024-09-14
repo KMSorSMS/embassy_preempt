@@ -7,5 +7,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: compile embassy_preempt_lib stm32f401re
         run: |
-          cd embassy_preempt_lib
+          cd embassy_preempt
+          cargo install flip-link
           cargo build --release --features stm32f401re
