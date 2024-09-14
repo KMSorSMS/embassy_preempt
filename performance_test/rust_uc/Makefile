@@ -58,6 +58,7 @@ defmt-test:
 build:$(OBJ_FILES)
 	cargo build $(MODE_ARG)
 	$(SZ) $(FILE_ELF)
+	objdump -h $(FILE_ELF)
 # --bin $(TARGET)
 # --features "defmt"
 

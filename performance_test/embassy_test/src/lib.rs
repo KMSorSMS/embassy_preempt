@@ -4,6 +4,8 @@ use stm32_metapac as _;
 use embassy_executor as _;
 #[cfg(feature = "defmt")]
 use {panic_probe as _, defmt_rtt as _ };
+use cortex_m_semihosting::debug;
+
 
 // same panicking *behavior* as `panic-probe` but doesn't print a panic message
 // this prevents the panic message being printed *twice* when `defmt::panic` is invoked
@@ -27,5 +29,6 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
 #[cortex_m_rt::exception]
 unsafe fn HardFault(_frame: &cortex_m_rt::ExceptionFrame) -> ! {
     loop {
+        debug::exit(debug::EXIT_FAILURE);
     }
 }

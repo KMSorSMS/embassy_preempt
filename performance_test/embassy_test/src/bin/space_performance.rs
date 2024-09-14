@@ -68,6 +68,49 @@ async fn main(spawner: Spawner) {
     spawner.spawn(task18()).unwrap();
     spawner.spawn(task19()).unwrap();
     spawner.spawn(task20()).unwrap();
+    spawner.spawn(task21()).unwrap();
+    spawner.spawn(task22()).unwrap();
+    spawner.spawn(task23()).unwrap();
+    spawner.spawn(task24()).unwrap();
+    spawner.spawn(task25()).unwrap();
+    spawner.spawn(task26()).unwrap();
+    spawner.spawn(task27()).unwrap();
+    spawner.spawn(task28()).unwrap();
+    spawner.spawn(task29()).unwrap();
+    spawner.spawn(task30()).unwrap();
+    spawner.spawn(task31()).unwrap();
+    spawner.spawn(task32()).unwrap();
+    spawner.spawn(task33()).unwrap();
+    spawner.spawn(task34()).unwrap();
+    spawner.spawn(task35()).unwrap();
+    spawner.spawn(task36()).unwrap();
+    spawner.spawn(task37()).unwrap();
+    spawner.spawn(task38()).unwrap();
+    spawner.spawn(task39()).unwrap();
+    spawner.spawn(task40()).unwrap();
+    spawner.spawn(task41()).unwrap();
+    spawner.spawn(task42()).unwrap();
+    spawner.spawn(task43()).unwrap();
+    spawner.spawn(task44()).unwrap();
+    spawner.spawn(task45()).unwrap();
+    spawner.spawn(task46()).unwrap();
+    spawner.spawn(task47()).unwrap();
+    spawner.spawn(task48()).unwrap();
+    spawner.spawn(task49()).unwrap();
+    spawner.spawn(task50()).unwrap();
+    spawner.spawn(task51()).unwrap();
+    spawner.spawn(task52()).unwrap();
+    spawner.spawn(task53()).unwrap();
+    spawner.spawn(task54()).unwrap();
+    spawner.spawn(task55()).unwrap();
+    spawner.spawn(task56()).unwrap();
+    spawner.spawn(task57()).unwrap();
+    spawner.spawn(task58()).unwrap();
+    spawner.spawn(task59()).unwrap();
+    spawner.spawn(task60()).unwrap();
+    spawner.spawn(task61()).unwrap();
+    spawner.spawn(task62()).unwrap();
+    spawner.spawn(task63()).unwrap();
 }
 
 // 用于模拟多任务执行环境，并且增加对比度
@@ -76,9 +119,9 @@ async fn test_task(mut led: Output<'static>) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led.set_high();
-        Timer::after_millis(5).await;
+        Timer::after_millis(500).await;
         led.set_low();
-        Timer::after_millis(5).await;
+        Timer::after_millis(500).await;
     }
 }
 
@@ -303,6 +346,458 @@ async fn task20() {
     }
 }
 
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task21() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task22() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task23() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task24() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task25() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task26() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task27() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task28() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task29() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task30() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task31() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task32() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task33() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task34() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task35() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task36() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task37() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task38() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task39() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task40() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task41() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task42() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task43() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task44() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task45() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task46() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task47() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task48() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task49() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task50() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task51() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task52() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task53() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task54() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task55() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task56() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task57() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task58() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task59() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task60() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task61() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task62() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
+// 用于模拟多任务执行环境，并且增加对比度
+#[embassy_executor::task]
+async fn task63() {
+    loop {
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+        delay(BLOCK_TIME);
+        Timer::after_millis(5).await;
+    }
+}
 /// block delay
 #[inline]
 pub fn delay(time: usize) {
