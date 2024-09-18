@@ -12,7 +12,7 @@
   "rust-analyzer.linkedProjects": [
     // "performance_test/embassy_test/Cargo.toml",
     // "performance_test/rust_uc/Cargo.toml",
-    "ucosii/Cargo.toml",
+    "embassy_preempt/Cargo.toml",
 
   ],
   "rust-analyzer.cargo.features": [
