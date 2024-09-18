@@ -24,6 +24,7 @@ use state::State;
 use time_driver::{AlarmHandle, Driver, RTC_DRIVER};
 
 pub use self::waker::task_from_waker;
+use crate::app::led::{stack_pin_high, stack_pin_low};
 use crate::arena::ARENA;
 use crate::cfg::*;
 use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, TASK_STACK_SIZE};
@@ -597,10 +598,16 @@ impl SyncExecutor {
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
+            
+            stack_pin_high();
+
             // by noah: *TEST*. Maybe when alloc_stack is called, we need the cs
             let mut stk = alloc_stack(layout);
             // then we need to mock the stack for the task(the stk will change during the mock)
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
+
+            stack_pin_low();
+
             task.OSTCBStkPtr = Some(stk);
         }
         // restore the task from stk
