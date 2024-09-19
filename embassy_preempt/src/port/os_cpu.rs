@@ -60,19 +60,10 @@ fn PendSV() {
     #[cfg(feature = "defmt")]
     info!("PendSV");
     // then switch the task
-    #[cfg(feature = "alarm_test")]
-    trace!(
-        "change from {:?} to {:?}",
-        GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut(),
-        GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
-    );
-    if GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
-        == GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut()
-    {
-        #[cfg(feature = "defmt")]
-        info!("unreach");
-        #[cfg(feature = "defmt")]
-        trace!("the highrdy is the same as the current, no need to switch");
+    let global_executor = GlobalSyncExecutor.as_ref().unwrap();
+    let prio_cur = global_executor.OSPrioCur.get_unmut();
+    let prio_highrdy = global_executor.OSPrioHighRdy.get_unmut();
+    if prio_highrdy == prio_cur {
         // we will reset the msp to the original
         let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
         unsafe {
@@ -90,21 +81,14 @@ fn PendSV() {
             )
         }
     }
-    let stk_ptr: crate::heap::stack_allocator::OS_STK_REF =
-        GlobalSyncExecutor.as_ref().unwrap().OSTCBHighRdy.get_mut().take_stk();
+    let stk_ptr: crate::heap::stack_allocator::OS_STK_REF = global_executor.OSTCBHighRdy.get_mut().take_stk();
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
     // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
     let mut old_stk = PROGRAM_STACK.swap(stk_ptr);
+    let tcb_cur = global_executor.OSTCBCur.get_mut();
     // by noah: *TEST*
     // let TCB: &OS_TCB;
-    if !*GlobalSyncExecutor
-        .as_ref()
-        .unwrap()
-        .OSTCBCur
-        .get_unmut()
-        .is_in_thread_poll
-        .get_unmut()
-    {
+    if !*tcb_cur.is_in_thread_poll.get_unmut() {
         // this situation is in interrupt poll
         #[cfg(feature = "defmt")]
         trace!("need to save the context");
@@ -122,19 +106,8 @@ fn PendSV() {
         old_stk.STK_REF = NonNull::new(old_stk_ptr as *mut OS_STK).unwrap();
         #[cfg(feature = "defmt")]
         info!("in pendsv, the old stk ptr is {:?}", old_stk_ptr);
-        // GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut().set_stk(old_stk)
-        let task_cur = GlobalSyncExecutor.as_ref().unwrap().OSTCBCur.get_mut();
-        task_cur.set_stk(old_stk);
-        // get the TCB
-        // unsafe {
-        //     TCB = task_cur.ptr.unwrap().as_ref();
-        // }
-        // by noah: judge whether the task stk is none
-        if task_cur.is_stk_none() {
-            #[cfg(feature = "defmt")]
-            trace!("the task stk is none");
-        }
-    } else if *GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut() != OS_TASK_IDLE_PRIO {
+        tcb_cur.set_stk(old_stk);
+    } else if *prio_cur != OS_TASK_IDLE_PRIO {
         // the situation is in poll
         drop(old_stk);
     } else {
@@ -142,15 +115,9 @@ fn PendSV() {
     }
     // set the current task to be the highrdy
     unsafe {
-        GlobalSyncExecutor.as_ref().unwrap().set_cur_highrdy();
+        global_executor.set_cur_highrdy();
         // set the current task's is_in_thread_poll to true
-        GlobalSyncExecutor
-            .as_ref()
-            .unwrap()
-            .OSTCBCur
-            .get_mut()
-            .is_in_thread_poll
-            .set(true);
+        tcb_cur.is_in_thread_poll.set(true);
     }
     #[cfg(feature = "defmt")]
     info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
