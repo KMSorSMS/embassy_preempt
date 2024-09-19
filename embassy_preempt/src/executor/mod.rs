@@ -607,10 +607,10 @@ impl SyncExecutor {
             let mut stk: OS_STK_REF;
             if *self.OSPrioCur.get_unmut() == OS_TASK_IDLE_PRIO {
                 stack_pin_high();
-                #[cfg(feature = "alarm_test")]
-                {
-                    info!("the cur task is idle and optimize change");
-                }
+                // #[cfg(feature = "alarm_test")]
+                // {
+                //     info!("the cur task is idle and optimize change");
+                // }
                 // if is idle, we don't need to alloc stack                // if is idle, we don't need to alloc stack,just use the idle stack
                 let mut program_stk = PROGRAM_STACK.exclusive_access();
                 program_stk.STK_REF = NonNull::new(

@@ -27,7 +27,7 @@ run_test() {
     MAX_WAIT=3
     WAITED=0
     # 单次测试最长执行时间
-    MAX_TIME=10
+    MAX_TIME=50
     # 记录总时间
     TOTAL_TIME=0
     # # 查找并终止probe-rs run进程
@@ -143,7 +143,8 @@ tests=(
 # hardware_test
 # preempt_basic
 # comprehensive_test
-scheduling2_test
+# scheduling2_test
+"time_performance"
 )
 
 # 循环遍历数组，执行测试

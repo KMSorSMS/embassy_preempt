@@ -14,7 +14,7 @@ TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # bottom_test
 # time_performance
 # stack_cost_test
-TARGET := time_performance
+TARGET := sync_bottom_test
 liam_TARGET := time_performance
 TEST = time_performance
 TEST_FILE = target/$(PLATFORM)/$(MODE)/$(TEST)

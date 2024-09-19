@@ -5,8 +5,8 @@ use core::mem;
 use core::ptr::NonNull;
 
 use cortex_m_rt::exception;
-#[cfg(feature = "alarm_test")]
-use defmt::trace;
+// #[cfg(feature = "alarm_test")]
+// use defmt::trace;
 #[cfg(feature = "defmt")]
 #[allow(unused_imports)]
 use defmt::{info, trace};

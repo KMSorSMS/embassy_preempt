@@ -31,15 +31,15 @@ impl Future for Timer {
     fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Self::Output> {
         if self.yielded_once && self.expires_at <= Instant::now() {
             self.yielded_once = false;
-            #[cfg(feature = "alarm_test")]
-            trace!("Timer expired");
+            // #[cfg(feature = "alarm_test")]
+            // trace!("Timer expired");
             Poll::Ready(())
         } else {
             // by noah:this func set the expire time of the task
             schedule_wake(self.expires_at.as_ticks(), cx.waker());
             self.yielded_once = true;
-            #[cfg(feature = "alarm_test")]
-            trace!("Set wake at {}", self.expires_at.as_ticks());
+            // #[cfg(feature = "alarm_test")]
+            // trace!("Set wake at {}", self.expires_at.as_ticks());
             Poll::Pending
         }
     }
@@ -108,9 +108,9 @@ impl Timer {
     #[inline]
     pub fn after_millis(millis: u64) -> Self {
         let tmp = Self::after(Duration::from_millis(millis));
-        #[cfg(feature = "alarm_test")]
         // 打印timer信息
-        trace!("the timer{:?}'s yield_once is {:?} , yield_once address is {}, timer_address is {}", millis, tmp.yielded_once, &tmp.yielded_once as *const _, &tmp as *const _);
+        // #[cfg(feature = "alarm_test")]
+        // trace!("the timer{:?}'s yield_once is {:?} , yield_once address is {}, timer_address is {}", millis, tmp.yielded_once, &tmp.yielded_once as *const _, &tmp as *const _);
         tmp
     }
 
