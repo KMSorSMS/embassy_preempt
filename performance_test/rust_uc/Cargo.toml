@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 cortex-m-rt = { version = "0.7",features = ["device"]}
-ucosii={ path="../../embassy_preempt", features=["memory-x","stm32f401re"] }
+embassy_preempt={ path="../../embassy_preempt", features=["memory-x","stm32f401re"] }
 cortex-m-semihosting = "0.5.0"
 
 [profile.release]
@@ -15,4 +15,4 @@ debug = 0
 
 [features]
 default = []
-defmt = ["ucosii/defmt"]
+defmt = ["embassy_preempt/defmt"]

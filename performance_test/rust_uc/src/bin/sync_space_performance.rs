@@ -4,11 +4,11 @@
 use core::arch::asm;
 use core::ffi::c_void;
 
-use ucosii::app::led::Pin_Init;
-use ucosii::os_core::{OSInit, OSStart};
-use ucosii::os_task::SyncOSTaskCreate;
-use ucosii::os_time::OSTimeDly;
-use ucosii::pac::{gpio, GPIOA, RCC};
+use embassy_preempt::app::led::Pin_Init;
+use embassy_preempt::os_core::{OSInit, OSStart};
+use embassy_preempt::os_task::SyncOSTaskCreate;
+use embassy_preempt::os_time::OSTimeDly;
+use embassy_preempt::pac::{gpio, GPIOA, RCC};
 const DELAY_TICK: u64 = 5 * 100;
 const BLOCK_TIME: usize = 1;
 
