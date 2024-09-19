@@ -67,7 +67,7 @@ test-run:
 	cargo test --package ucosii --test integration
 
 build:$(OBJ_FILES)
-	cargo build $(MODE_ARG)
+	cargo build $(MODE_ARG) --features "stm32f401re"
 # --features "defmt"
 
 liam_build_release:
