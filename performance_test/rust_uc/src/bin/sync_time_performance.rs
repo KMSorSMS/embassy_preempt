@@ -8,10 +8,8 @@ use core::ffi::c_void;
 
 use embassy_preempt::os_core::{OSInit, OSStart};
 use embassy_preempt::os_task::SyncOSTaskCreate;
-use embassy_preempt::os_time::timer::Timer;
 use embassy_preempt::os_time::OSTimeDly;
 use embassy_preempt::pac::{gpio, GPIOA, RCC};
-use embassy_preempt::port::bottom_driver::Bottom::bottom;
 use embassy_preempt::port::bottom_driver::OSWaitBot;
 
 const BLOCK_TIME: usize = 2;

@@ -60,9 +60,9 @@ async fn task1(_args: *mut c_void) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led_on();
-        Timer::after_millis(5 * 100).await;
+        Timer::after_millis(5 * 1000).await;
         led_off();
-        Timer::after_millis(5 * 100).await;
+        Timer::after_millis(5 * 1000).await;
     }
 }
 
@@ -70,7 +70,7 @@ async fn task1(_args: *mut c_void) {
 async fn task2(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(10).await;
+        Timer::after_millis(100).await;
     }
 }
 
@@ -78,7 +78,7 @@ async fn task2(_args: *mut c_void) {
 async fn task3(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(20).await;
+        Timer::after_millis(200).await;
     }
 }
 
@@ -86,7 +86,7 @@ async fn task3(_args: *mut c_void) {
 async fn task4(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(30).await;
+        Timer::after_millis(300).await;
     }
 }
 
@@ -94,7 +94,7 @@ async fn task4(_args: *mut c_void) {
 async fn task5(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(40).await;
+        Timer::after_millis(400).await;
     }
 }
 
@@ -160,26 +160,31 @@ pub fn pin_init() {
         // set mode as output
         v.set_moder(0, gpio::vals::Moder::OUTPUT);
         v.set_moder(1, gpio::vals::Moder::OUTPUT);
+        v.set_moder(4, gpio::vals::Moder::OUTPUT);
     });
     GPIOA.otyper().modify(|v| {
         // set output type as push-pull
         v.set_ot(0, gpio::vals::Ot::PUSHPULL);
         v.set_ot(1, gpio::vals::Ot::PUSHPULL);
+        v.set_ot(4, gpio::vals::Ot::PUSHPULL);
     });
     GPIOA.ospeedr().modify(|v| {
         // set output speed as high
         v.set_ospeedr(0, gpio::vals::Ospeedr::HIGHSPEED);
         v.set_ospeedr(1, gpio::vals::Ospeedr::HIGHSPEED);
+        v.set_ospeedr(4, gpio::vals::Ospeedr::HIGHSPEED);
     });
     GPIOA.pupdr().modify(|v| {
         // set pull-up/pull-down as no pull-up/pull-down
         v.set_pupdr(0, gpio::vals::Pupdr::FLOATING);
         v.set_pupdr(1, gpio::vals::Pupdr::FLOATING);
+        v.set_pupdr(4, gpio::vals::Pupdr::FLOATING);
     });
     GPIOA.odr().modify(|v| {
         // set output as low
         v.set_odr(0, gpio::vals::Odr::LOW);
         v.set_odr(1, gpio::vals::Odr::LOW);
+        v.set_odr(4, gpio::vals::Odr::LOW);
     });
 }
 

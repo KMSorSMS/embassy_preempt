@@ -9,7 +9,7 @@ TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # time_performance 
 # sync_space_performance
 TARGET := sync_time_performance
-liam_TARGET := space_performance
+liam_TARGET := sync_time_performance
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
 DEVICE = STM32F401RE
 MODE ?= release

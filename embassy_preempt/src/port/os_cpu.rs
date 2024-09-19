@@ -14,7 +14,7 @@ use defmt::{info, trace};
 use super::OS_STK;
 use crate::executor::GlobalSyncExecutor;
 use crate::heap::stack_allocator::{INTERRUPT_STACK, PROGRAM_STACK};
-use crate::ucosii::OS_TASK_IDLE_PRIO;
+// use crate::ucosii::OS_TASK_IDLE_PRIO;
 
 // use crate::ucosii::OSIdleCtr;
 // use core::sync::atomic::Ordering::Relaxed;
@@ -82,6 +82,7 @@ fn PendSV() {
         }
     }
     let stk_ptr: crate::heap::stack_allocator::OS_STK_REF = global_executor.OSTCBHighRdy.get_mut().take_stk();
+    let stk_heap_ref = stk_ptr.HEAP_REF;
     let program_stk_ptr = stk_ptr.STK_REF.as_ptr();
     // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
     let mut old_stk = PROGRAM_STACK.swap(stk_ptr);
@@ -107,7 +108,7 @@ fn PendSV() {
         #[cfg(feature = "defmt")]
         info!("in pendsv, the old stk ptr is {:?}", old_stk_ptr);
         tcb_cur.set_stk(old_stk);
-    } else if *prio_cur != OS_TASK_IDLE_PRIO {
+    } else if old_stk.HEAP_REF != stk_heap_ref {
         // the situation is in poll
         drop(old_stk);
     } else {
