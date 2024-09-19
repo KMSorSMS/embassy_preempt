@@ -636,9 +636,9 @@ fn OS_InitTaskIdle() {
                 trace!("task idle");
                 blockdelay::delay(1);
             }
-            // unsafe {
-            //     run_idle();
-            // }
+            unsafe {
+                run_idle();
+            }
         }
     };
     #[cfg(feature = "defmt")]

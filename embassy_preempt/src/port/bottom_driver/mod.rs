@@ -318,3 +318,33 @@ fn set_Interrupt() {
         NVIC::unmask(Interrupt::EXTI0);
     }
 }
+
+/// a safe interface of the bottom waiter
+pub fn OSWaitBot(){
+    unsafe{
+        bottom_waiter();
+    }
+}
+
+// sync bottom waiter
+pub(crate) unsafe fn bottom_waiter() {
+    // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
+    let executor = GlobalSyncExecutor.as_ref().unwrap();
+    let task = executor.OSTCBCur.get_mut();
+    // task.expires_at.set(RTC_DRIVER.now() + _ticks);
+    // set the bottom driver
+    critical_section::with(|_| {
+        executor.set_task_unready(*task);
+        BOT_DRIVER.set_task(*task);
+    });
+    // find the highrdy
+    if critical_section::with(|_| {
+        executor.set_highrdy();
+        executor.OSPrioHighRdy != executor.OSPrioCur
+    }) {
+        // call the interrupt poll
+        GlobalSyncExecutor.as_ref().unwrap().interrupt_poll();
+        #[cfg(feature = "defmt")]
+        trace!("end the delay");
+    }
+}
