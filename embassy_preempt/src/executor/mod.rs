@@ -582,7 +582,9 @@ impl SyncExecutor {
 
         #[cfg(feature = "defmt")]
         trace!("interrupt_poll");
-        self.OSTCBCur.get().is_in_thread_poll.set(false);
+        if *self.OSPrioCur.get_unmut() != OS_TASK_IDLE_PRIO {
+            self.OSTCBCur.get().is_in_thread_poll.set(false);
+        }
         let mut task = critical_section::with(|_| self.OSTCBHighRdy.get());
 
         // then we need to restore the highest priority task
@@ -598,15 +600,23 @@ impl SyncExecutor {
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
-            
+
             stack_pin_high();
 
             // by noah: *TEST*. Maybe when alloc_stack is called, we need the cs
-            let mut stk = alloc_stack(layout);
+            let mut stk: OS_STK_REF;
+            if *self.OSPrioCur.get_unmut() == OS_TASK_IDLE_PRIO {
+                // if is idle, we don't need to alloc stack,just use the idle stack
+                stk = self.OSTCBCur.get_mut().OSTCBStkPtr.take().unwrap();
+                stk.STK_REF = NonNull::new(stk.HEAP_REF.as_ptr().offset(stk.layout.size() as isize) as *mut OS_STK).unwrap();
+            } else {
+                stk = alloc_stack(layout);
+            }
+            stack_pin_low();
             // then we need to mock the stack for the task(the stk will change during the mock)
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
 
-            stack_pin_low();
+            // stack_pin_low();
 
             task.OSTCBStkPtr = Some(stk);
         }

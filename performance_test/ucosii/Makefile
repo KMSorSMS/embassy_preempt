@@ -13,7 +13,7 @@ else ifeq ($(TARGET), time_performance)
 endif
 
 DEBUG = 1
-OPT = -O3
+OPT = -O1
 # Build path
 BUILD_DIR = build
 FILE_BIN := $(BUILD_DIR)/$(TARGET).bin

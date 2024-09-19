@@ -13,8 +13,9 @@ TEST_ELF_NEW := target/thumbv7em-none-eabi/debug/integration
 # comprehensive_test
 # bottom_test
 # time_performance
+# stack_cost_test
 TARGET := bottom_test
-liam_TARGET := time_performance
+liam_TARGET := stack_cost_test
 TEST = time_performance
 TEST_FILE = target/$(PLATFORM)/$(MODE)/$(TEST)
 PLATFORM := $(shell sed -n 's/^target = "\(.*\)"/\1/p' .cargo/config.toml)
