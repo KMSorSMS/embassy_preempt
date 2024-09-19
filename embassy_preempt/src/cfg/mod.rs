@@ -14,6 +14,7 @@ pub const OS_MAX_MEM_PART: USIZE = 5;
 /// You can set it refer to the number of tasks in your application(OS_MAX_TASKS) and the number of system tasks(OS_N_SYS_TASKS).
 pub const OS_ARENA_SIZE: USIZE = 10240;
 /// output frequency of the Timer. frequency of the Systick(run on Timer)
+/// one tick is 10us
 pub const TICK_HZ: INT64U = 100_000;
 /// input frequency of the Timer, you should config it yourself(set the Hardware)
 pub const APB_HZ: INT64U = 84000000;
