@@ -1,6 +1,7 @@
 //! about the cpu
 
 use core::arch::asm;
+use core::mem;
 use core::ptr::NonNull;
 
 use cortex_m_rt::exception;
@@ -8,11 +9,12 @@ use cortex_m_rt::exception;
 use defmt::trace;
 #[cfg(feature = "defmt")]
 #[allow(unused_imports)]
-use defmt::{info,trace};
+use defmt::{info, trace};
 
 use super::OS_STK;
 use crate::executor::GlobalSyncExecutor;
 use crate::heap::stack_allocator::{INTERRUPT_STACK, PROGRAM_STACK};
+use crate::ucosii::OS_TASK_IDLE_PRIO;
 
 // use crate::ucosii::OSIdleCtr;
 // use core::sync::atomic::Ordering::Relaxed;
@@ -20,9 +22,7 @@ use crate::heap::stack_allocator::{INTERRUPT_STACK, PROGRAM_STACK};
 // use crate::heap::init_heap;
 
 /// finish the init part of the CPU/MCU
-pub fn OSInitHookBegin() {
-    
-}
+pub fn OSInitHookBegin() {}
 
 const NVIC_INT_CTRL: u32 = 0xE000ED04;
 const NVIC_PENDSVSET: u32 = 0x10000000;
@@ -61,7 +61,11 @@ fn PendSV() {
     info!("PendSV");
     // then switch the task
     #[cfg(feature = "alarm_test")]
-    trace!("change from {:?} to {:?}", GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut(), GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut());
+    trace!(
+        "change from {:?} to {:?}",
+        GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut(),
+        GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
+    );
     if GlobalSyncExecutor.as_ref().unwrap().OSPrioHighRdy.get_unmut()
         == GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut()
     {
@@ -130,9 +134,11 @@ fn PendSV() {
             #[cfg(feature = "defmt")]
             trace!("the task stk is none");
         }
-    } else {
+    } else if *GlobalSyncExecutor.as_ref().unwrap().OSPrioCur.get_unmut() != OS_TASK_IDLE_PRIO {
         // the situation is in poll
         drop(old_stk);
+    } else {
+        mem::forget(old_stk);
     }
     // set the current task to be the highrdy
     unsafe {

@@ -8,7 +8,7 @@ use core::ffi::c_void;
 
 #[cfg(feature = "alarm_test")]
 use defmt::trace;
-use embassy_preempt::app::led::Pin_Init;
+use embassy_preempt::app::led::{interrupt_pin_low, thread_pin_high, thread_pin_low, Pin_Init};
 use embassy_preempt::os_core::{OSInit, OSStart};
 use embassy_preempt::os_task::AsyncOSTaskCreate;
 use embassy_preempt::os_time::timer::Timer;
@@ -39,10 +39,20 @@ fn test_time_performance() -> ! {
 // 主要测试任务
 async fn test_task(_args: *mut c_void) {
     loop {
+        // set the thread pin low, indicating that the thread time test is finished
+        thread_pin_low();
         bottom::wait_for_rising_edge().await;
+        // set the interrupt pin low, indicating that the interrput and scheduling test is finished
+        interrupt_pin_low();
+        // set the thread pin high, indicating that the thread time test begins
+        thread_pin_high();
+
         // delay 5s
         Timer::after_millis(50).await;
+        thread_pin_low();
         bottom::wait_for_rising_edge().await;
+        interrupt_pin_low();
+        thread_pin_high();
         Timer::after_millis(50).await;
     }
 }

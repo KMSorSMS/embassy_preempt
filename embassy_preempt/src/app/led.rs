@@ -133,7 +133,7 @@ pub fn interrupt_pin_low() {
 #[inline]
 pub fn stack_pin_high() {
     GPIOA.odr().modify(|v| {
-        v.set_odr(0, vals::Odr::HIGH);
+        v.set_odr(4, vals::Odr::HIGH);
     });
 }
 
@@ -142,6 +142,6 @@ pub fn stack_pin_high() {
 #[inline]
 pub fn stack_pin_low() {
     GPIOA.odr().modify(|v| {
-        v.set_odr(0, vals::Odr::LOW);
+        v.set_odr(4, vals::Odr::LOW);
     });
 }
