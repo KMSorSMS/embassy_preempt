@@ -1,5 +1,5 @@
 h
-loadfile target/thumbv7em-none-eabi/release/bottom_test.bin 0x08000000
+loadfile target/thumbv7em-none-eabi/release/time_performance.bin 0x08000000
 r
 g
 exit
