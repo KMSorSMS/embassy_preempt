@@ -47,12 +47,12 @@ async fn test_task(_args: *mut c_void) {
         thread_pin_high();
 
         // delay 5s
-        Timer::after_millis(50).await;
+        Timer::after_millis(500).await;
         thread_pin_low();
         bottom::wait_for_rising_edge().await;
         interrupt_pin_low();
         thread_pin_high();
-        Timer::after_millis(50).await;
+        Timer::after_millis(500).await;
     }
 }
 
@@ -79,7 +79,7 @@ async fn task2(_args: *mut c_void) {
         trace!("the task2");
         delay(BLOCK_TIME);
         critical_section::with(|_| task_pin_high(2));
-        Timer::after_millis(5).await;
+        Timer::after_millis(11000).await;
     }
 }
 
@@ -95,7 +95,7 @@ async fn task3(_args: *mut c_void) {
         task_pin_high(3);
         #[cfg(feature = "alarm_test")]
         trace!("the task3");
-        Timer::after_millis(20).await;
+        Timer::after_millis(5000).await;
     }
 }
 
@@ -109,7 +109,7 @@ async fn task4(_args: *mut c_void) {
         trace!("the task4");
         delay(BLOCK_TIME);
         task_pin_high(4);
-        Timer::after_millis(8).await;
+        Timer::after_millis(7000).await;
     }
 }
 
@@ -123,7 +123,7 @@ async fn task5(_args: *mut c_void) {
         trace!("the task5");
         delay(BLOCK_TIME);
         task_pin_high(5);
-        Timer::after_millis(10).await;
+        Timer::after_millis(3000).await;
     }
 }
 

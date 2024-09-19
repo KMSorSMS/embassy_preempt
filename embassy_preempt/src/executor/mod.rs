@@ -14,6 +14,8 @@ use core::pin::Pin;
 use core::ptr::NonNull;
 use core::task::{Context, Poll};
 
+#[cfg(feature = "alarm_test")]
+use defmt::info;
 #[cfg(feature = "defmt")]
 use defmt::info;
 #[cfg(feature = "defmt")]
@@ -27,7 +29,7 @@ pub use self::waker::task_from_waker;
 use crate::app::led::{stack_pin_high, stack_pin_low};
 use crate::arena::ARENA;
 use crate::cfg::*;
-use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, TASK_STACK_SIZE};
+use crate::heap::stack_allocator::{alloc_stack, OS_STK_REF, PROGRAM_STACK, TASK_STACK_SIZE};
 // use crate::os_sem::SemHandle;
 #[cfg(feature = "delay_idle")]
 use crate::os_time::blockdelay::delay;
@@ -601,20 +603,35 @@ impl SyncExecutor {
             // we need to alloc a stack for the task
             let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
 
-            stack_pin_high();
-
             // by noah: *TEST*. Maybe when alloc_stack is called, we need the cs
             let mut stk: OS_STK_REF;
             if *self.OSPrioCur.get_unmut() == OS_TASK_IDLE_PRIO {
-                // if is idle, we don't need to alloc stack,just use the idle stack
-                stk = self.OSTCBCur.get_mut().OSTCBStkPtr.take().unwrap();
-                stk.STK_REF = NonNull::new(stk.HEAP_REF.as_ptr().offset(stk.layout.size() as isize) as *mut OS_STK).unwrap();
+                stack_pin_high();
+                #[cfg(feature = "alarm_test")]
+                {
+                    info!("the cur task is idle and optimize change");
+                }
+                // if is idle, we don't need to alloc stack                // if is idle, we don't need to alloc stack,just use the idle stack
+                let mut program_stk = PROGRAM_STACK.exclusive_access();
+                program_stk.STK_REF = NonNull::new(
+                    program_stk.HEAP_REF.as_ptr().offset(program_stk.layout.size() as isize) as *mut OS_STK,
+                )
+                .unwrap();
+                stk = program_stk.clone();
             } else {
+                #[cfg(feature = "alarm_test")]
+                {
+                    info!("alloc stack");
+                }
                 stk = alloc_stack(layout);
+                #[cfg(feature = "alarm_test")]
+                {
+                    info!("the alloc task's stk is {:?}", stk.STK_REF);
+                }
             }
-            stack_pin_low();
             // then we need to mock the stack for the task(the stk will change during the mock)
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
+            stack_pin_low();
 
             // stack_pin_low();
 
