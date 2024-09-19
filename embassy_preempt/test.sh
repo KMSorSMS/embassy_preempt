@@ -10,7 +10,7 @@ run_test() {
     local test_name=$1
     # 如果tmp.yaml文件存在时才删除tmp.yaml文件
     [ -f tmp.yaml ] && rm tmp.yaml
-    cargo run --bin "$test_name" --release --features "defmt"> tmp.yaml &
+    cargo run --bin "$test_name" --release --features "alarm_test","stm32f401re"> tmp.yaml &
     # 记录上一次文件大小
     PREV_SIZE=0
 

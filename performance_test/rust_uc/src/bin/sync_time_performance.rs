@@ -7,13 +7,15 @@ use core::arch::asm;
 use core::ffi::c_void;
 
 use embassy_preempt::os_core::{OSInit, OSStart};
-use embassy_preempt::os_task::AsyncOSTaskCreate;
+use embassy_preempt::os_task::SyncOSTaskCreate;
 use embassy_preempt::os_time::timer::Timer;
+use embassy_preempt::os_time::OSTimeDly;
 use embassy_preempt::pac::{gpio, GPIOA, RCC};
 use embassy_preempt::port::bottom_driver::Bottom::bottom;
+use embassy_preempt::port::bottom_driver::OSWaitBot;
 
 const BLOCK_TIME: usize = 2;
-
+const ONE_MS:u64 = 100;
 
 // use embassy_preempt::{self as _};
 
@@ -24,77 +26,88 @@ fn test_time_performance() -> ! {
     pin_init();
     // os初始化
     OSInit();
-    AsyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
-    AsyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 15);
-    AsyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 14);
-    AsyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
-    AsyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 12);
-    AsyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 11);
+    SyncOSTaskCreate(test_task, 0 as *mut c_void, 0 as *mut usize, 10);
+    SyncOSTaskCreate(task1, 0 as *mut c_void, 0 as *mut usize, 15);
+    SyncOSTaskCreate(task2, 0 as *mut c_void, 0 as *mut usize, 14);
+    SyncOSTaskCreate(task3, 0 as *mut c_void, 0 as *mut usize, 13);
+    SyncOSTaskCreate(task4, 0 as *mut c_void, 0 as *mut usize, 12);
+    SyncOSTaskCreate(task5, 0 as *mut c_void, 0 as *mut usize, 11);
     // 启动os
     OSStart();
 }
 
 // 主要测试任务
-async fn test_task(_args: *mut c_void) {
+fn test_task(_args: *mut c_void) {
     loop {
         // set the thread pin low, indicating that the thread time test is finished
         thread_pin_low();
-        bottom::wait_for_rising_edge().await;
+        OSWaitBot();
         // set the interrupt pin low, indicating that the interrput and scheduling test is finished
         interrupt_pin_low();
         // set the thread pin high, indicating that the thread time test begins
         thread_pin_high();
 
-        // delay 5s
-        Timer::after_millis(50).await;
+        // delay 50ms
+        // Timer::after_millis(50).await;
+        OSTimeDly(50 * ONE_MS);
         thread_pin_low();
-        bottom::wait_for_rising_edge().await;
+        // bottom::wait_for_rising_edge().await;
+        OSWaitBot();
         interrupt_pin_low();
         thread_pin_high();
-        Timer::after_millis(50).await;
+        // Timer::after_millis(50).await;
+        OSTimeDly(50 * ONE_MS);
     }
 }
 
+/* 线程模式测试的TImer delay 修改为OSTime*/
+
 // 用于模拟多任务执行环境
-async fn task1(_args: *mut c_void) {
+fn task1(_args: *mut c_void) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led_on();
-        Timer::after_millis(5 * 100).await;
+        // Timer::after_millis(5 * 100).await;
+        OSTimeDly(500 * ONE_MS);
         led_off();
-        Timer::after_millis(5 * 100).await;
+        // Timer::after_millis(5 * 100).await;
+        OSTimeDly(500 * ONE_MS);
     }
 }
 
 // 用于模拟多任务执行环境
-async fn task2(_args: *mut c_void) {
+fn task2(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(10).await;
+        // Timer::after_millis(10).await;
+        OSTimeDly(10 * ONE_MS);
     }
 }
 
 // 用于模拟多任务执行环境
-async fn task3(_args: *mut c_void) {
+fn task3(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(20).await;
+        // Timer::after_millis(20).await;
+        OSTimeDly(20 * ONE_MS);        
     }
 }
 
 // 用于模拟多任务执行环境
-async fn task4(_args: *mut c_void) {
+fn task4(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(30).await;
+        // Timer::after_millis(30).await;
+        OSTimeDly(30 * ONE_MS);
     }
 }
 
 // 用于模拟多任务执行环境
-async fn task5(_args: *mut c_void) {
+fn task5(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(40).await;
+        // Timer::after_millis(40).await;
+        OSTimeDly(40 * ONE_MS);
     }
 }
 
