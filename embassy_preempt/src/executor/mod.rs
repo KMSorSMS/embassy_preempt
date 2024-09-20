@@ -597,7 +597,6 @@ impl SyncExecutor {
             trace!("interrupt poll :the highrdy task's prio is {}", task.OSTCBPrio);
             trace!("interrupt poll :the cur task's prio is {}", self.OSPrioCur.get_unmut());
         }
-
         if task.OSTCBStkPtr.is_none() {
             #[cfg(feature = "defmt")]
             info!("the task's stk is none");
@@ -633,8 +632,6 @@ impl SyncExecutor {
             // then we need to mock the stack for the task(the stk will change during the mock)
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
 
-            // stack_pin_low();
-
             task.OSTCBStkPtr = Some(stk);
         }
         // restore the task from stk
@@ -653,9 +650,7 @@ impl SyncExecutor {
     pub(crate) unsafe fn poll(&'static self) -> ! {
         #[cfg(feature = "defmt")]
         trace!("poll");
-        stack_pin_high();
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
-        stack_pin_low();
         // build this as a loop
         loop {
             // test: print the ready queue
@@ -695,13 +690,14 @@ impl SyncExecutor {
             if task.is_none() {
                 continue;
             }
-            let mut task = task.unwrap();
+            let task = task.unwrap();
             // execute the task depending on if it has stack
-            #[cfg(feature = "defmt")]
-            trace!("in the poll task loop");
-            #[cfg(feature = "defmt")]
-            trace!("poll the task");
-            task.OS_POLL_FN.get().unwrap_unchecked()(task);
+            self.single_poll(task);
+        }
+    }
+
+    pub unsafe fn single_poll(&'static self,mut task: OS_TCB_REF) {
+        task.OS_POLL_FN.get().unwrap_unchecked()(task);
             // by noah：Remove tasks from the ready queue in advance to facilitate subsequent unified operations
             // update timer
             critical_section::with(|_| {
@@ -738,7 +734,6 @@ impl SyncExecutor {
                 // adapt the method above
                 self.set_highrdy()
             });
-        }
     }
     pub(crate) unsafe fn set_highrdy(&self) {
         #[cfg(feature = "defmt")]

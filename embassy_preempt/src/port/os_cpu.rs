@@ -201,7 +201,12 @@ pub extern "Rust" fn OSTaskStkInit(stk_ref: NonNull<OS_STK>) -> NonNull<OS_STK> 
     let executor_function_ptr: fn() = || unsafe {
         #[cfg(feature = "defmt")]
         info!("entering the executor function");
-        GlobalSyncExecutor.as_ref().unwrap().poll();
+        stack_pin_high();
+        let global_executor = GlobalSyncExecutor.as_ref().unwrap();
+        let task = global_executor.OSTCBHighRdy.get_mut().clone();
+        stack_pin_low();
+        global_executor.single_poll(task);
+        global_executor.poll();
     };
     let executor_function_ptr = executor_function_ptr as *const () as usize;
     #[cfg(feature = "defmt")]
