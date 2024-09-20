@@ -89,9 +89,9 @@ void task1(void *args)
     while (1)
     {
         LED_ON()
-        OSTimeDly(5* 100); //delay 5 ms
+        OSTimeDly(5* 1000); //delay 5 ms
         LED_OFF()
-        OSTimeDly(5* 100); //delay 5 ms
+        OSTimeDly(5* 1000); //delay 5 ms
     }
 }
 
@@ -100,7 +100,7 @@ void task2(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(10); //delay 5 ms
+        OSTimeDly(100); //delay 5 ms
     }
 }
 
@@ -109,7 +109,7 @@ void task3(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(20); //delay 5 ms
+        OSTimeDly(200); //delay 5 ms
     }
 }
 void task4(void *args)
@@ -117,7 +117,7 @@ void task4(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(30); //delay 5 ms
+        OSTimeDly(300); //delay 5 ms
     }
 }
 
@@ -126,7 +126,7 @@ void task5(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(40); //delay 5 ms
+        OSTimeDly(400); //delay 5 ms
     }
 }
 

@@ -565,6 +565,7 @@ impl SyncExecutor {
         }) {
             unsafe { self.interrupt_poll() }
         }
+        stack_pin_low();
     }
 
     /// this function must be called in the interrupt context, and it will trigger pendsv to switch the task
@@ -601,7 +602,6 @@ impl SyncExecutor {
             info!("the task's stk is none");
             // if the task has no stack, it's a task, we need to mock a stack for it.
             // we need to alloc a stack for the task
-            let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
 
             // by noah: *TEST*. Maybe when alloc_stack is called, we need the cs
             let mut stk: OS_STK_REF;
@@ -623,6 +623,7 @@ impl SyncExecutor {
                 {
                     info!("alloc stack");
                 }
+                let layout = Layout::from_size_align(TASK_STACK_SIZE, 4).unwrap();
                 stk = alloc_stack(layout);
                 #[cfg(feature = "alarm_test")]
                 {
@@ -631,7 +632,6 @@ impl SyncExecutor {
             }
             // then we need to mock the stack for the task(the stk will change during the mock)
             stk.STK_REF = OSTaskStkInit(stk.STK_REF);
-            stack_pin_low();
 
             // stack_pin_low();
 
