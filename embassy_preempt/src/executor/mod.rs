@@ -540,6 +540,7 @@ impl SyncExecutor {
     }
 
     pub(crate) unsafe fn IntCtxSW(&'static self) {
+        stack_pin_high();
         // set the cur task's is_in_thread_poll to false, as it is preempted in the interrupt context
         #[cfg(feature = "defmt")]
         info!("IntCtxSW");
@@ -606,7 +607,6 @@ impl SyncExecutor {
             // by noah: *TEST*. Maybe when alloc_stack is called, we need the cs
             let mut stk: OS_STK_REF;
             if *self.OSPrioCur.get_unmut() == OS_TASK_IDLE_PRIO {
-                stack_pin_high();
                 // #[cfg(feature = "alarm_test")]
                 // {
                 //     info!("the cur task is idle and optimize change");
@@ -653,7 +653,9 @@ impl SyncExecutor {
     pub(crate) unsafe fn poll(&'static self) -> ! {
         #[cfg(feature = "defmt")]
         trace!("poll");
+        stack_pin_high();
         RTC_DRIVER.set_alarm_callback(self.alarm, Self::alarm_callback, self as *const _ as *mut ());
+        stack_pin_low();
         // build this as a loop
         loop {
             // test: print the ready queue

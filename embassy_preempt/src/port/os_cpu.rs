@@ -12,6 +12,7 @@ use cortex_m_rt::exception;
 use defmt::{info, trace};
 
 use super::OS_STK;
+use crate::app::led::{stack_pin_high, stack_pin_low};
 use crate::executor::GlobalSyncExecutor;
 use crate::heap::stack_allocator::{INTERRUPT_STACK, PROGRAM_STACK};
 // use crate::ucosii::OS_TASK_IDLE_PRIO;
@@ -44,6 +45,7 @@ pub extern "Rust" fn restore_thread_task() {
 // the pendsv handler used to switch the task
 #[exception]
 fn PendSV() {
+    stack_pin_high();
     // first close the interrupt
     unsafe {
         asm!(
@@ -124,6 +126,7 @@ fn PendSV() {
     info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
     // we will reset the msp to the original
     let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
+    stack_pin_low();
     unsafe {
         asm!(
             // "CPSID I",
