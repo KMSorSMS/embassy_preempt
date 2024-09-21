@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>介绍 - Embassy Preempt</title>
+        <title>开发时间表 - Embassy Preempt</title>
 
 
         <!-- Custom HTML head -->
@@ -12,21 +12,21 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="theme-color" content="#ffffff">
 
-        <link rel="icon" href="favicon.svg">
-        <link rel="shortcut icon" href="favicon.png">
-        <link rel="stylesheet" href="css/variables.css">
-        <link rel="stylesheet" href="css/general.css">
-        <link rel="stylesheet" href="css/chrome.css">
-        <link rel="stylesheet" href="css/print.css" media="print">
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
 
         <!-- Fonts -->
-        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
-        <link rel="stylesheet" href="fonts/fonts.css">
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
 
         <!-- Highlight.js Stylesheets -->
-        <link rel="stylesheet" href="highlight.css">
-        <link rel="stylesheet" href="tomorrow-night.css">
-        <link rel="stylesheet" href="ayu-highlight.css">
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
 
         <!-- Custom theme stylesheets -->
 
@@ -35,7 +35,7 @@
     <div id="body-container">
         <!-- Provide site root to javascript -->
         <script>
-            var path_to_root = "";
+            var path_to_root = "../";
             var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
         </script>
 
@@ -88,7 +88,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html" class="active">介绍</a></li><li class="chapter-item expanded affix "><a href="docs/开发记录.html">开发记录</a></li><li class="chapter-item expanded affix "><a href="docs/技术报告.html">技术报告</a></li><li class="chapter-item expanded affix "><a href="docs/设计文档.html">设计文档</a></li><li class="chapter-item expanded affix "><a href="docs/资料汇总.html">资料汇总</a></li><li class="chapter-item expanded affix "><a href="docs/embassy_preempt开发杂记.html">开发杂记</a></li><li class="chapter-item expanded affix "><a href="docs/index.html">开发时间表</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">介绍</a></li><li class="chapter-item expanded affix "><a href="../docs/开发记录.html">开发记录</a></li><li class="chapter-item expanded affix "><a href="../docs/技术报告.html">技术报告</a></li><li class="chapter-item expanded affix "><a href="../docs/设计文档.html">设计文档</a></li><li class="chapter-item expanded affix "><a href="../docs/资料汇总.html">资料汇总</a></li><li class="chapter-item expanded affix "><a href="../docs/embassy_preempt开发杂记.html">开发杂记</a></li><li class="chapter-item expanded affix "><a href="../docs/index.html" class="active">开发时间表</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -144,7 +144,7 @@
                     <h1 class="menu-title">Embassy Preempt</h1>
 
                     <div class="right-buttons">
-                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
                             <i id="print-button" class="fa fa-print"></i>
                         </a>
                         <a href="https://github.com/KMSorSMS/embassy_preempt" title="Git repository" aria-label="Git repository">
@@ -176,24 +176,54 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="介绍"><a class="header" href="#介绍">介绍</a></h1>
-<h1 id="embassy-preempt"><a class="header" href="#embassy-preempt">embassy-preempt❤️</a></h1>
-<p>embassy_preempt是一个嵌入式异步实时操作系统的调度模块。它通过Rust提供的协程机制，结合embassy的异步执行器的实现方式，并借鉴传统嵌入式实时操作系统uCOSII的任务切换机制，在任务调度时，若当前任务主动让权，则会进行栈复用；若当前任务被抢占，则会进行栈分配，并进行现场的保存，使得embassy_preempt同时具有了embassy低内存开销的优势以及uCOSII高实时性的特点。</p>
-<h1 id="项目背景"><a class="header" href="#项目背景">项目背景📝</a></h1>
-<p>在通常情况下，如uCOSII的嵌入式操作系统基本都以线程（或任务）为基本单位进行调度，这就使得每一个任务都将占有一个私有的栈空间。而在实际的应用中，在任务调度的过程中，大部分任务释放CPU都是由于主动让权，而非被高优先级的任务抢占，这使得栈空间存在一定的浪费。</p>
-<p>而在embassy中，通过引入Rust的协程机制，使得栈空间的利用率得到了极大的提升。但是由于embassy的线程执行器中的协程之间无法进行抢占，并且进行协程调度时并没有优先级裁决机制，在多任务的情景下将导致若干个任务出现未被及时唤醒的情况，导致实时性较差，这是一个嵌入式实时操作系统无法接受的。</p>
-<p>我们希望在已有的嵌入式实时操作系统的高实时性以及embassy的协程机制之间进行“折衷”，编写一个既可以满足实时应用环境下的实时性要求，又可以尽可能缩小内存使用的嵌入式异步实时操作系统调度模块——embassy_preempt。</p>
-<h1 id="技术报告"><a class="header" href="#技术报告"><a href="docs/%E6%8A%80%E6%9C%AF%E6%8A%A5%E5%91%8A.html">技术报告</a>📦</a></h1>
-<p><a href="https://liamy.clovy.top/article/RTOS/embassy-preempt">开发全流程日志</a></p>
+                        <ol>
+<li>
+<p>上下文切换的分类：分成抢占和让权两种；</p>
+</li>
+<li>
+<p>上下文切换的过程分成保存和恢复两步。抢占时的保存会占用堆栈，可视为线程；让权时的保存会让出堆栈，可视为协程。恢复过程按是否需要空栈分成线程恢复和协程恢复两种情况。</p>
+</li>
+<li>
+<p>可能的实施线路：</p>
+<ol>
+<li>在uCOS中<strong>没有中断的场景</strong>下，引入embassy，以支持协程；（线程被视为不会暂停的协程）
+<ul>
+<li>统一线程和协程的控制块结构TCB（Task Control Block）；</li>
+<li>只有让权情况出现，让权时栈空，可以复用栈；（解决堆栈的分配和回收问题）</li>
+</ul>
+</li>
+<li>在uCOS中没有中断的场景下，引入embassy和<strong>优先级</strong>，以支持线程和协程的优先级调度；
+<ul>
+<li>按优先级选就绪任务（可能是线程，也可能是协程）；</li>
+</ul>
+</li>
+<li>在uCOS中<strong>有中断的场景</strong>下，引入embassy和优先级，以支持线程和协程的优先级调度；
+<ul>
+<li>中断就是抢占情况，需要保存堆栈，并（有可能）分配新堆栈，用于恢复下一个任务；</li>
+</ul>
+</li>
+</ol>
+<p>时间线安排：</p>
+<p>7.28-7.29：完成思路设计结束</p>
+<p>7.30-8.5：至少完成线路1整体代码部分，测试以及debug可以留到下周</p>
+<p>8.6-8.12：至少完成线路1，最好线路2也完成了</p>
+<p>8.13-8.19： 完成线路2以及完成最终的抢占设计的代码部分，测试以及debug可以留到下周</p>
+<p>8.20-8.26：完成所有测试与debug</p>
+<p>8.27-...: 做一些数据分析以及形成较好的文档</p>
+<p>修正时间线：</p>
+<p>8.13-8.19: 完成所有代码，开始debug</p>
+<p>8.20-8.26: 完成所有测试与debug</p>
+</li>
+</ol>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-
-                            <a rel="next prefetch" href="docs/开发记录.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="../docs/embassy_preempt开发杂记.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
+
 
                         <div style="clear: both"></div>
                     </nav>
@@ -201,10 +231,10 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-
-                    <a rel="next prefetch" href="docs/开发记录.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="prev" href="../docs/embassy_preempt开发杂记.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
+
             </nav>
 
         </div>
@@ -217,13 +247,13 @@
         </script>
 
 
-        <script src="elasticlunr.min.js"></script>
-        <script src="mark.min.js"></script>
-        <script src="searcher.js"></script>
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
 
-        <script src="clipboard.min.js"></script>
-        <script src="highlight.js"></script>
-        <script src="book.js"></script>
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
 
         <!-- Custom JS scripts -->
 

@@ -89,7 +89,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">介绍</a></li><li class="chapter-item expanded affix "><a href="docs/开发记录.html">开发记录</a></li><li class="chapter-item expanded affix "><a href="docs/技术报告.html">技术报告</a></li><li class="chapter-item expanded affix "><a href="docs/设计文档.html">设计文档</a></li><li class="chapter-item expanded affix "><a href="docs/资料汇总.html">资料汇总</a></li><li class="chapter-item expanded affix "><a href="docs/embassy_preempt开发杂记.html">开发杂记</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">介绍</a></li><li class="chapter-item expanded affix "><a href="docs/开发记录.html">开发记录</a></li><li class="chapter-item expanded affix "><a href="docs/技术报告.html">技术报告</a></li><li class="chapter-item expanded affix "><a href="docs/设计文档.html">设计文档</a></li><li class="chapter-item expanded affix "><a href="docs/资料汇总.html">资料汇总</a></li><li class="chapter-item expanded affix "><a href="docs/embassy_preempt开发杂记.html">开发杂记</a></li><li class="chapter-item expanded affix "><a href="docs/index.html">开发时间表</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle">
                 <div class="sidebar-resize-indicator"></div>
@@ -1940,6 +1940,45 @@ fn main() {
 <p><a href="https://github.com/dtolnay/cargo-expand">https://github.com/dtolnay/cargo-expand</a></p>
 <h1 id="33-out_dir环境变量"><a class="header" href="#33-out_dir环境变量">33. OUT_DIR环境变量</a></h1>
 <p><a href="https://rustwiki.org/zh-CN/cargo/reference/environment-variables.html">https://rustwiki.org/zh-CN/cargo/reference/environment-variables.html</a></p>
+<div style="break-before: page; page-break-before: always;"></div><ol>
+<li>
+<p>上下文切换的分类：分成抢占和让权两种；</p>
+</li>
+<li>
+<p>上下文切换的过程分成保存和恢复两步。抢占时的保存会占用堆栈，可视为线程；让权时的保存会让出堆栈，可视为协程。恢复过程按是否需要空栈分成线程恢复和协程恢复两种情况。</p>
+</li>
+<li>
+<p>可能的实施线路：</p>
+<ol>
+<li>在uCOS中<strong>没有中断的场景</strong>下，引入embassy，以支持协程；（线程被视为不会暂停的协程）
+<ul>
+<li>统一线程和协程的控制块结构TCB（Task Control Block）；</li>
+<li>只有让权情况出现，让权时栈空，可以复用栈；（解决堆栈的分配和回收问题）</li>
+</ul>
+</li>
+<li>在uCOS中没有中断的场景下，引入embassy和<strong>优先级</strong>，以支持线程和协程的优先级调度；
+<ul>
+<li>按优先级选就绪任务（可能是线程，也可能是协程）；</li>
+</ul>
+</li>
+<li>在uCOS中<strong>有中断的场景</strong>下，引入embassy和优先级，以支持线程和协程的优先级调度；
+<ul>
+<li>中断就是抢占情况，需要保存堆栈，并（有可能）分配新堆栈，用于恢复下一个任务；</li>
+</ul>
+</li>
+</ol>
+<p>时间线安排：</p>
+<p>7.28-7.29：完成思路设计结束</p>
+<p>7.30-8.5：至少完成线路1整体代码部分，测试以及debug可以留到下周</p>
+<p>8.6-8.12：至少完成线路1，最好线路2也完成了</p>
+<p>8.13-8.19： 完成线路2以及完成最终的抢占设计的代码部分，测试以及debug可以留到下周</p>
+<p>8.20-8.26：完成所有测试与debug</p>
+<p>8.27-...: 做一些数据分析以及形成较好的文档</p>
+<p>修正时间线：</p>
+<p>8.13-8.19: 完成所有代码，开始debug</p>
+<p>8.20-8.26: 完成所有测试与debug</p>
+</li>
+</ol>
 
                     </main>
 
