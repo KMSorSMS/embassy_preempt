@@ -89,9 +89,9 @@ void task1(void *args)
     while (1)
     {
         LED_ON()
-        OSTimeDly(5* 1000); //delay 5 ms
+        OSTimeDly(5 * 100); //delay 5 ms
         LED_OFF()
-        OSTimeDly(5* 1000); //delay 5 ms
+        OSTimeDly(5 * 100); //delay 5 ms
     }
 }
 
@@ -100,7 +100,7 @@ void task2(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(100); //delay 5 ms
+        OSTimeDly(10); //delay 5 ms
     }
 }
 
@@ -109,7 +109,7 @@ void task3(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(200); //delay 5 ms
+        OSTimeDly(20); //delay 5 ms
     }
 }
 void task4(void *args)
@@ -117,7 +117,7 @@ void task4(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(300); //delay 5 ms
+        OSTimeDly(30); //delay 5 ms
     }
 }
 
@@ -126,7 +126,7 @@ void task5(void *args)
     while (1)
     {
         delay(BLOCK_TIME);
-        OSTimeDly(400); //delay 5 ms
+        OSTimeDly(40); //delay 5 ms
     }
 }
 
@@ -151,11 +151,11 @@ int main(){
     // pnext用于指向任务扩展部分，暂时没有用到
     // opt是可选项，根据被置位的位来进行一些额外的操作，暂时没有用到
     (void)OSTaskCreate(test_task, (void *)0, &my_task_0[TASK_STACK_SIZE - 1u], 10);
-    (void)OSTaskCreate(task1, (void *)0, &my_task_1[TASK_STACK_SIZE - 1u], 15);
+    (void)OSTaskCreate(task1, (void *)0, &my_task_1[TASK_STACK_SIZE - 1u], 11);
     (void)OSTaskCreate(task2, (void *)0, &my_task_2[TASK_STACK_SIZE - 1u], 14);
     (void)OSTaskCreate(task3, (void *)0, &my_task_3[TASK_STACK_SIZE- 1u], 13);
     (void)OSTaskCreate(task4, (void *)0, &my_task_4[TASK_STACK_SIZE- 1u], 12);
-    (void)OSTaskCreate(task5, (void *)0, &my_task_5[TASK_STACK_SIZE- 1u], 11);
+    (void)OSTaskCreate(task5, (void *)0, &my_task_5[TASK_STACK_SIZE- 1u], 15);
 
     // OS启动
     OSStart();

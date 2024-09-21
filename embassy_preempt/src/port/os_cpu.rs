@@ -45,7 +45,6 @@ pub extern "Rust" fn restore_thread_task() {
 // the pendsv handler used to switch the task
 #[exception]
 fn PendSV() {
-    stack_pin_high();
     // first close the interrupt
     unsafe {
         asm!(
@@ -59,6 +58,7 @@ fn PendSV() {
             options(nostack, preserves_flags)
         );
     }
+    stack_pin_high();
     #[cfg(feature = "defmt")]
     info!("PendSV");
     // then switch the task
@@ -89,6 +89,7 @@ fn PendSV() {
     // the swap will return the ownership of PROGRAM_STACK's original value and set the new value(check it when debuging!!!)
     let mut old_stk = PROGRAM_STACK.swap(stk_ptr);
     let tcb_cur = global_executor.OSTCBCur.get_mut();
+    stack_pin_low();
     // by noah: *TEST*
     // let TCB: &OS_TCB;
     if !*tcb_cur.is_in_thread_poll.get_unmut() {
@@ -126,7 +127,6 @@ fn PendSV() {
     info!("trying to restore, the new stack pointer is {:?}", program_stk_ptr);
     // we will reset the msp to the original
     let msp_stk = INTERRUPT_STACK.get().STK_REF.as_ptr();
-    stack_pin_low();
     unsafe {
         asm!(
             // "CPSID I",

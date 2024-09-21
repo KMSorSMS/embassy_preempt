@@ -1,4 +1,4 @@
-TARGET ?= space_performance
+TARGET ?= time_performance
 .PHONY: bear clean
 
 UBUNTU_VERSION := $(shell lsb_release -rs)
@@ -175,7 +175,7 @@ STdownload: all
 Jdownload:
 	make bear
 # 生成脚本
-	@echo "h\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
+	@echo "h\nerase 0x08000000 0x0807FFFF\nloadfile $(FILE_BIN) 0x08000000\nr\ng\nexit" > JLinkDownload.jlink
 	JLinkExe -device $(DEVICE) -autoconnect 1 -if SWD -speed 4000 -CommanderScript JLinkDownload.jlink
 Jdebug: Jdownload JGDBServer
 	tmux new-session -d "gdb-multiarch -ex 'file $(FILE_ELF)' -ex 'set arch arm' -ex 'target extended-remote localhost:2331' \

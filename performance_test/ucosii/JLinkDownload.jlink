@@ -1,5 +1,6 @@
 h
-loadfile build/space_performance.bin 0x08000000
+erase 0x08000000 0x0807FFFF
+loadfile build/time_performance.bin 0x08000000
 r
 g
 exit
