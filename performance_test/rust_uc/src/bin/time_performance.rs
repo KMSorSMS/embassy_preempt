@@ -60,9 +60,9 @@ async fn task1(_args: *mut c_void) {
     loop {
         // 将闪灯代码放入task1以免影响引脚设置和对Timer delay的测量
         led_on();
-        Timer::after_millis(5 * 1000).await;
+        Timer::after_millis(5 * 100).await;
         led_off();
-        Timer::after_millis(5 * 1000).await;
+        Timer::after_millis(5 * 100).await;
     }
 }
 
@@ -70,7 +70,7 @@ async fn task1(_args: *mut c_void) {
 async fn task2(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(100).await;
+        Timer::after_millis(1000).await;
     }
 }
 
@@ -78,7 +78,7 @@ async fn task2(_args: *mut c_void) {
 async fn task3(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(200).await;
+        Timer::after_millis(2000).await;
     }
 }
 
@@ -86,7 +86,7 @@ async fn task3(_args: *mut c_void) {
 async fn task4(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(300).await;
+        Timer::after_millis(3000).await;
     }
 }
 
@@ -94,7 +94,7 @@ async fn task4(_args: *mut c_void) {
 async fn task5(_args: *mut c_void) {
     loop {
         delay(BLOCK_TIME);
-        Timer::after_millis(400).await;
+        Timer::after_millis(4000).await;
     }
 }
 

@@ -54,8 +54,8 @@ void RCC_Configuration(void)
     while ((RCC->CR & 0x00020000) == 0); // 等待HSE启动成功
     while ((RCC->CR & 0x02000000) == 0); // 等待PLL启动成功
     while ((RCC->CR & 0x08000000) == 0); // 等待PLL2S启动成功
-    // HSE启动成功后，使能FLASH预存取缓冲区
-    FLASH->ACR |= FLASH_ACR_PRFTEN;
+    // // HSE启动成功后，使能FLASH预存取缓冲区
+    // FLASH->ACR |= FLASH_ACR_PRFTEN;
     // 设置FLASH的延时周期
     FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
     // 更改系统的时钟源为PLL
