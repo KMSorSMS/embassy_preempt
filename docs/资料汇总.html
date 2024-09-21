@@ -1,0 +1,526 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>资料汇总 - Embassy Preempt</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">介绍</a></li><li class="chapter-item expanded affix "><a href="../docs/开发记录.html">开发记录</a></li><li class="chapter-item expanded affix "><a href="../docs/技术报告.html">技术报告</a></li><li class="chapter-item expanded affix "><a href="../docs/设计文档.html">设计文档</a></li><li class="chapter-item expanded affix "><a href="../docs/资料汇总.html" class="active">资料汇总</a></li><li class="chapter-item expanded affix "><a href="../docs/embassy_preempt开发杂记.html">开发杂记</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Embassy Preempt</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="资料汇总"><a class="header" href="#资料汇总">资料汇总</a></h1>
+<h1 id="本篇主要内容"><a class="header" href="#本篇主要内容">本篇主要内容</a></h1>
+<p>本篇主要聚焦于与开发过程中相关的一些其他的软件项目</p>
+<h1 id="embassy"><a class="header" href="#embassy">Embassy</a></h1>
+<h2 id="1-task-arena"><a class="header" href="#1-task-arena">1. <strong>Task arena</strong></a></h2>
+<p>from: <a href="https://docs.embassy.dev/embassy-executor/git/cortex-m/index.html">https://docs.embassy.dev/embassy-executor/git/cortex-m/index.html</a></p>
+<h3 id="11-attention-we-set-the-arena-size-to-the-sum-of-sizes-of-all-tasks"><a class="header" href="#11-attention-we-set-the-arena-size-to-the-sum-of-sizes-of-all-tasks">1.1 Attention: we set the arena size to the sum of sizes of all tasks.</a></h3>
+<p>When the <code>nightly</code> Cargo feature is not enabled, <code>embassy-executor</code> allocates tasks out of an arena (a very simple bump allocator).
+If the task arena gets full, the program will panic at runtime. To guarantee this doesn’t happen, you must set the size to <strong>the sum of sizes of all tasks</strong>.</p>
+<h3 id="12-attention-we-can-set-arena-size-in-two-ways"><a class="header" href="#12-attention-we-can-set-arena-size-in-two-ways">1.2 Attention: we can set arena size in two ways</a></h3>
+<p>The arena size can be configured in two ways:</p>
+<ul>
+<li><strong>Via Cargo features</strong>: enable a Cargo feature like <code>task-arena-size-8192</code>. <strong>Only a selection of values</strong> is available, see <a href="https://docs.embassy.dev/embassy-executor/git/cortex-m/index.html#task-arena-size">Task Area Sizes</a> for reference.</li>
+<li><strong>Via environment variables at build time</strong>: set the variable named <code>EMBASSY_EXECUTOR_TASK_ARENA_SIZE</code>. For example <code>EMBASSY_EXECUTOR_TASK_ARENA_SIZE=4321 cargo build</code>. You can also set them in the <code>[env]</code> section of <code>.cargo/config.toml</code>. <strong>Any value can be set</strong>, unlike with Cargo features.</li>
+</ul>
+<p><strong>Environment variables take precedence over Cargo features</strong>. If two Cargo features are enabled for the same setting with different values, compilation fails.</p>
+<h2 id="2-executor"><a class="header" href="#2-executor">2. Executor</a></h2>
+<p>from: <a href="https://docs.embassy.dev/embassy-executor/git/cortex-m/index.html#executor">https://docs.embassy.dev/embassy-executor/git/cortex-m/index.html#executor</a></p>
+<h3 id="21-attention-the-executor-interrupt-particularly-in-cortex-m"><a class="header" href="#21-attention-the-executor-interrupt-particularly-in-cortex-m">2.1 Attention the executor-interrupt particularly in cortex-M</a></h3>
+<ul>
+<li><code>executor-thread</code> — Enable the thread-mode executor (using WFE/SEV in Cortex-M, WFI in other embedded archs)</li>
+<li><code>executor-interrupt</code> — Enable the interrupt-mode executor (available in Cortex-M only)</li>
+</ul>
+<h2 id="3-attribute-macros"><a class="header" href="#3-attribute-macros">3. <strong>Attribute Macros</strong></a></h2>
+<p>from: <a href="https://docs.embassy.dev/embassy-executor/git/cortex-m/index.html#attributes">https://docs.embassy.dev/embassy-executor/git/cortex-m/index.html#attributes</a></p>
+<h3 id="31-attention-we-can-spawn-multiple-task-from-the-same-function-by-setting-the-pool_size"><a class="header" href="#31-attention-we-can-spawn-multiple-task-from-the-same-function-by-setting-the-pool_size">3.1 Attention: we can spawn multiple task from the same function by setting the pool_size</a></h3>
+<ul>
+<li>
+<p><a href="https://docs.embassy.dev/embassy-executor/git/cortex-m/attr.main.html">main</a></p>
+<p>Creates a new <code>executor</code> instance and declares an application entry point for Cortex-M spawning the corresponding function body as an async task.</p>
+</li>
+<li>
+<p><a href="https://docs.embassy.dev/embassy-executor/git/cortex-m/attr.task.html">task</a></p>
+<p>Declares an async task that can be run by <code>embassy-executor</code>. The optional <code>pool_size</code> parameter can be used to specify how many concurrent tasks can be spawned (default is 1) for the function.</p>
+</li>
+</ul>
+<h2 id="4-what-is-const-generic-and-how-we-use"><a class="header" href="#4-what-is-const-generic-and-how-we-use">4. what is const generic and how we use?</a></h2>
+<p><a href="https://www.awwsmm.com/blog/what-are-const-generics-and-how-are-they-used-in-rust">https://www.awwsmm.com/blog/what-are-const-generics-and-how-are-they-used-in-rust</a></p>
+<p><a href="https://doc.rust-lang.org/reference/items/generics.html#const-generics">https://doc.rust-lang.org/reference/items/generics.html#const-generics</a></p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// Examples where const generic parameters can be used.
+
+// Used in the signature of the item itself.
+fn foo&lt;const N: usize&gt;(arr: [i32; N]) {
+    // Used as a type within a function body.
+    let x: [i32; N];
+    // Used as an expression.
+    println!("{}", N * 2);
+}
+
+// Used as a field of a struct.
+struct Foo&lt;const N: usize&gt;([i32; N]);
+
+impl&lt;const N: usize&gt; Foo&lt;N&gt; {
+    // Used as an associated constant.
+    const CONST: usize = N * 4;
+}
+
+trait Trait {
+    type Output;
+}
+
+impl&lt;const N: usize&gt; Trait for Foo&lt;N&gt; {
+    // Used as an associated type.
+    type Output = [i32; N];
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="5additional-part-for-previous-blog"><a class="header" href="#5additional-part-for-previous-blog">5.additional part for <a href="https://liamy.clovy.top/e771385866b0465990dcd7e17870b591#a71a07cdddde4f0196809b9cf4eff89c">previous blog</a>:</a></h2>
+<h3 id="51-note-the-type-dont-be-messed-up"><a class="header" href="#51-note-the-type-dont-be-messed-up">5.1 note the type, don’t be messed up</a></h3>
+<p>from embassy-executor/src/raw/mod.rs:189</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>impl&lt;F: Future + 'static&gt; AvailableTask&lt;F&gt; {
+    /// Try to claim a [`TaskStorage`].
+    ///
+    /// This function returns `None` if a task has already been spawned and has not finished running.
+    pub fn claim(task: &amp;'static TaskStorage&lt;F&gt;) -&gt; Option&lt;Self&gt; {
+        task.raw.state.spawn().then(|| Self { task })
+    }
+
+    fn initialize_impl&lt;S&gt;(self, future: impl FnOnce() -&gt; F) -&gt; SpawnToken&lt;S&gt; {
+        unsafe {
+            self.task.raw.poll_fn.set(Some(TaskStorage::&lt;F&gt;::poll));
+            self.task.future.write_in_place(future);
+
+            let task = TaskRef::new(self.task);
+
+            SpawnToken::new(task)
+        }
+    }
+
+    /// Initialize the [`TaskStorage`] to run the given future.
+    pub fn initialize(self, future: impl FnOnce() -&gt; F) -&gt; SpawnToken&lt;F&gt; {
+        self.initialize_impl::&lt;F&gt;(future)
+    }
+...
+}
+<span class="boring">}</span></code></pre></pre>
+<p>Note the parameter future is not what we thought of future. In fact it’s return is what <code>future</code> in rust is, which is generic type F who implement the Future trait.</p>
+<p>And so we found that <code>self.task.future.write_in_place(future);</code> , who’s <code>write_in_place</code> function is critical:</p>
+<p>from embassy-executor/src/raw/util.rs:5</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub(crate) struct UninitCell&lt;T&gt;(MaybeUninit&lt;UnsafeCell&lt;T&gt;&gt;);
+impl&lt;T&gt; UninitCell&lt;T&gt; {
+    pub const fn uninit() -&gt; Self {
+        Self(MaybeUninit::uninit())
+    }
+
+    pub unsafe fn as_mut_ptr(&amp;self) -&gt; *mut T {
+        (*self.0.as_ptr()).get()
+    }
+
+    #[allow(clippy::mut_from_ref)]
+    pub unsafe fn as_mut(&amp;self) -&gt; &amp;mut T {
+        &amp;mut *self.as_mut_ptr()
+    }
+
+    #[inline(never)]
+    pub unsafe fn write_in_place(&amp;self, func: impl FnOnce() -&gt; T) {
+        ptr::write(self.as_mut_ptr(), func())
+    }
+
+    pub unsafe fn drop_in_place(&amp;self) {
+        ptr::drop_in_place(self.as_mut_ptr())
+    }
+}
+<span class="boring">}</span></code></pre></pre>
+<p>note that what the <code>write_in_place</code> does is just call the func(in our example is the future parameter who implement the FnOnce() → T trait). So actually we write the return future which truly implement Future trait into the <code>UninitCell</code>, which in our example is future member of TaskStorage:</p>
+<p>from embassy-executor/src/raw/mod.rs:104</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[repr(C)]
+pub struct TaskStorage&lt;F: Future + 'static&gt; {
+    raw: TaskHeader,
+    future: UninitCell&lt;F&gt;, // Valid if STATE_SPAWNED
+}
+<span class="boring">}</span></code></pre></pre>
+<h2 id="6-embassy-book"><a class="header" href="#6-embassy-book">6. Embassy Book</a></h2>
+<p><a href="https://embassy.dev/book/#_the_memory_definition_for_my_stm_chip_seems_wrong_how_do_i_define_a_memory_x_file">Embassy Book</a></p>
+<h1 id="cortex-m-pac"><a class="header" href="#cortex-m-pac">cortex-m pac</a></h1>
+<h2 id="1-interrupt-vector-table"><a class="header" href="#1-interrupt-vector-table">1. Interrupt Vector Table</a></h2>
+<p>from: <a href="https://github.com/rust-embedded/cortex-m?tab=readme-ov-file">https://github.com/rust-embedded/cortex-m?tab=readme-ov-file</a></p>
+<p><a href="https://crates.io/crates/cortex-m-rt"><code>cortex-m-rt</code></a>: Startup code and interrupt handling</p>
+<h2 id="2-the-attributes"><a class="header" href="#2-the-attributes">2. the Attributes:</a></h2>
+<p>from: <a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/">https://docs.rs/cortex-m-rt/latest/cortex_m_rt/</a></p>
+<h3 id="21-intro"><a class="header" href="#21-intro">2.1 Intro</a></h3>
+<p>This crate also provides the following attributes:</p>
+<ul>
+<li><a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.entry.html"><code>#[entry]</code></a> to declare the entry point of the program</li>
+<li><a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.exception.html"><code>#[exception]</code></a> <strong>to override an exception handler</strong>. If not overridden all exception handlers default to an infinite loop.</li>
+<li><a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.pre_init.html"><code>#[pre_init]</code></a> to run code <em>before</em> <code>static</code> variables are initialized</li>
+</ul>
+<p>This crate also implements a related attribute called <code>#[interrupt]</code>, which allows you to define interrupt handlers. However, since which interrupts are available depends on the microcontroller in use, this attribute should be re-exported and used from a device crate.
+The documentation for these attributes can be found in the <a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/#attributes">Attribute Macros</a> section.</p>
+<h3 id="22-the-attribute-macros"><a class="header" href="#22-the-attribute-macros">2.2 the <a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/#attributes"><strong>Attribute Macros</strong></a></a></h3>
+<p><a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.entry.html">entry</a>:         Attribute to declare the entry point of the program</p>
+<p><a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.exception.html">exception</a>:  Attribute to declare an exception handler</p>
+<p><a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.interrupt.html">interrupt</a>:    Attribute to declare an interrupt (AKA device-specific exception) handler</p>
+<p><a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.pre_init.html">pre_init</a>:      Attribute to mark which function will be called at the beginning of the reset handler.</p>
+<h3 id="23-attribute-macro-cortex_m_rtexception"><a class="header" href="#23-attribute-macro-cortex_m_rtexception"><strong>2.3 Attribute Macro <a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/index.html">cortex_m_rt</a>::<a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.exception.html#">exception</a></strong></a></h3>
+<h3 id="syntax"><a class="header" href="#syntax"><a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.exception.html#syntax"><strong>Syntax</strong></a></a></h3>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[exception]
+fn SysTick() {
+    // ..
+}
+<span class="boring">}</span></code></pre></pre>
+<p>where the name of the function must be one of:</p>
+<ul>
+<li><code>DefaultHandler</code></li>
+<li><code>NonMaskableInt</code></li>
+<li><code>HardFault</code></li>
+<li><code>MemoryManagement</code> (a)</li>
+<li><code>BusFault</code> (a)</li>
+<li><code>UsageFault</code> (a)</li>
+<li><code>SecureFault</code> (b)</li>
+<li><code>SVCall</code></li>
+<li><code>DebugMonitor</code> (a)</li>
+<li><code>PendSV</code></li>
+<li><code>SysTick</code></li>
+</ul>
+<p>(a) Not available on Cortex-M0 variants (<code>thumbv6m-none-eabi</code>)</p>
+<p>(b) Only available on ARMv8-M</p>
+<h3 id="usage"><a class="header" href="#usage"><a href="https://docs.rs/cortex-m-rt/latest/cortex_m_rt/attr.exception.html#usage"><strong>Usage</strong></a></a></h3>
+<p><code>#[exception] unsafe fn HardFault(..</code> sets the hard fault handler. The handler must have signature <code>unsafe fn(&amp;ExceptionFrame) -&gt; !</code>. This handler is not allowed to return as that can cause undefined behavior.</p>
+<p><code>#[exception] unsafe fn DefaultHandler(..</code> sets the <em>default</em> handler. All exceptions which have not been assigned a handler will be serviced by this handler. This handler must have signature <code>unsafe fn(irqn: i16) [-&gt; !]</code>. <code>irqn</code> is the IRQ number (See CMSIS); <code>irqn</code> will be a negative number when the handler is servicing a core exception; <code>irqn</code> will be a positive number when the handler is servicing a device specific exception (interrupt).</p>
+<p><code>#[exception] fn Name(..</code> overrides the default handler for the exception with the given <code>Name</code>. These handlers must have signature <code>[unsafe] fn() [-&gt; !]</code>. When overriding these other exception it’s possible to add state to them by declaring <code>static mut</code> variables at the beginning of the body of the function. These variables will be safe to access from the function body.</p>
+<h1 id="drone-rtos"><a class="header" href="#drone-rtos">Drone RTOS</a></h1>
+<p>Some reference about the research of RTOS in rust:<a href="https://arewertosyet.com/">https://arewertosyet.com/</a></p>
+<p>we need two repo, the file directory is：</p>
+<pre><code class="language- ignore">├── drone
+│   ├── CHANGELOG.md
+│   ├── Cargo.lock
+│   ├── Cargo.toml
+│   ├── LICENSE-APACHE
+│   ├── LICENSE-MIT
+│   ├── README.md
+│   ├── config
+│   ├── flake.lock
+│   ├── flake.nix
+│   ├── openocd
+│   ├── project-templates
+│   ├── rustfmt.toml
+│   ├── src
+│   ├── stream
+│   └── templates
+└── drone-core
+    ├── CHANGELOG.md
+    ├── Cargo.toml
+    ├── LICENSE-APACHE
+    ├── LICENSE-MIT
+    ├── README.md
+    ├── flake.lock
+    ├── flake.nix
+    ├── macros
+    ├── macros-core
+    ├── rustfmt.toml
+    ├── src
+    └── tests
+</code></pre>
+<p><a href="https://github.com/drone-os/drone">https://github.com/drone-os/drone</a></p>
+<p><a href="https://github.com/drone-os/drone-core">https://github.com/drone-os/drone-core</a></p>
+<p>we reference from the drone book:<a href="https://book.drone-os.com/introduction.html">https://book.drone-os.com/introduction.html</a></p>
+<h2 id="1memory-allocation"><a class="header" href="#1memory-allocation">1.Memory Allocation</a></h2>
+<p><a href="https://api.drone-os.com/drone-core/0.14/drone_core/heap/index.html">drone_core::heap - Rust</a></p>
+<p>Dynamic memory is crucial for Drone operation. Objectives like real-time characteristics, high concurrency, small code size, fast execution have led to Memory Pools design of the heap. All operations are lock-free and have <em>O(1)</em> time complexity, which means they are deterministic.</p>
+<p>The continuous memory region for the heap is split into pools. A pool is further split into fixed-sized blocks that hold actual allocations. A pool is defined by its block-size and the number of blocks. The pools configuration should be defined in the compile-time. A drawback of this approach is that memory pools may need to be tuned for the application.</p>
+<p>Using empiric values for the memory pools layout may lead to undesired memory fragmentation. Eventually the layout will need to be tuned for the application. Drone can capture allocation statistics from the real target device at the run-time and generate an optimized memory layout for this specific application. Ideally this will result in zero fragmentation.</p>
+<p>The actual steps are platform-specific. Refer to the platform crate documentation for instructions.</p>
+<h3 id="11-we-need-the-platform-module-and-stream-module"><a class="header" href="#11-we-need-the-platform-module-and-stream-module">1.1 we need the platform module and stream module</a></h3>
+<p>To adapt our structure, I decide to add it to helper directory, the whole structure like this:</p>
+<pre><code class="language- ignore">├── helper
+│   ├── linked_list.rs
+│   ├── macros.rs
+│   ├── mod.rs
+│   ├── runtime.rs
+│   └── soft_atomic.rs
+</code></pre>
+<p>and to use stream, I have to import it’s dependency—<code>drone_stream</code>  directly into the <code>mod.rs</code></p>
+<p>finally our project like this(I omit the other parts that not belonged to our adapt of Drone):</p>
+<pre><code class="language- ignore">├── heap
+│   ├── mod.rs
+│   ├── pool.rs
+│   └── trace.rs
+├── helper
+│   ├── linked_list.rs
+│   ├── macros.rs
+│   ├── mod.rs
+│   ├── runtime.rs
+│   └── soft_atomic.rs
+├── lang_items.rs
+├── lib.rs
+├── platform
+│   ├── interrputs.rs
+│   └── mod.rs
+</code></pre>
+<h3 id="12-with-heap-we-can-do-more-thing-like-smart-pointer"><a class="header" href="#12-with-heap-we-can-do-more-thing-like-smart-pointer">1.2 with heap we can do more thing like smart pointer</a></h3>
+<p><img src="./graph/ref1.png" alt="                                     the mind map of the smart pointer’s memory allocation " /></p>
+<pre><code>                                 the mind map of the smart pointer’s memory allocation 
+</code></pre>
+<h3 id="13-problem-we-need-heap-macro"><a class="header" href="#13-problem-we-need-heap-macro">1.3 problem: we need heap! macro</a></h3>
+<p>according to the api doc:</p>
+<p><a href="https://api.drone-os.com/drone-core/0.14/drone_core/heap/index.html#usage">https://api.drone-os.com/drone-core/0.14/drone_core/heap/index.html#usage</a></p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>use drone_core::heap;
+
+// Define a concrete heap type with the layout defined in the Drone.toml
+heap! {
+    // Heap configuration key in `Drone.toml`.
+    config =&gt; main;
+    /// The main heap allocator generated from the `Drone.toml`.
+    metadata =&gt; pub Heap;
+    // Use this heap as the global allocator.
+    global =&gt; true;
+    // Uncomment the following line to enable heap tracing feature:
+    // trace_port =&gt; 31;
+}
+
+// Create a static instance of the heap type and declare it as the global
+// allocator.
+/// The global allocator.
+#[global_allocator]
+pub static HEAP: Heap = Heap::new();
+<span class="boring">}</span></code></pre></pre>
+<p>we need to use the macro heap, which is a <code>proc-macro</code> of rust, we have to know it’s grammar:</p>
+<p><a href="https://www.notion.so/proc-macro-1-c9ef4b1da67d48b8969da5e060050443?pvs=21">proc-macro (1)</a></p>
+<p>you should know workspace:</p>
+<p><a href="https://doc.rust-lang.org/cargo/reference/workspaces.html">Workspaces - The Cargo Book</a></p>
+<p>As the macro in drone is so poor in designing, I give up port it to my project. So I try to construct a global allocator myself.</p>
+<p>there is my reference:</p>
+<p><a href="https://os.phil-opp.com/heap-allocation/">Heap Allocation | Writing an OS in Rust</a></p>
+<p><a href="https://os.phil-opp.com/allocator-designs/#fixed-size-block-allocator">Allocator Designs | Writing an OS in Rust</a></p>
+<p>When I implementing the allocator above, as it discussed, we also need linked list to optimize our design:</p>
+<p><a href="https://os.phil-opp.com/allocator-designs/#linked-list-allocator">Allocator Designs | Writing an OS in Rust</a></p>
+<p>I leave the tutorial’s linked list example, but still use the <code>linked_list_allocator</code> crate because of the merge of freed blocks.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../docs/设计文档.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+                            <a rel="next prefetch" href="../docs/embassy_preempt开发杂记.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../docs/设计文档.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+                    <a rel="next prefetch" href="../docs/embassy_preempt开发杂记.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>

@@ -1,0 +1,643 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>开发杂记 - Embassy Preempt</title>
+
+
+        <!-- Custom HTML head -->
+        
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" href="../highlight.css">
+        <link rel="stylesheet" href="../tomorrow-night.css">
+        <link rel="stylesheet" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+    </head>
+    <body class="sidebar-visible no-js">
+    <div id="body-container">
+        <!-- Provide site root to javascript -->
+        <script>
+            var path_to_root = "../";
+            var default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "navy" : "light";
+        </script>
+
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                var theme = localStorage.getItem('mdbook-theme');
+                var sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            var theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            var html = document.querySelector('html');
+            html.classList.remove('light')
+            html.classList.add(theme);
+            var body = document.querySelector('body');
+            body.classList.remove('no-js')
+            body.classList.add('js');
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            var body = document.querySelector('body');
+            var sidebar = null;
+            var sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+            }
+            sidebar_toggle.checked = sidebar === 'visible';
+            body.classList.remove('sidebar-visible');
+            body.classList.add("sidebar-" + sidebar);
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <div class="sidebar-scrollbox">
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../index.html">介绍</a></li><li class="chapter-item expanded affix "><a href="../docs/开发记录.html">开发记录</a></li><li class="chapter-item expanded affix "><a href="../docs/技术报告.html">技术报告</a></li><li class="chapter-item expanded affix "><a href="../docs/设计文档.html">设计文档</a></li><li class="chapter-item expanded affix "><a href="../docs/资料汇总.html">资料汇总</a></li><li class="chapter-item expanded affix "><a href="../docs/embassy_preempt开发杂记.html" class="active">开发杂记</a></li></ol>
+            </div>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <!-- Track and set sidebar scroll position -->
+        <script>
+            var sidebarScrollbox = document.querySelector('#sidebar .sidebar-scrollbox');
+            sidebarScrollbox.addEventListener('click', function(e) {
+                if (e.target.tagName === 'A') {
+                    sessionStorage.setItem('sidebar-scroll', sidebarScrollbox.scrollTop);
+                }
+            }, { passive: true });
+            var sidebarScrollTop = sessionStorage.getItem('sidebar-scroll');
+            sessionStorage.removeItem('sidebar-scroll');
+            if (sidebarScrollTop) {
+                // preserve sidebar scroll position when navigating via links within sidebar
+                sidebarScrollbox.scrollTop = sidebarScrollTop;
+            } else {
+                // scroll sidebar to current active section when navigating via "next/previous chapter" buttons
+                var activeSection = document.querySelector('#sidebar .active');
+                if (activeSection) {
+                    activeSection.scrollIntoView({ block: 'center' });
+                }
+            }
+        </script>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search. (Shortkey: s)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="S" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">Embassy Preempt</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="rust-ucos-ii开发杂记"><a class="header" href="#rust-ucos-ii开发杂记">Rust-uC/OS II开发杂记</a></h1>
+<h1 id="本篇主要内容"><a class="header" href="#本篇主要内容">本篇主要内容</a></h1>
+<p>本篇的主要内容为，在开发过程中遇到的一些代码上的问题，包括Rust的语言特性，以及对Embassy和uCOSII更深层次的一点理解和一些变动</p>
+<h1 id="1-rust-cargo-error"><a class="header" href="#1-rust-cargo-error">1. rust cargo error</a></h1>
+<h2 id="11-cargo-shows-error"><a class="header" href="#11-cargo-shows-error">1.1 cargo shows error</a></h2>
+<p>rust analyzer runs at the same time you run a <code>cargo</code> command after updating the toolchain file. If it's not that please open a new rustup issue</p>
+<p><a href="https://github.com/rust-lang/rust-clippy/issues/12763">https://github.com/rust-lang/rust-clippy/issues/12763</a></p>
+<p>The workaround is to uninstall the toolchain and reinstall it, usually stopping rust analyzer or similar while you're doing that</p>
+<h2 id="12-cargo-stuck-in--waiting-for-cargo-metadata-or-cargo-check"><a class="header" href="#12-cargo-stuck-in--waiting-for-cargo-metadata-or-cargo-check">1.2 cargo stuck in  <strong>waiting for cargo metadata or cargo check</strong></a></h2>
+<p><a href="https://github.com/rust-lang/rust-analyzer/issues/10910">https://github.com/rust-lang/rust-analyzer/issues/10910</a></p>
+<h2 id="13-a-chinese-problem-we-may-need-mirror-accelerate"><a class="header" href="#13-a-chinese-problem-we-may-need-mirror-accelerate">1.3 A Chinese problem, we may need mirror accelerate</a></h2>
+<p><a href="https://juejin.cn/post/7133482060307496997">https://juejin.cn/post/7133482060307496997</a></p>
+<p>and we set a proxy for git</p>
+<p><a href="https://blog.csdn.net/yoyo_u/article/details/132637141">https://blog.csdn.net/yoyo_u/article/details/132637141</a></p>
+<h1 id="2-defmt"><a class="header" href="#2-defmt">2. defmt</a></h1>
+<p>as the code show below, the defmt and log feature can not be active at the same time.</p>
+<pre><code class="language-jsx">#[cfg(all(feature = "defmt", feature = "log"))]
+compile_error!("You may not enable both `defmt` and `log` features.");
+</code></pre>
+<h1 id="3-why-embassy-executors-test-can-run-with-src-in-no_std"><a class="header" href="#3-why-embassy-executors-test-can-run-with-src-in-no_std">3. Why Embassy-Executor’s test can run with src in no_std?</a></h1>
+<p><a href="https://stackoverflow.com/questions/28185854/how-do-i-test-crates-with-no-std">https://stackoverflow.com/questions/28185854/how-do-i-test-crates-with-no-std</a></p>
+<h1 id="4-rust-conditional-compilation"><a class="header" href="#4-rust-conditional-compilation">4. rust conditional compilation</a></h1>
+<h2 id="41-how-to-use-env-section-of-cargoconfigtoml"><a class="header" href="#41-how-to-use-env-section-of-cargoconfigtoml">4.1 how to use <code>[env]</code> section of <code>.cargo/config.toml</code></a></h2>
+<p><a href="https://doc.rust-lang.org/cargo/reference/config.html">https://doc.rust-lang.org/cargo/reference/config.html</a></p>
+<h2 id="42-the-usage-of-cfg--cfg_attr"><a class="header" href="#42-the-usage-of-cfg--cfg_attr">4.2 the usage of cfg &amp; cfg_attr</a></h2>
+<p><a href="https://doc.rust-lang.org/reference/conditional-compilation.html">https://doc.rust-lang.org/reference/conditional-compilation.html</a></p>
+<h1 id="5covariant"><a class="header" href="#5covariant">5.covariant</a></h1>
+<p><a href="https://doc.rust-lang.org/reference/subtyping.html">https://doc.rust-lang.org/reference/subtyping.html</a></p>
+<p><a href="https://stackoverflow.com/questions/74990774/how-to-understand-covariance-in-rust">https://stackoverflow.com/questions/74990774/how-to-understand-covariance-in-rust</a></p>
+<p><a href="https://doc.rust-lang.org/nomicon/subtyping.html">https://doc.rust-lang.org/nomicon/subtyping.html</a></p>
+<p><img src="./graph/dev1.png" alt="Untitled" /></p>
+<h1 id="6-fnonce-vs-fnmut-vs-fn-rust"><a class="header" href="#6-fnonce-vs-fnmut-vs-fn-rust">6. fnonce vs fnmut vs fn rust</a></h1>
+<p><a href="https://google.github.io/comprehensive-rust/std-traits/closures.html">https://google.github.io/comprehensive-rust/std-traits/closures.html</a></p>
+<h1 id="7-how-can-we-transfer-from-a-function-pointer-to-a-closure"><a class="header" href="#7-how-can-we-transfer-from-a-function-pointer-to-a-closure">7. how can we transfer from a function pointer to a closure</a></h1>
+<h1 id="8-const-fn"><a class="header" href="#8-const-fn">8. const fn</a></h1>
+<p>The const fn can be called at compiling time so there are some restrictions of it(Just like cpp?).</p>
+<p><a href="https://doc.rust-lang.org/reference/const_eval.html">https://doc.rust-lang.org/reference/const_eval.html</a></p>
+<h1 id="9-feature-edition2021-is-required"><a class="header" href="#9-feature-edition2021-is-required">9. feature <code>edition2021</code> is required</a></h1>
+<p>Caused by:
+feature <code>edition2021</code> is required</p>
+<p>consider adding <code>cargo-features = ["edition2021"]</code> to the manifest</p>
+<p><a href="https://stackoverflow.com/questions/69848319/unable-to-specify-edition2021-in-order-to-use-unstable-packages-in-rust">https://stackoverflow.com/questions/69848319/unable-to-specify-edition2021-in-order-to-use-unstable-packages-in-rust</a></p>
+<p>however, my problem is that my toolchain set the rust so old</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>[toolchain]
+channel = "nightly-2024-06-18"
+components = [ "clippy", "llvm-tools-preview", "rust-src", "rustfmt" ]
+profile = "minimal"
+<span class="boring">}</span></code></pre></pre>
+<h1 id="10-liveshare-give-full-access"><a class="header" href="#10-liveshare-give-full-access">10. liveshare give full access</a></h1>
+<p><a href="https://stackoverflow.com/questions/53729195/visual-studio-live-share-as-a-host-how-to-give-access-permission-to-my-particip">https://stackoverflow.com/questions/53729195/visual-studio-live-share-as-a-host-how-to-give-access-permission-to-my-particip</a></p>
+<h1 id="11-cant-use-lazy_static-with-no_std"><a class="header" href="#11-cant-use-lazy_static-with-no_std">11. can’t use lazy_static with no_std</a></h1>
+<p><a href="https://stackoverflow.com/questions/73049446/could-not-compile-lazy-static">https://stackoverflow.com/questions/73049446/could-not-compile-lazy-static</a></p>
+<p><a href="https://github.com/rust-lang-nursery/lazy-static.rs/issues/35">https://github.com/rust-lang-nursery/lazy-static.rs/issues/35</a></p>
+<h1 id="12-the-layout-of-rust"><a class="header" href="#12-the-layout-of-rust">12. the <code>layout</code> of rust</a></h1>
+<p><a href="https://doc.rust-lang.org/reference/type-layout.html">https://doc.rust-lang.org/reference/type-layout.html</a></p>
+<p><a href="https://doc.rust-lang.org/nightly/core/alloc/struct.Layout.html">https://doc.rust-lang.org/nightly/core/alloc/struct.Layout.html</a></p>
+<h1 id="13-how-to-design-the-ostcbtbl"><a class="header" href="#13-how-to-design-the-ostcbtbl">13. how to design the OSTCBTbl</a></h1>
+<p>To make space allocation certain, we can not design the <code>OSTCBTbl</code> as uC/OS. In uC/OS the TCBs’ size is confirmed and same. But in our Rust-uC/OS, because we use future, the size of <code>TaskStorage</code> is not the same, and we can not confirmed it before we know how the async func is defined.</p>
+<p>We can find that the source of the problem is the size of futures of every <code>TaskStorage</code> is different, but we want to make it the same to avoid some tough issues related to memory.</p>
+<aside>
+💡 So I thought about to set the Size of `TaskStorage` as the maximum of all the objects of `TaskStorage` . But because we can not calculate the maximum when we init the TCB Table, so we abandoned the plan.
+</aside>
+<p>There is another way to solve this problem: using pointer. But unavoidably there will be some raw pointers and unsafe code block. But for now, we will take this approach. In the future, we can wrap the raw pointer by some types to make our code safe.</p>
+<h1 id="14-the-function-of-unsafecell"><a class="header" href="#14-the-function-of-unsafecell">14. the Function of UnsafeCell</a></h1>
+<p>Quote from copilot:</p>
+<blockquote>
+<p><strong>内部可变性</strong>：允许在外部看似不可变的情况下，修改<code>UnsafeCell&lt;T&gt;</code>内部的值。这对于实现像<code>RefCell&lt;T&gt;</code>和<code>Mutex&lt;T&gt;</code>这样的类型非常重要，这些类型提供了在运行时而不是编译时检查借用规则的能力。
+<strong>绕过借用规则</strong>：正常情况下，Rust不允许在存在不可变引用的同时创建可变引用，因为这可能导致数据竞争和不一致的状态。然而，通过使用<code>UnsafeCell&lt;T&gt;</code>，开发者可以手动管理这种访问，允许在不违反所有权模型的前提下，进行更灵活的内存访问。
+<strong>安全性责任</strong>：使用<code>UnsafeCell&lt;T&gt;</code>意味着绕过了Rust编译器的安全检查，将安全性的责任转移到了开发者身上。开发者需要确保使用<code>UnsafeCell&lt;T&gt;</code>时不会引入数据竞争或其他安全问题。
+<strong>底层构建块</strong>：<code>UnsafeCell&lt;T&gt;</code>通常被用作构建更高级别抽象的底层构建块，如同步原语（<code>Mutex</code>、<code>RwLock</code>等）或其他需要内部可变性的类型。直接使用<code>UnsafeCell&lt;T&gt;</code>是不常见的，除非你正在实现这些高级抽象。</p>
+</blockquote>
+<p>So, only when the inner var is immutable, but we need it to be mutable temporary will we wrap the var in <code>UnsafeCell</code> . It is common to wrap static var or var with static life-cycles in <code>UnsafeCell</code></p>
+<h1 id="15-the-import-of-future"><a class="header" href="#15-the-import-of-future">15. the import of Future</a></h1>
+<p>In the definition of TCB, we need to import the future of the task. But for Future is a trait, so we only import it as a trait bound:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub(crate) struct OS_TCB&lt;F: Future + 'static&gt;{...}
+<span class="boring">}</span></code></pre></pre>
+<p>But we want to be uncoupled so that in other crate, only OS_TCB_REF can be visited. So we wrap the TCB as OS_TCB_REF:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub struct OS_TCB_REF{
+    ptr:NonNull&lt;OS_TCB&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<p>But after we import the Future, we need to add a trait bound to OS_TCB_REF too:</p>
+<pre><code class="language-jsx">pub struct OS_TCB_REF&lt;F: Future + 'static&gt;{
+    ptr:NonNull&lt;OS_TCB&lt;F&gt;&gt;,
+}
+</code></pre>
+<p>Besides, everything about the OS_TCB_REF needs to be added a trait bound. As a result, there will be too much var having a static life time, which is not what we want to see.</p>
+<aside>
+💡 In uC，TCB can have a static life time in order to ensure the certainty of space allocation. But we don’t want to make the REF also having the static life time, because only the running task is meaningful to us.
+</aside>
+<p>In Embassy, the TCB is separated from the future：</p>
+<pre><code class="language-jsx">pub struct TaskStorage&lt;F: Future + 'static&gt; {
+    raw: TaskHeader,
+    future: UninitCell&lt;F&gt;, // Valid if STATE_SPAWNED
+}
+</code></pre>
+<p><code>TaskRef</code> still point to <code>TaskHeader</code> , which has nothing to do with Future.:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>#[derive(Clone, Copy)]
+pub struct TaskRef {
+    ptr: NonNull&lt;TaskHeader&gt;,
+}
+<span class="boring">}</span></code></pre></pre>
+<p>In this way, there is no need to add a trait bound to <code>TaskRef</code> . So it can be recycled freely. When we want to get the <code>TaskStorage</code> , we can use type casting, for <code>TaskHeader</code> is <code>TaskStorage</code> ’s first member.</p>
+<p>So we will refer to the realization of Embassy. So in OS_init, we should alloc an array of <code>OS_TASK_STORAGE</code>, instead of <code>OS_TCB</code> .</p>
+<h1 id="16-the-executor"><a class="header" href="#16-the-executor">16. the Executor</a></h1>
+<p>In the Rust-uC we imagine, there is no concept of thread. So there just need an executor, which I will make it lazy_static.</p>
+<p>Besides, there is also no need to add a member to TCB to store the executor, which is different to Embassy.</p>
+<h1 id="17-string--str"><a class="header" href="#17-string--str">17. String &amp; str</a></h1>
+<p>At the beginning, we can only use str, for it is a slice, which doesn’t require a heap allocator.</p>
+<p>But there is still one problem: the size of str can be confirmed when compiling. So we have to impl a heap allocator. Otherwise, we can only use unsafe code.</p>
+<p>After we impl a heap allocator, we can use the String type, which is <strong>Sized</strong> in Rust.</p>
+<h1 id="18-global-static-var"><a class="header" href="#18-global-static-var">18. Global Static Var</a></h1>
+<p>In the first version of our uC/OS, we just use <code>pub</code> and <code>static</code> to define global var. It is so annoyed because it makes our code unsafe. In the second version of Rust-uC, we try to refer to the realization of Embassy and rCore.</p>
+<p>In Embassy, the <code>RtcDriver</code> is static and we need to change its member in the static life time. It’s definition looks like:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>embassy_time_driver::time_driver_impl!(static DRIVER: RtcDriver = RtcDriver {
+    period: AtomicU32::new(0),
+    alarm_count: AtomicU8::new(0),
+    alarms: Mutex::const_new(CriticalSectionRawMutex::new(), [ALARM_STATE_NEW; ALARM_COUNT]),
+    #[cfg(feature = "low-power")]
+    rtc: Mutex::const_new(CriticalSectionRawMutex::new(), Cell::new(None)),
+});
+<span class="boring">}</span></code></pre></pre>
+<p>Here, Embassy use <code>Mutex</code> and <code>AtomicU32</code> for the static structure’s member to ensure the thread safety. The <code>Mutex</code> used here is defined in <code>embassy::sync</code> and <code>AtomicU32</code> is in the <code>core::sync::atomic</code> . Actually, there is also a <code>Mutex</code> in <code>critical-section</code> . It expose a safe interface to us. Because there is only one core on our board, so we can ensure that if we acquire a critical section, the interrupt will be disable and task will not switch.</p>
+<p>So we will use <code>AtomicU32</code> to keep var of primary data type thread safe, and use <code>critical-section::Mutex&lt;RefCell&lt;T&gt;&gt;</code> to keep var of other type safe.</p>
+<p>Besides, by using <code>Atomic</code> , we can change the global var without critical section:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>fn next_period(&amp;self) {
+    let r = regs_gp16();
+
+    // We only modify the period from the timer interrupt, so we know this can't race.
+    let period = self.period.load(Ordering::Relaxed) + 1;
+    self.period.store(period, Ordering::Relaxed);
+    let t = (period as u64) &lt;&lt; 15;
+
+    critical_section::with(move |cs| {
+        r.dier().modify(move |w| {
+            for n in 0..ALARM_COUNT {
+                let alarm = &amp;self.alarms.borrow(cs)[n];
+                let at = alarm.timestamp.get();
+
+                if at &lt; t + 0xc000 {
+                    // just enable it. `set_alarm` has already set the correct CCR val.
+                    w.set_ccie(n + 1, true);
+                }
+            }
+        })
+    })
+}
+<span class="boring">}</span></code></pre></pre>
+<p>The period’s type is <code>AtomicU32</code> and it is one of the members of the RtcDriver. But in the example pick out from Embassy above, it can be get and set without a critical section.</p>
+<p>Before, our code looks like this:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>// need a cs
+critical_section::with(|_cs| unsafe {
+    if OS_IS_RUNNING &amp;&amp; OSINT_NESTING &gt; 0 {
+        OSINT_NESTING -= 1;
+    }
+    let _os_int_nesting = OSINT_NESTING;
+    // info!("in os_int_exit the OSINT_NESTING is {}", OSINT_NESTING);
+    if OS_IS_RUNNING &amp;&amp; OSINT_NESTING == 0 {
+        os_sched_new();
+        OS_TCB_HIGH_RDY = OS_TCB_PRIO_TBL[OS_PRIO_HIGH_RDY as usize];
+        (*OS_TCB_HIGH_RDY).stride += OS_STRIDE_NUM / (OS_LOWEST_PRIO - (*OS_TCB_HIGH_RDY).os_prio as usize);
+        if OS_PRIO_CUR != OS_PRIO_HIGH_RDY {
+            // update the stride
+            OSIntCtxSw();
+        }
+    }
+});
+<span class="boring">}</span></code></pre></pre>
+<p>Though we can ensure there will only one thread enter the critical section, there is still a huge unsafe block.</p>
+<p>But now our code may looks like:</p>
+<pre><pre class="playground"><code class="language-rust">static FOO: Mutex&lt;RefCell&lt;i32&gt;&gt; = Mutex::new(RefCell::new(42));
+
+fn main() {
+   critical_section::with(|cs| {
+       // Instead of calling this
+       let _ = FOO.borrow(cs).take();
+       // Call this
+       let _ = FOO.take(cs);
+       // `RefCell::borrow` and `RefCell::borrow_mut` are renamed to
+       // `borrow_ref` and `borrow_ref_mut` to avoid name collisions
+       let _: &amp;mut i32 = &amp;mut *FOO.borrow_ref_mut(cs);
+   })
+}</code></pre></pre>
+<p>Good, there is no unsafe block.</p>
+<aside>
+💡 we use the type:`Mutex<RefCell<i32>>` to define the static var because `RefCell` is not thread safe.
+</aside>
+<h1 id="19-the-function-of-refcell"><a class="header" href="#19-the-function-of-refcell">19. the Function of RefCell</a></h1>
+<p>In the last part, there is a type: <code>RefCell</code> . It provide a mechanism for borrowing checks at run time. We need this because if we do static check on our borrowing of the global var, there are many places that get mutable references to global variables, which will make our code can not pass compiling. But in an OS, this situation is unavoidable, so we need <code>RefCell</code> to do borrowing checks at run time.</p>
+<h1 id="20-the-order-of-atomic"><a class="header" href="#20-the-order-of-atomic">20. the Order of Atomic</a></h1>
+<p><a href="https://course.rs/advance/concurrency-with-threads/sync2.html">https://course.rs/advance/concurrency-with-threads/sync2.html</a></p>
+<p>There is a para we should pass to func <code>load</code> and <code>store</code> when we need to read or write the Atomic var. The para is order. Its type is <code>Ordering</code> , which is an enum.</p>
+<p>As the comment on <code>Ordering</code> in Rust lib, <code>Ordering</code> is used to:</p>
+<blockquote>
+<p>Memory orderings specify the way atomic operations synchronize memory.</p>
+</blockquote>
+<p>There are five possible values of <code>Ordering</code> :</p>
+<ul>
+<li>
+<p>Relaxed</p>
+<blockquote>
+<p>No ordering constraints, only atomic operations.
+<a href="https://en.cppreference.com/w/cpp/atomic/memory_order#Relaxed_ordering">https://en.cppreference.com/w/cpp/atomic/memory_order#Relaxed_ordering</a></p>
+</blockquote>
+</li>
+<li>
+<p>Release</p>
+<blockquote>
+<p>When coupled with a <strong>store</strong>, all previous operations become ordered before any load of this value with [<code>Acquire</code>] (or stronger) ordering.In particular, all previous writes become visible to all threads that perform an [<code>Acquire</code>] (or stronger) load of this value.
+This ordering is only applicable for operations that can perform a store
+<a href="https://en.cppreference.com/w/cpp/atomic/memory_order#Release-Acquire_ordering">https://en.cppreference.com/w/cpp/atomic/memory_order#Release-Acquire_ordering</a></p>
+</blockquote>
+</li>
+<li>
+<p>Acquire</p>
+<blockquote>
+<p>When coupled with a load, if the loaded value was written by a store operation with [<code>Release</code>] (or stronger) ordering, then all subsequent operations become ordered after that store. In particular, all subsequent loads will see data written before the store.
+<a href="https://en.cppreference.com/w/cpp/atomic/memory_order#Release-Acquire_ordering">https://en.cppreference.com/w/cpp/atomic/memory_order#Release-Acquire_ordering</a></p>
+</blockquote>
+</li>
+<li>
+<p>AcqRel</p>
+<blockquote>
+<p>Has the effects of both [<code>Acquire</code>] and [<code>Release</code>] together:
+For loads it uses [<code>Acquire</code>] ordering. For stores it uses the [<code>Release</code>] ordering.
+<a href="https://en.cppreference.com/w/cpp/atomic/memory_order#Release-Acquire_ordering">https://en.cppreference.com/w/cpp/atomic/memory_order#Release-Acquire_ordering</a></p>
+</blockquote>
+</li>
+<li>
+<p>SeqCst</p>
+<blockquote>
+<p>Like [<code>Acquire</code>]/[<code>Release</code>]/[<code>AcqRel</code>] (for load, store, and load-with-store operations, respectively) with the additional guarantee that all threads see all sequentially consistent operations in the same order.
+<a href="https://en.cppreference.com/w/cpp/atomic/memory_order#Sequentially-consistent_ordering">https://en.cppreference.com/w/cpp/atomic/memory_order#Sequentially-consistent_ordering</a></p>
+</blockquote>
+</li>
+</ul>
+<p>In the comment of the possible values, we can know that we can build a Memory Barrier by using <code>Release</code> coupled with <code>store</code> and  <code>Acquire</code> coupled with <code>load</code> (or just use <code>AcqRel</code>). In this way, we can ensure the <strong>synchronization</strong> when we read or write an Atomic var, just like we set a mutex.</p>
+<aside>
+💡 By `Release` , the operations before `store` will be finished before the `store` operation, which can ensure that the `store` op is effective and the stored value is visible to other threads. By `Acquire` , the operations after `load` will not be finished before the `load` operation, which can ensure that the `load` op can load the val we need.
+</aside>
+<p>There is an example:</p>
+<pre><pre class="playground"><code class="language-rust">use std::thread::{self, JoinHandle};
+use std::sync::atomic::{Ordering, AtomicBool};
+
+static mut DATA: u64 = 0;
+static READY: AtomicBool = AtomicBool::new(false);
+
+fn reset() {
+    unsafe {
+        DATA = 0;
+    }
+    READY.store(false, Ordering::Relaxed);
+}
+
+fn producer() -&gt; JoinHandle&lt;()&gt; {
+    thread::spawn(move || {
+        unsafe {
+            DATA = 100;                                 // A
+        }
+        READY.store(true, Ordering::Release);           // B: Memory Barrier ↑
+    })
+}
+
+fn consumer() -&gt; JoinHandle&lt;()&gt; {
+    thread::spawn(move || {
+        while !READY.load(Ordering::Acquire) {}         // C: Memory Barrier ↓
+
+        assert_eq!(100, unsafe { DATA });               // D
+    })
+}
+
+fn main() {
+    loop {
+        reset();
+
+        let t_producer = producer();
+        let t_consumer = consumer();
+
+        t_producer.join().unwrap();
+        t_consumer.join().unwrap();
+    }
+}</code></pre></pre>
+<h1 id="21-steps-to-adapt-to-embassy"><a class="header" href="#21-steps-to-adapt-to-embassy">21. steps to adapt to embassy</a></h1>
+<p><a href="https://www.notion.so/embassy-9ae45929a3dc49128a4349679d38fa07?pvs=21">embassy 改变设计想法</a></p>
+<h1 id="22-design-of-the-testing-part"><a class="header" href="#22-design-of-the-testing-part">22. Design of the testing part</a></h1>
+<p><img src="./graph/dev2.png" alt="Untitled" /></p>
+<p><a href="https://os.phil-opp.com/testing/">https://os.phil-opp.com/testing/</a></p>
+<p><a href="https://ferrous-systems.com/blog/tags/embedded-rust-testing/">https://ferrous-systems.com/blog/tags/embedded-rust-testing/</a></p>
+<h2 id="221-i-choose-the-defmt-test"><a class="header" href="#221-i-choose-the-defmt-test">22.1 I choose the defmt-test:</a></h2>
+<p><a href="https://github.com/knurling-rs/defmt/tree/704bee6ebfa153aad9dba1fcee5ba0ec6b77f3a8/firmware/defmt-test">defmt/firmware/defmt-test at 704bee6ebfa153aad9dba1fcee5ba0ec6b77f3a8 · knurling-rs/defmt</a></p>
+<h2 id="222-and-learn-from-the-template-to-know-how-to-use-it"><a class="header" href="#222-and-learn-from-the-template-to-know-how-to-use-it">22.2 And learn from the template to know how to use it:</a></h2>
+<p><a href="https://github.com/knurling-rs/app-template">https://github.com/knurling-rs/app-template</a></p>
+<h1 id="23-what-does-flip-link-do-"><a class="header" href="#23-what-does-flip-link-do-">23. what does <strong><code>flip-link</code> do ?</strong></a></h1>
+<p><a href="https://github.com/knurling-rs/flip-link">https://github.com/knurling-rs/flip-link</a></p>
+<p><img src="./graph/dev3.png" alt="Untitled" /></p>
+<p><img src="./graph/dev4.png" alt="Untitled" /></p>
+<h1 id="24-we-need-taskpoolref"><a class="header" href="#24-we-need-taskpoolref">24. We Need TaskPoolRef</a></h1>
+<p>Just as the comments in Embassy：</p>
+<blockquote>
+<p>type-erased <code>&amp;'static mut TaskPool&lt;F, N&gt;</code>. Needed because statics can't have generics.</p>
+</blockquote>
+<p>Because the TaskPool is static in both our uC and Embassy, so it is important to use <code>TaskPoolRef</code> to define a <code>TaskPool</code>in a static life time</p>
+<aside>
+💡 the `Arena` is also known as `OSTCBTbl` in uC/OS
+</aside>
+<p>plus: I add note of static usage:<a href="https://doc.rust-lang.org/reference/items/static-items.html">https://doc.rust-lang.org/reference/items/static-items.html</a></p>
+<p>and the embassy use this to init TaskPool static var once in the task macro design:</p>
+<p>from file embassy-executor-macros/src/macros:113</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>    #[cfg(not(feature = "nightly"))]
+    let mut task_outer: ItemFn = parse_quote! {
+<span class="boring">        visibility fn #task_ident(#fargs) -&gt; ::embassy_executor::SpawnToken&lt;impl Sized&gt; {
+</span>            const POOL_SIZE: usize = #pool_size;
+            static POOL: ::embassy_executor::_export::TaskPoolRef = ::embassy_executor::_export::TaskPoolRef::new();
+            unsafe { POOL.get::&lt;_, POOL_SIZE&gt;()._spawn_async_fn(move || #task_inner_ident(#(#full_args,)*)) }
+        }
+    };
+<span class="boring">}</span></code></pre></pre>
+<h1 id="25-about-arena"><a class="header" href="#25-about-arena">25. About Arena</a></h1>
+<p>In the last part, we know that we need <code>TaskPoolRef</code> because statics can't have generics. But a new problem arose: The <code>TaskPoolRef</code> is static but <code>TaskPool</code> is not. This will cause error because a ref’s life time is longer than the data it points. So we should do something to make <code>TaskPool</code> static too.</p>
+<p>In Embassy, <code>TaskPool</code> become static with the help of <code>Arena</code> . It defined as:</p>
+<pre><code class="language-jsx">    struct Arena&lt;const N: usize&gt; {
+        buf: UnsafeCell&lt;MaybeUninit&lt;[u8; N]&gt;&gt;,
+        ptr: Mutex&lt;Cell&lt;*mut u8&gt;&gt;,
+    }
+</code></pre>
+<p>For now, we just focus on <code>buf</code> . It is a <code>UnsafeCell&lt;MaybeUninit&lt;[u8; N]&gt;&gt;</code> . About <code>MaybeUninit</code> , we will discuss it below. Now we just need to know that <code>MaybeUninit</code> ’s memory layout is the same to <code>[u8; N]</code> . So if we claim an <code>Arena</code> with static life time, its member will be static too. We get what we want.</p>
+<aside>
+💡 “N” is defined as the number of bytes of the TaskPool.
+</aside>
+<p>Maybe you will ask that if we use <code>Arena</code> , why do we still need the <code>TaskPool</code> and <code>TaskPoolRef</code> ? As shown above and in Embassy, the <code>Arena</code> just used to alloc a piece of memory but <code>TaskPool</code> or <code>TaskPoolRef</code> is used to complete the relevant parts of the task and scheduling. By this, the coupling degree is reduced. Of course we can define <code>Arena</code> as:</p>
+<pre><code class="language-jsx">   struct Arena&lt;const N: usize&gt; {
+        buf: UnsafeCell&lt;MaybeUninit&lt;[TaskStorage; N]&gt;&gt;,
+        ptr: Mutex&lt;Cell&lt;*mut u8&gt;&gt;,
+    }
+</code></pre>
+<p>In this way, the the coupling degree increases, and there is anther problem: if we use <code>TaskStorage</code> directly, we need genericity, which can’t be added to the static <code>Arena</code> .</p>
+<h1 id="26-sync-and-send-trait"><a class="header" href="#26-sync-and-send-trait">26. Sync and Send trait</a></h1>
+<p><a href="https://doc.rust-lang.org/nomicon/send-and-sync.html">Send and Sync - The Rustonomicon</a></p>
+<ul>
+<li>A type is Send if it is safe to send it to another thread.</li>
+<li>A type is Sync if it is safe to share between threads (T is Sync if and only if <code>&amp;T</code> is Send).</li>
+</ul>
+<h1 id="27-maybeuninit"><a class="header" href="#27-maybeuninit">27. MaybeUninit</a></h1>
+<p>This type is used to define vars which are not init. Its memory layout is the same to the genericity var’s memory layout. MaybeUninit is defined as:</p>
+<pre><code class="language-jsx">  pub union MaybeUninit&lt;T&gt; {
+      uninit: (),
+      value: ManuallyDrop&lt;T&gt;,
+  }
+</code></pre>
+<p>For more information about MaybeUninit, read: <a href="https://learnku.com/articles/65520">https://learnku.com/articles/65520</a></p>
+<h1 id="28-deref-and-derefmut"><a class="header" href="#28-deref-and-derefmut">28. Deref and DerefMut</a></h1>
+<p>The usage of these trait is:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span> use std::ops::{Deref, DerefMut};
+
+ struct DerefMutExample&lt;T&gt; {
+     value: T
+ }
+
+ impl&lt;T&gt; Deref for DerefMutExample&lt;T&gt; {
+     type Target = T;
+
+     fn deref(&amp;self) -&gt; &amp;Self::Target {
+         &amp;self.value
+     }
+ }
+
+ impl&lt;T&gt; DerefMut for DerefMutExample&lt;T&gt; {
+     fn deref_mut(&amp;mut self) -&gt; &amp;mut Self::Target {
+         &amp;mut self.value
+     }
+ }
+<span class="boring">}</span></code></pre></pre>
+<p>Maybe you will be confused with the <code>Target</code> in <code>DerefMut</code> . Once you know how <code>DerefMut</code> defined, you won't be confused:</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span>pub trait DerefMut: Deref {
+    /// Mutably dereferences the value.
+    #[stable(feature = "rust1", since = "1.0.0")]
+    #[rustc_diagnostic_item = "deref_mut_method"]
+    fn deref_mut(&amp;mut self) -&gt; &amp;mut Self::Target;
+}
+<span class="boring">}</span></code></pre></pre>
+<h1 id="29-关于refmut"><a class="header" href="#29-关于refmut">29. 关于refmut</a></h1>
+<p><a href="https://doc.rust-lang.org/std/cell/struct.RefMut.html">https://doc.rust-lang.org/std/cell/struct.RefMut.html</a></p>
+<h3 id="refcell"><a class="header" href="#refcell"><strong><code>RefCell</code></strong></a></h3>
+<p><code>RefCell</code> is a type that provides interior mutability. It allows you to borrow its contents either mutably or immutably, but these borrows are checked at runtime. If you try to violate Rust's borrowing rules (e.g., having multiple mutable borrows or a mutable borrow while there are immutable borrows), the program will panic.</p>
+<h3 id="refmut"><a class="header" href="#refmut"><strong><code>RefMut</code></strong></a></h3>
+<p><code>RefMut</code> is a smart pointer type that <code>RefCell</code> returns when you borrow its contents mutably. It implements <code>Deref</code> and <code>DerefMut</code>, so you can use it like a regular mutable reference.</p>
+<h1 id="30-tokenstream"><a class="header" href="#30-tokenstream">30. TokenStream</a></h1>
+<p><a href="https://zjp-cn.github.io/rust-note/proc/proc_macro2.html">https://zjp-cn.github.io/rust-note/proc/proc_macro2.html</a></p>
+<h1 id="31-quote"><a class="header" href="#31-quote">31. quote!</a></h1>
+<p><a href="https://zjp-cn.github.io/rust-note/proc/quote.html#quote-%E4%B8%8E-totokens">https://zjp-cn.github.io/rust-note/proc/quote.html#quote-与-totokens</a></p>
+<h1 id="32-过程宏"><a class="header" href="#32-过程宏">32. 过程宏</a></h1>
+<p><a href="https://zjp-cn.github.io/rust-note/proc/ref.html">https://zjp-cn.github.io/rust-note/proc/ref.html</a></p>
+<p>学习过程宏的lab（感觉可以考虑开学出成题目）：</p>
+<p><a href="https://github.com/dtolnay/proc-macro-workshop">https://github.com/dtolnay/proc-macro-workshop</a></p>
+<p>感觉还不错的中文博客：</p>
+<p><a href="https://rustmagazine.github.io/rust_magazine_2021/chapter_5/proc_macro_workshop_guide_for_builder_project.html">Rust过程宏系列教程 | Proc Macro Workshop 之 Builder 实现 - Rust精选</a></p>
+<p>我自己的lab笔记：</p>
+<p><a href="https://liamy.clovy.top/en/article/notes/proc-macro-workshop">proc-macro-workshop 笔记 | LiamY’s Blog</a></p>
+<p>很有用的宏debug工具，把宏展开的样子写出来：</p>
+<p><a href="https://github.com/dtolnay/cargo-expand">https://github.com/dtolnay/cargo-expand</a></p>
+<h1 id="33-out_dir环境变量"><a class="header" href="#33-out_dir环境变量">33. OUT_DIR环境变量</a></h1>
+<p><a href="https://rustwiki.org/zh-CN/cargo/reference/environment-variables.html">https://rustwiki.org/zh-CN/cargo/reference/environment-variables.html</a></p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../docs/资料汇总.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../docs/资料汇总.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+    </div>
+    </body>
+</html>
