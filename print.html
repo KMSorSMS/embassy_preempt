@@ -185,7 +185,7 @@
 <p>而在embassy中，通过引入Rust的协程机制，使得栈空间的利用率得到了极大的提升。但是由于embassy的线程执行器中的协程之间无法进行抢占，并且进行协程调度时并没有优先级裁决机制，在多任务的情景下将导致若干个任务出现未被及时唤醒的情况，导致实时性较差，这是一个嵌入式实时操作系统无法接受的。</p>
 <p>我们希望在已有的嵌入式实时操作系统的高实时性以及embassy的协程机制之间进行“折衷”，编写一个既可以满足实时应用环境下的实时性要求，又可以尽可能缩小内存使用的嵌入式异步实时操作系统调度模块——embassy_preempt。</p>
 <h1 id="技术报告"><a class="header" href="#技术报告"><a href="docs/%E6%8A%80%E6%9C%AF%E6%8A%A5%E5%91%8A.html">技术报告</a>📦</a></h1>
-<p><a href="https://liamy.clovy.top/article/RTOS/embassy-preempt">开发杂记</a></p>
+<p><a href="https://liamy.clovy.top/article/RTOS/embassy-preempt">开发全流程日志</a></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="开发记录"><a class="header" href="#开发记录">开发记录</a></h1>
 <h1 id="本篇主要内容"><a class="header" href="#本篇主要内容">本篇主要内容</a></h1>
 <p>本篇的主要内容为：按照老师提供的实现路线进行开发时的设计、实现以及所遇到的问题</p>
