@@ -176,7 +176,7 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="r-ucosii设计文档"><a class="header" href="#r-ucosii设计文档">r-ucosii设计文档</a></h1>
+                        <h1 id="embassy_preempt设计文档"><a class="header" href="#embassy_preempt设计文档">embassy_preempt设计文档</a></h1>
 <h2 id="整体设计"><a class="header" href="#整体设计">整体设计</a></h2>
 <p>分成两个接口，一个接口是对于c/rust的普通函数的，另一个接口是对于rust的异步函数的。</p>
 <p>然而对于c/rust普通函数，我们对它进行包装，在接口内转为一个future 对象，从而将调度都统一到执行器进行。</p>

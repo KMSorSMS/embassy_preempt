@@ -1074,7 +1074,7 @@ TRACE exit TIM3
 </ul>
 <h1 id="总结"><a class="header" href="#总结">总结</a></h1>
 <p>我们设计实现embassy_preempt的初衷为：在不影响ucosii的实时性的基础上，借助Rust的异步机制以及embassy的实现方式，在一定程度上提高了空间的利用率。从目前的测试结果来看，embassy_preempt的表现符合我们的预期。</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="r-ucosii设计文档"><a class="header" href="#r-ucosii设计文档">r-ucosii设计文档</a></h1>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="embassy_preempt设计文档"><a class="header" href="#embassy_preempt设计文档">embassy_preempt设计文档</a></h1>
 <h2 id="整体设计"><a class="header" href="#整体设计">整体设计</a></h2>
 <p>分成两个接口，一个接口是对于c/rust的普通函数的，另一个接口是对于rust的异步函数的。</p>
 <p>然而对于c/rust普通函数，我们对它进行包装，在接口内转为一个future 对象，从而将调度都统一到执行器进行。</p>
