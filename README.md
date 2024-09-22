@@ -9,5 +9,6 @@ embassy_preempt是一个嵌入式异步实时操作系统的调度模块。它�
 
 我们希望在已有的嵌入式实时操作系统的高实时性以及embassy的协程机制之间进行“折衷”，编写一个既可以满足实时应用环境下的实时性要求，又可以尽可能缩小内存使用的嵌入式异步实时操作系统调度模块——embassy_preempt。
 
-# [技术报告](docs/技术报告.md)📦
+# [技术报告](src/docs/技术报告.md)📦
 [开发杂记](https://liamy.clovy.top/article/RTOS/embassy-preempt)
+[项目网站](https://kmsorsms.github.io/embassy_preempt)
