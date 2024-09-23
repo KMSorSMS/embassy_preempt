@@ -47,10 +47,10 @@ use defmt::trace;
 use os_cpu::*;
 
 use crate::executor::GlobalSyncExecutor;
-#[cfg(feature = "alarm_test")]
-use crate::os_time::blockdelay;
 use crate::heap::stack_allocator::init_stack_allocator;
 use crate::os_task::SyncOSTaskCreate;
+#[cfg(feature = "alarm_test")]
+use crate::os_time::blockdelay;
 use crate::os_time::OSTimerInit;
 // use crate::os_q::OS_QInit;
 use crate::port::*;
@@ -636,9 +636,9 @@ fn OS_InitTaskIdle() {
                 trace!("task idle");
                 blockdelay::delay(1);
             }
-            // unsafe {
-            //     run_idle();
-            // }
+            unsafe {
+                run_idle();
+            }
         }
     };
     #[cfg(feature = "defmt")]
