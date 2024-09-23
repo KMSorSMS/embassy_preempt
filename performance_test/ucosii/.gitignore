@@ -1,7 +1,0 @@
-.vscode/
-build/
-.cache/
-compile_commands.json
-*.gdb
-*.tmp
-*.py

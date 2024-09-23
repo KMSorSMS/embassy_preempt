@@ -1,6 +1,0 @@
-h
-erase 0x08000000 0x0807FFFF
-loadfile target/thumbv7em-none-eabi/release/sync_time_performance.bin 0x08000000
-r
-g
-exit

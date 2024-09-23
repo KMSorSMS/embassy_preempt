@@ -1,0 +1,3 @@
+[submodule "embassy_preempt_test"]
+	path = embassy_preempt_test
+	url = https://github.com/Air-Suck/embassy_preempt_test.git
